@@ -1,0 +1,27 @@
+{
+  "name": "matrix",
+  "description": "Inflalo Matrix Monorepo",
+  "private": true,
+  "scripts": {
+    "bootstrap": "lerna bootstrap",
+    "clean": "lerna clean",
+    "build": "lerna run build",
+    "dev": "lerna run dev",
+    "serve": "lerna run serve",
+    "test": "lerna run test",
+    "lint": "lerna run lint",
+    "format": "lerna run format",
+    "release": "lerna version",
+    "publish": "lerna publish"
+  },
+  "workspaces": [
+    "packages/shared",
+    "packages/backend",
+    "packages/panel",
+    "packages/website"
+  ],
+  "devDependencies": {
+    "@rollup/rollup-linux-x64-gnu": "^4.34.8",
+    "lerna": "^8.1.8"
+  }
+}

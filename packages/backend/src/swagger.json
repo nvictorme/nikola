@@ -1,0 +1,36 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "2024.4.27",
+    "title": "Inflalo Inc. - Matrix Backend",
+    "description": "Inflalo Backend System",
+    "license": {
+      "name": "Proprietary",
+      "url": "https://us.inflalo.com"
+    }
+  },
+  "host": "localhost:3000",
+  "basePath": "/",
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Authentication"
+    },
+    {
+      "name": "Usuarios",
+      "description": "Usuarios del sistema"
+    },
+    {
+      "name": "Direcciones",
+      "description": "Direcciones fisicas de los usuarios y empresas"
+    },
+    {
+      "name": "Sucursales",
+      "description": "Sucursales de Inflalo Inc."
+    }
+  ],
+  "schemes": ["http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {}
+}
