@@ -11,6 +11,5 @@ export * from "./api/v1.routes";
 export * from "./api/public.routes";
 export * from "./paises.routes";
 export * from "./categorias.routes";
-export * from "./configuracion.routes";
 export * from "./reportes.routes";
 export * from "./dashboard.routes";

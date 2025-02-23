@@ -1,7 +1,7 @@
 {
   "name": "shared",
-  "description": "Inflalo Shared Library",
-  "version": "2024.4.27",
+  "description": "Nikola Shared Library",
+  "version": "2025.2.24",
   "private": true,
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

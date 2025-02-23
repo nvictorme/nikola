@@ -1,6 +1,6 @@
-# Backend - Inflalo Inc.
+# Backend - Nikola
 
-Inflalo Business Backend System
+Nikola Business Backend System
 
 ## Swagger UI
 

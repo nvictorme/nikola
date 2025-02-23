@@ -25,7 +25,6 @@ import {
   PublicRouter,
   PaisesRouter,
   CategoriasRouter,
-  ConfigRouter,
   ReportesRouter,
   DashboardRouter,
 } from "./routes";
@@ -82,10 +81,6 @@ AppDataSource.initialize()
     app.use("/api/public", PublicRouter, limiter);
     // Third-party API Routes
     app.use("/api/v1", V1ApiRouter, limiter);
-    // Configuration Routes
-    app.use("/config", ConfigRouter, limiter);
-    // Certificados Routes
-    app.use("/certificados", CertificadosRouter, limiter);
 
     // Put all other routes behind JWT Auth
     app.use(Auth.authenticate("jwt", { session: false }), withUserContext);

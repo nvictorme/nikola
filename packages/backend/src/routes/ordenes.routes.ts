@@ -24,7 +24,6 @@ import slugify from "slugify";
 import { Precio } from "../orm/entity/precio";
 import { Pais } from "../orm/entity/pais";
 import { Dimension } from "../orm/entity/dimension";
-import { QuickBooksAPI } from "../providers/quickbooks.api";
 import { Transaccion } from "../orm/entity/transaccion";
 import { processTransaction } from "./transacciones.routes";
 import { Stock } from "../orm/entity/stock";
@@ -899,26 +898,11 @@ OrdenesRouter.put(
           updatedOrden.tipo === TipoOrden.credito) &&
         updatedOrden.estatus === EstatusOrden.confirmado
       ) {
-        const qbApi = new QuickBooksAPI();
-        // Create invoice in QB
-        const { Id: qbInvoiceId, DocNumber: qbInvoiceDocNumber } =
-          await qbApi.createInvoiceFromOrden(updatedOrden);
-        console.log(
-          `Created QB Invoice #${qbInvoiceDocNumber} with ID ${qbInvoiceId}`
-        );
-        // Update order with invoice ID and doc number
-        await AppDataSource.getRepository(Orden).update(ordenId, {
-          qbInvoiceId,
-          qbInvoiceDocNumber,
-        });
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
         transaccion.usuario = updatedOrden.vendedor;
-        transaccion.descripcion = `Factura #${qbInvoiceDocNumber}\nOrden #${updatedOrden.serial}`;
         transaccion.monto = updatedOrden.total;
         transaccion.tipo = TipoTransaccion.factura;
-        transaccion.qbInvoiceId = qbInvoiceId;
-        transaccion.qbInvoiceDocNumber = qbInvoiceDocNumber;
         await AppDataSource.manager.transaction(async (manager) => {
           await processTransaction(manager, transaccion);
         });

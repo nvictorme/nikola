@@ -1,8 +1,8 @@
 {
   "name": "panel",
-  "description": "Panel de Administración de Inflalo",
+  "description": "Panel de Administración de Nikola",
   "private": true,
-  "version": "2024.8.31",
+  "version": "2025.2.24",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,3 +1,9 @@
-# Matrix - Inflalo Inc.
+# Nikola Monorepo
 
-Inflalo Matrix Monorepo
+Sistema de gestión de inventario, compras y ventas para Nikola
+
+## Backend
+
+## Panel de control
+
+## Website

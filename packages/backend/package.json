@@ -1,7 +1,7 @@
 {
   "name": "backend",
-  "description": "Backend de Inflalo",
-  "version": "2024.8.31",
+  "description": "Backend de Nikola",
+  "version": "2025.2.24",
   "private": true,
   "main": "dist/server.js",
   "scripts": {
