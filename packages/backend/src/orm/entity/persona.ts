@@ -1,12 +1,10 @@
-import { Entity, Column, OneToMany, JoinTable, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, OneToMany } from "typeorm";
 import { Base } from "./base";
-import { Pais } from "./pais";
 import { Direccion } from "./direccion";
 import { IPersona } from "shared/interfaces";
 
 export interface ORMPersona extends IPersona {
   direcciones: Direccion[];
-  pais: Pais;
 }
 
 @Entity("personas")
@@ -66,10 +64,6 @@ export class Persona extends Base implements ORMPersona {
     length: 20,
   })
   telefono: string;
-
-  @ManyToOne(() => Pais, (pais) => pais)
-  @JoinColumn()
-  pais: Pais;
 
   @OneToMany(() => Direccion, (direccion) => direccion.persona)
   direcciones: Direccion[];

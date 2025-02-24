@@ -12,13 +12,11 @@ V1ApiRouter.get(
   ApiAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const pais = req.headers["x-pais"];
       const productos = await AppDataSource.createQueryBuilder(
         Producto,
         "producto"
       )
-        .where(":pais = ANY(producto.paises)", { pais })
-        .andWhere("activo = :activo", { activo: true })
+        .where("activo = :activo", { activo: true })
         .getMany();
       res.status(200).json({ productos });
     } catch (error: any) {
@@ -33,13 +31,11 @@ V1ApiRouter.get(
   ApiAuthMiddleware,
   async (req: Request, res: Response) => {
     try {
-      const pais = req.headers["x-pais"];
       const sucursales = await AppDataSource.createQueryBuilder(
         Sucursal,
         "sucursal"
       )
-        .where(":pais = ANY(sucursal.pais)", { pais })
-        .andWhere("activo = :activo", { activo: true })
+        .where("activo = :activo", { activo: true })
         .getMany();
       res.status(200).json({ sucursales });
     } catch (error: any) {

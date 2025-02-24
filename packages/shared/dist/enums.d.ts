@@ -1,19 +1,3 @@
-export declare enum Paises {
-    bolivia = "Bolivia",
-    chile = "Chile",
-    china = "China",
-    costa_rica = "Costa Rica",
-    ecuador = "Ecuador",
-    el_salvador = "El Salvador",
-    españa = "Espa\u00F1a",
-    estados_unidos = "Estados Unidos",
-    guatemala = "Guatemala",
-    honduras = "Honduras",
-    panama = "Panam\u00E1",
-    peru = "Per\u00FA",
-    republica_dominicana = "Rep\u00FAblica Dominicana",
-    venezuela = "Venezuela"
-}
 export declare enum RouteRuleCheck {
     isAdmin = "isAdmin",
     canCreateOrders = "canCreateOrders",
@@ -25,92 +9,6 @@ export declare enum NivelResultado {
     info = "info",
     success = "success",
     warning = "warning"
-}
-export declare enum Categorias {
-    diversion = "Diversi\u00F3n",
-    playsoft = "PlaySoft",
-    inflaplay = "InflaPlay",
-    maquinas = "M\u00E1quinas",
-    publicitarios = "Publicitarios",
-    trampolines = "Trampolines",
-    motores = "Motores",
-    consumibles = "Consumibles",
-    materia_prima = "Materia Prima",
-    personalizado = "Personalizado"
-}
-export declare enum CategoriasTraducidas {
-    diversion = "Fun",
-    playsoft = "PlaySoft",
-    inflaplay = "InflaPlay",
-    maquinas = "Machines",
-    publicitarios = "Advertising",
-    trampolines = "Trampolines",
-    motores = "Blowers",
-    consumibles = "Consumables",
-    materia_prima = "Raw Material",
-    personalizado = "Custom"
-}
-export declare enum Subcategorias {
-    brinca_brinca = "Brinca Brinca",
-    brinca_brinca_con_deslizador = "Brinca Brinca con Deslizador",
-    deslizador = "Deslizador",
-    deportivos = "Deportivos",
-    obstaculos = "Obst\u00E1culos",
-    acuatico = "Acu\u00E1tico",
-    accesorios = "Accesorios",
-    igloo = "Igl\u00FA",
-    toldo_plegable = "Toldo Plegable",
-    bandera_de_viento = "Bandera de Viento",
-    arco = "Arco",
-    tunel = "T\u00FAnel",
-    totem = "T\u00F3tem",
-    pantalla = "Pantalla",
-    sky_dancer = "Sky Dancer",
-    replica = "R\u00E9plica",
-    disfraz = "Disfraz",
-    pelota = "Pelota",
-    aplaudidor = "Aplaudidor",
-    zeppelin = "Zeppelin",
-    popcorn = "Popcorn",
-    cotton_candy = "Cotton Candy",
-    waffle = "Waffle",
-    nacho = "Nacho",
-    hot_dog = "Hot Dog",
-    gourmet_popcorn = "Gourmet Popcorn",
-    sno_kones = "Sno kones",
-    frozen = "Frozen",
-    fryers = "Fryers"
-}
-export declare enum SubcategoriasTraducidas {
-    brinca_brinca = "Bounce House",
-    brinca_brinca_con_deslizador = "Bounce House with Slide",
-    deslizador = "Slide",
-    deportivos = "Sports",
-    obstaculos = "Obstacles",
-    acuatico = "Aquatic",
-    accesorios = "Accessories",
-    igloo = "Igloo",
-    toldo_plegable = "Folding Tent",
-    bandera_de_viento = "Wind Flag",
-    arco = "Arch",
-    tunel = "Tunnel",
-    totem = "Totem",
-    pantalla = "Screen",
-    sky_dancer = "Air Dancer",
-    replica = "Replica",
-    disfraz = "Costume",
-    pelota = "Ball",
-    aplaudidor = "Thundersticks",
-    zeppelin = "Zeppelin",
-    popcorn = "Popcorn",
-    cotton_candy = "Cotton Candy",
-    waffle = "Waffle",
-    nacho = "Nacho",
-    hot_dog = "Hot Dog",
-    gourmet_popcorn = "Gourmet Popcorn",
-    sno_kones = "Sno Kones",
-    frozen = "Frozen",
-    fryers = "Fryers"
 }
 export declare enum RolesBase {
     gerente = "Gerente",
@@ -138,7 +36,6 @@ export declare enum EntidadesProtegidas {
     sucursal = "Sucursal",
     almacen = "Almacen",
     transaccion = "Transaccion",
-    pais = "Pais",
     categoria = "Categoria",
     subcategoria = "Subcategoria"
 }
@@ -228,21 +125,17 @@ export declare enum EstatusPago {
     fallo = "Fallido"
 }
 export declare enum MetodoPago {
-    tarjeta = "Tarjeta de Cr\u00E9dito o D\u00E9bito",
+    efectivo = "Efectivo",
+    tarjeta = "Tarjeta",
     cheque = "Cheque",
     deposito = "Dep\u00F3sito",
     transferencia = "Transferencia",
+    pago_movil = "Pago M\u00F3vil",
     zelle = "Zelle",
     paypal = "PayPal",
     stripe = "Stripe",
     remesa = "Remesa",
     cripto = "Criptomoneda"
-}
-export declare enum PeriodosGarantia {
-    sin_garantia = "Sin Garant\u00EDa",
-    seis_meses = "Seis Meses",
-    un_año = "Un A\u00F1o",
-    dos_años = "Dos A\u00F1os"
 }
 export declare enum TipoDocumento {
     cotizacion = "Cotizaci\u00F3n",

@@ -2,11 +2,9 @@ import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
 import { Base } from "./base";
 import { IDireccion } from "shared/interfaces";
 import { Persona } from "./persona";
-import { Pais } from "./pais";
 
 export interface ORMAddress extends IDireccion {
   persona: Persona;
-  pais: Pais;
 }
 
 @Entity("direcciones")
@@ -21,10 +19,6 @@ export class Direccion extends Base implements ORMAddress {
     nullable: true,
   })
   destinatario: string;
-
-  @ManyToOne(() => Pais, (pais) => pais)
-  @JoinColumn()
-  pais: Pais;
 
   @Column({
     nullable: true,

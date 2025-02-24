@@ -19,22 +19,19 @@ SucursalesRouter.get(
   }),
   async (req: Request, res: Response) => {
     try {
-      const { page = "1", limit = "10", pais } = req.query;
+      const { page = "1", limit = "10" } = req.query;
       const user = req.user as Usuario;
       // Create where clause conditionally
       const whereClause: any = { activo: true };
-      if (pais) {
-        whereClause.pais = { id: pais };
-      }
 
       const [sucursales, total] = await AppDataSource.getRepository(
         Sucursal
       ).findAndCount({
         where: whereClause,
-        relations: ["pais", "direccion", "almacenes"],
+        relations: ["direccion", "almacenes"],
         take: parseInt(limit as string),
         skip: (parseInt(page as string) - 1) * parseInt(limit as string),
-        order: { pais: { nombre: "ASC" }, nombre: "ASC" },
+        order: { nombre: "ASC" },
         cache: {
           id: `sucursales-${user.id}`, // Cache key of branches
           milliseconds: 7 * 24 * 60 * 60 * 1000, // Cache for 7 days
@@ -46,32 +43,6 @@ SucursalesRouter.get(
         page: parseInt(page as string),
         pageCount: Math.ceil(total / (parseInt(limit as string) || 1)),
       });
-    } catch (e: any) {
-      console.error(e);
-      return res.status(500).json({ error: e.message });
-    }
-  }
-);
-
-// listar sucursales por pais
-SucursalesRouter.get(
-  "/pais/:pais",
-  verificarPrivilegio({
-    entidad: Sucursal.name,
-    accion: Acciones.leer,
-    valor: true,
-  }),
-  async (req: Request, res: Response) => {
-    try {
-      const { pais } = req.params;
-      const sucursales = await AppDataSource.getRepository(Sucursal).find({
-        where: {
-          pais: { id: pais as string },
-          activo: true,
-        },
-        relations: ["pais", "direccion", "almacenes"],
-      });
-      res.status(200).json({ sucursales });
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
@@ -91,8 +62,8 @@ SucursalesRouter.get(
     try {
       const sucursales = await AppDataSource.getRepository(Sucursal).find({
         where: { activo: true },
-        relations: ["pais", "direccion", "almacenes"],
-        order: { pais: { nombre: "ASC" }, nombre: "ASC" },
+        relations: ["direccion", "almacenes"],
+        order: { nombre: "ASC" },
       });
       res.status(200).json({ sucursales });
     } catch (e: any) {
@@ -136,7 +107,6 @@ SucursalesRouter.post(
           // crear una nueva sucursal
           const sucursal = await transactionalEntityManager.save(Sucursal, {
             nombre: data.nombre,
-            pais: data.pais,
             codigoMoneda: data.codigoMoneda || "USD",
             simboloMoneda: data.simboloMoneda || "$",
             direccion: direccion || undefined,
@@ -216,7 +186,6 @@ SucursalesRouter.put(
 
           // Update the sucursal
           existingSucursal.nombre = data.nombre;
-          existingSucursal.pais = data.pais;
           existingSucursal.codigoMoneda = data.codigoMoneda;
           existingSucursal.simboloMoneda = data.simboloMoneda;
           existingSucursal.direccion = data.direccion;
@@ -231,7 +200,7 @@ SucursalesRouter.put(
               where: {
                 id: req.params.id,
               },
-              relations: ["pais", "direccion", "almacenes"],
+              relations: ["direccion", "almacenes"],
             }
           );
 

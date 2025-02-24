@@ -5,7 +5,7 @@ import { Acciones } from "shared/enums";
 import { Persona } from "../orm/entity/persona";
 import { IPersona } from "shared/interfaces";
 import { Usuario } from "../orm/entity/usuario";
-import { Like, ILike } from "typeorm";
+import { ILike } from "typeorm";
 
 const PersonasRouter: Router = Router();
 
@@ -20,7 +20,6 @@ PersonasRouter.get(
   async (req: Request, res: Response) => {
     try {
       const user = req.user as Usuario;
-      const pais = user.pais.id || (req.query.pais as string);
       const {
         page = "1",
         limit = "10",
@@ -31,9 +30,7 @@ PersonasRouter.get(
         nombre,
       } = req.query;
 
-      const where: any = {
-        ...(!user.super && { pais: { id: pais } }),
-      };
+      const where: any = {};
 
       if (term) {
         where[0] = { nif: ILike(`%${term}%`) };
@@ -59,7 +56,6 @@ PersonasRouter.get(
           : nombre
           ? [where[0], where[1]]
           : where,
-        relations: ["pais"],
         take: parseInt(limit as string),
         skip: (parseInt(page as string) - 1) * parseInt(limit as string),
         order: { fechaCreado: "DESC" },
@@ -91,7 +87,6 @@ PersonasRouter.get(
       const { id } = req.params;
       const persona = await AppDataSource.getRepository(Persona).findOne({
         where: { id },
-        relations: ["pais"],
       });
       if (!persona)
         return res.status(404).json({ message: `Persona no existe.` });
@@ -119,7 +114,6 @@ PersonasRouter.post(
       newPersona.apellido = persona.apellido;
       newPersona.email = persona.email;
       newPersona.nif = persona.nif;
-      newPersona.pais = persona.pais;
       persona.empresa && (newPersona.empresa = persona.empresa);
       persona.telefono && (newPersona.telefono = persona.telefono);
       const savedPersona = await AppDataSource.getRepository(Persona).save(

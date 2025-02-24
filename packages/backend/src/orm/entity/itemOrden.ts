@@ -13,7 +13,6 @@ import { Orden } from "./orden";
 import { Almacen } from "./almacen";
 import { Archivo } from "./archivo";
 import { decimalTransformer } from "shared/constants";
-import { PeriodosGarantia, QbTipoInventario } from "shared/enums";
 
 export interface ORMItemOrden extends IItemOrden {
   producto: Producto;
@@ -54,22 +53,11 @@ export class ItemOrden extends Base implements ORMItemOrden {
   })
   total: number;
 
-  @Column({
-    type: "enum",
-    enum: QbTipoInventario,
-    default: QbTipoInventario.inventory,
-  })
-  qbTipoInventario: QbTipoInventario;
-
   @Column({ type: "text", nullable: true })
   notas: string;
 
-  @Column({
-    type: "enum",
-    enum: PeriodosGarantia,
-    default: PeriodosGarantia.sin_garantia,
-  })
-  garantia: PeriodosGarantia;
+  @Column({ nullable: false, default: "Sin Garantía" })
+  garantia: string;
 
   @ManyToMany(() => Archivo, {
     cascade: true,

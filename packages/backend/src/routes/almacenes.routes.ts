@@ -3,7 +3,6 @@ import { AppDataSource } from "../orm/data-source";
 import { Almacen } from "../orm/entity/almacen";
 import { verificarPrivilegio } from "../helpers/privilegios.helpers";
 import { Acciones } from "shared/enums";
-import { Paises } from "shared/enums";
 import { Usuario } from "../orm/entity/usuario";
 import { calcularStockDisponible, isSuperAdmin, IStockProducto } from "shared";
 import { Sucursal } from "../orm/entity/sucursal";
@@ -21,22 +20,16 @@ AlmacenesRouter.get(
   }),
   async (req: Request, res: Response) => {
     try {
-      const { page = "1", limit = "10", pais } = req.query;
+      const { page = "1", limit = "10" } = req.query;
       const pageNumber = parseInt(page as string);
       const limitNumber = parseInt(limit as string);
 
       const queryBuilder = AppDataSource.getRepository(Almacen)
         .createQueryBuilder("almacen")
-        .leftJoinAndSelect("almacen.pais", "pais")
         .leftJoinAndSelect("almacen.direccion", "direccion")
-        .orderBy("pais.nombre", "ASC")
-        .addOrderBy("almacen.nombre", "ASC")
+        .orderBy("almacen.nombre", "ASC")
         .take(limitNumber)
         .skip((pageNumber - 1) * limitNumber);
-
-      if (pais) {
-        queryBuilder.where("pais.id = :pais", { pais });
-      }
 
       const [almacenes, total] = await queryBuilder.getManyAndCount();
 
@@ -79,7 +72,6 @@ AlmacenesRouter.post(
           // crear un nuevo almacen
           const almacen = await transactionalEntityManager.save(Almacen, {
             nombre: data.nombre,
-            pais: data.pais, // This should be { id: paisId }
             direccion: direccion || undefined,
           });
 
@@ -130,7 +122,6 @@ AlmacenesRouter.put(
           // Preparar los datos para actualizar
           const updateData = {
             nombre: data.nombre,
-            pais: data.pais,
             direccion: data.direccion,
           };
 
@@ -145,7 +136,7 @@ AlmacenesRouter.put(
             Almacen,
             {
               where: { id: req.params.id },
-              relations: ["pais", "direccion"],
+              relations: ["direccion"],
             }
           );
 
@@ -184,7 +175,6 @@ AlmacenesRouter.get(
       // Base query for regular almacenes
       const queryBuilder = AppDataSource.getRepository(Almacen)
         .createQueryBuilder("almacen")
-        .leftJoinAndSelect("almacen.pais", "pais")
         .innerJoin(
           "producto_stock",
           "stock",
@@ -197,9 +187,6 @@ AlmacenesRouter.get(
           "stock.transito",
           "stock.rma",
         ])
-        .where("almacen.nombre NOT IN (:...specialNames)", {
-          specialNames: [Paises.panama, Paises.china],
-        })
         .andWhere("(stock.actual + stock.transito - stock.reservado) > 0");
 
       // If not admin, filter by user's almacenes
@@ -218,7 +205,6 @@ AlmacenesRouter.get(
       const rawResults = await queryBuilder
         .select([
           "almacen",
-          "pais",
           "stock.actual as actual",
           "stock.reservado as reservado",
           "stock.transito as transito",
@@ -236,74 +222,6 @@ AlmacenesRouter.get(
           rma: rawResults[index].rma,
         },
       }));
-
-      // Function to get special almacen (Panama or China)
-      const getSpecialAlmacen = async (nombre: string) => {
-        // First, find the almacen ID
-        const almacenBase = await AppDataSource.getRepository(Almacen)
-          .createQueryBuilder("almacen")
-          .leftJoinAndSelect("almacen.pais", "pais")
-          .where("almacen.nombre = :nombre", { nombre })
-          .getOne();
-
-        if (!almacenBase) {
-          console.log(`Special almacen ${nombre} not found`);
-          return null;
-        }
-
-        // Then get the stock information
-        const stockInfo = await AppDataSource.createQueryBuilder()
-          .select([
-            "stock.actual as actual",
-            "stock.reservado as reservado",
-            "stock.transito as transito",
-            "stock.rma as rma",
-          ])
-          .from("producto_stock", "stock")
-          .where("stock.almacenId = :almacenId", { almacenId: almacenBase.id })
-          .andWhere("stock.productoId = :productoId", { productoId })
-          .getRawOne();
-
-        console.log(`Stock info for ${nombre}:`, stockInfo);
-
-        if (!stockInfo) {
-          console.log(`No stock found for ${nombre}`);
-          return null;
-        }
-
-        const stock = {
-          actual: stockInfo.actual || 0,
-          reservado: stockInfo.reservado || 0,
-          transito: stockInfo.transito || 0,
-          rma: stockInfo.rma || 0,
-        };
-
-        console.log(`Processed stock for ${nombre}:`, stock);
-        console.log(
-          `Stock disponible calculation:`,
-          calcularStockDisponible(stock as IStockProducto)
-        );
-
-        // Return the almacen if there's any stock (including transit)
-        if (
-          stock.actual > 0 ||
-          stock.transito > 0 ||
-          calcularStockDisponible(stock as IStockProducto) > 0
-        ) {
-          return { ...almacenBase, stock };
-        }
-
-        return null;
-      };
-
-      // Add special almacenes if they have disponible stock
-      const [panamaSummary, chinaSummary] = await Promise.all([
-        getSpecialAlmacen(Paises.panama),
-        getSpecialAlmacen(Paises.china),
-      ]);
-
-      if (panamaSummary) result.push(panamaSummary);
-      if (chinaSummary) result.push(chinaSummary);
 
       // Cache the result in Redis for 60 seconds
       await redis.set(cacheKey, JSON.stringify(result), "EX", 60);
@@ -349,7 +267,6 @@ AlmacenesRouter.get(
 
       const queryBuilder = AppDataSource.getRepository(Almacen)
         .createQueryBuilder("almacen")
-        .leftJoinAndSelect("almacen.pais", "pais")
         .innerJoin(
           "producto_stock",
           "stock",
@@ -369,7 +286,6 @@ AlmacenesRouter.get(
       const rawResults = await queryBuilder
         .select([
           "almacen",
-          "pais",
           "stock.actual as actual",
           "stock.reservado as reservado",
           "stock.transito as transito",
@@ -387,74 +303,6 @@ AlmacenesRouter.get(
           rma: rawResults[index].rma,
         },
       }));
-
-      // Function to get special almacen (Panama or China)
-      const getSpecialAlmacen = async (nombre: string) => {
-        // First, find the almacen ID
-        const almacenBase = await AppDataSource.getRepository(Almacen)
-          .createQueryBuilder("almacen")
-          .leftJoinAndSelect("almacen.pais", "pais")
-          .where("almacen.nombre = :nombre", { nombre })
-          .getOne();
-
-        if (!almacenBase) {
-          console.log(`Special almacen ${nombre} not found`);
-          return null;
-        }
-
-        // Then get the stock information
-        const stockInfo = await AppDataSource.createQueryBuilder()
-          .select([
-            "stock.actual as actual",
-            "stock.reservado as reservado",
-            "stock.transito as transito",
-            "stock.rma as rma",
-          ])
-          .from("producto_stock", "stock")
-          .where("stock.almacenId = :almacenId", { almacenId: almacenBase.id })
-          .andWhere("stock.productoId = :productoId", { productoId })
-          .getRawOne();
-
-        console.log(`Stock info for ${nombre}:`, stockInfo);
-
-        if (!stockInfo) {
-          console.log(`No stock found for ${nombre}`);
-          return null;
-        }
-
-        const stock = {
-          actual: stockInfo.actual || 0,
-          reservado: stockInfo.reservado || 0,
-          transito: stockInfo.transito || 0,
-          rma: stockInfo.rma || 0,
-        };
-
-        console.log(`Processed stock for ${nombre}:`, stock);
-        console.log(
-          `Stock disponible calculation:`,
-          calcularStockDisponible(stock as IStockProducto)
-        );
-
-        // Return the almacen if there's any stock (including transit)
-        if (
-          stock.actual > 0 ||
-          stock.transito > 0 ||
-          calcularStockDisponible(stock as IStockProducto) > 0
-        ) {
-          return { ...almacenBase, stock };
-        }
-
-        return null;
-      };
-
-      // Add special almacenes if they have disponible stock
-      const [panamaSummary, chinaSummary] = await Promise.all([
-        getSpecialAlmacen(Paises.panama),
-        getSpecialAlmacen(Paises.china),
-      ]);
-
-      if (panamaSummary) result.push(panamaSummary);
-      if (chinaSummary) result.push(chinaSummary);
 
       // Cache the result in Redis for 60 seconds
       await redis.set(cacheKey, JSON.stringify(result), "EX", 60);

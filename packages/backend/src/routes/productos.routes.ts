@@ -6,11 +6,9 @@ import { Acciones } from "shared/enums";
 import slugify from "slugify";
 import { Usuario } from "../orm/entity/usuario";
 import { Archivo } from "../orm/entity/archivo";
-import { Precio } from "../orm/entity/precio";
 import { Stock } from "../orm/entity/stock";
 import { Dimension } from "../orm/entity/dimension";
-import { IArchivo, IPais, IPrecioProducto } from "shared/interfaces";
-import { ProductoMotor } from "../orm/entity/productoMotor";
+import { IArchivo } from "shared/interfaces";
 import { isSuperAdmin } from "shared/helpers";
 
 const ProductosRouter: Router = Router();
@@ -28,16 +26,7 @@ ProductosRouter.get(
       const user = req.user as Usuario;
       const isAdmin = isSuperAdmin(user);
 
-      const paisId = user.pais.id;
-
-      const {
-        page = "1",
-        limit = "10",
-        pais,
-        term,
-        categoria,
-        enOferta,
-      } = req.query;
+      const { page = "1", limit = "10", term, categoria, enOferta } = req.query;
 
       const queryBuilder = AppDataSource.getRepository(Producto)
         .createQueryBuilder("producto")
@@ -59,21 +48,6 @@ ProductosRouter.get(
         .addSelect(["categoria.id", "categoria.nombre"])
         .leftJoin("producto.subcategoria", "subcategoria")
         .addSelect(["subcategoria.id", "subcategoria.nombre"])
-        .leftJoin("producto.precios", "precios")
-        .leftJoin("precios.pais", "precioPais")
-        .addSelect([
-          "precios.id",
-          "precios.precioLista",
-          "precios.precioOferta",
-          "precios.precioExw",
-          "precios.enOferta",
-          "precios.inicioOferta",
-          "precios.finOferta",
-          "precioPais.id",
-          "precioPais.nombre",
-        ])
-        .leftJoin("producto.paises", "paises")
-        .addSelect(["paises.id"])
         .where("producto.activo = :activo", { activo: true });
 
       // Add enOferta condition
@@ -99,20 +73,6 @@ ProductosRouter.get(
           "(LOWER(producto.nombre) LIKE LOWER(:term) OR LOWER(producto.modelo) LIKE LOWER(:term) OR LOWER(producto.sku) LIKE LOWER(:term))",
           { term: `%${term}%` }
         );
-      }
-
-      // Add país condition
-      if (isAdmin) {
-        if (pais) {
-          queryBuilder.andWhere("paises.id = :paisId", {
-            paisId: pais as string,
-          });
-        }
-      } else {
-        // Modified condition for non-super users
-        queryBuilder
-          .andWhere("paises.id = :paisId", { paisId })
-          .andWhere("precios.pais.id = :paisId", { paisId });
       }
 
       // Add categoria condition
@@ -157,7 +117,6 @@ ProductosRouter.get(
 
       const user = req.user as Usuario;
       const isAdmin = isSuperAdmin(user);
-      const paisId = user.pais.id;
 
       // Query user's almacenes
       const userAlmacenes = await AppDataSource.getRepository(Usuario)
@@ -182,17 +141,13 @@ ProductosRouter.get(
           "producto.sku",
           "producto.slug",
           "producto.activo",
-          "producto.requiereMotor",
           "producto.descripcion",
           "producto.garantia",
           ...(isAdmin ? ["producto.costo"] : []),
         ])
         .leftJoinAndSelect("producto.dimensiones", "dimensiones")
         .leftJoinAndSelect("producto.embalaje", "embalaje")
-        .leftJoinAndSelect("producto.motores", "motores")
-        .leftJoinAndSelect("motores.motor", "motor")
         .leftJoinAndSelect("producto.portada", "portada")
-        .leftJoinAndSelect("producto.paises", "paises")
         .leftJoinAndSelect("producto.categoria", "categoria")
         .leftJoinAndSelect("producto.subcategoria", "subcategoria")
         .leftJoinAndSelect("producto.galeria", "galeria")
@@ -201,33 +156,16 @@ ProductosRouter.get(
       const producto = await productoQuery.getOne();
       if (!producto) throw new Error("Producto no existe");
 
-      // Get precios for user's país
-      const preciosQuery = AppDataSource.getRepository(Precio)
-        .createQueryBuilder("precio")
-        .leftJoinAndSelect("precio.pais", "precioPais")
-        .where("precio.producto = :productoId", { productoId: producto.id });
-
-      if (!isAdmin) {
-        preciosQuery.andWhere("precio.pais = :paisId", { paisId });
-      }
-
-      const precios = await preciosQuery.getMany();
-
       // Get stock for user's almacenes
       const stockQuery = AppDataSource.getRepository(Stock)
         .createQueryBuilder("stock")
         .leftJoinAndSelect("stock.almacen", "almacen")
-        .leftJoin("almacen.pais", "almacenPais")
         .where("stock.producto = :productoId", { productoId: producto.id });
 
-      if (!isAdmin) {
-        stockQuery.andWhere("almacenPais.id = :paisId", { paisId });
-
-        if (almacenIds.length > 0) {
-          stockQuery.andWhere("stock.almacen IN (:...almacenIds)", {
-            almacenIds,
-          });
-        }
+      if (!isAdmin && almacenIds.length > 0) {
+        stockQuery.andWhere("stock.almacen IN (:...almacenIds)", {
+          almacenIds,
+        });
       }
 
       const stock = await stockQuery.getMany();
@@ -235,7 +173,6 @@ ProductosRouter.get(
       // Combine the results
       const result = {
         ...producto,
-        precios,
         stock,
       };
 
@@ -261,7 +198,6 @@ ProductosRouter.post(
   }),
   async (req: Request, res: Response) => {
     try {
-      const user = req.user as Usuario;
       const data = req.body.producto as Producto;
       const _producto = new Producto();
       _producto.nombre = data.nombre;
@@ -280,33 +216,10 @@ ProductosRouter.post(
         trim: true,
       });
 
-      _producto.paises = data.paises;
-
-      _producto.requiereMotor = data.requiereMotor;
-
       // First save the producto to get its ID
       const savedProducto = await AppDataSource.getRepository(Producto).save(
         _producto
       );
-
-      // Then create motor relations if needed
-      if (data.requiereMotor && data.motores?.length) {
-        const motorRepo = AppDataSource.getRepository(ProductoMotor);
-        const motorRelations = await Promise.all(
-          data.motores.map(async (motor) => {
-            const productoMotor = new ProductoMotor();
-            productoMotor.producto = savedProducto;
-            productoMotor.motor = { id: motor.motor.id } as Producto;
-            productoMotor.cantidad = motor.cantidad;
-            return motorRepo.save(productoMotor);
-          })
-        );
-
-        // Update the savedProducto with the new relations
-        savedProducto.motores = motorRelations;
-        // Save again to ensure everything is up to date
-        await AppDataSource.getRepository(Producto).save(savedProducto);
-      }
 
       res.status(200).json(savedProducto);
     } catch (e: any) {
@@ -339,10 +252,7 @@ ProductosRouter.put(
         fechaEliminado,
         portada,
         galeria,
-        precios,
         stock,
-        motores,
-        paises,
         ...updateData
       } = data;
 
@@ -366,7 +276,7 @@ ProductosRouter.put(
 
       const target = await AppDataSource.getRepository(Producto).findOne({
         where: { id: productoId },
-        relations: ["paises", "dimensiones", "embalaje", "motores"],
+        relations: ["dimensiones", "embalaje"],
       });
       if (!target) throw new Error("Producto no existe");
 
@@ -407,39 +317,6 @@ ProductosRouter.put(
           );
           target.embalaje = newEmbalaje;
         }
-      }
-
-      // Update many-to-many relation (paises)
-      if (data.paises) {
-        target.paises = data.paises.map((pais) => ({ id: pais.id })) as IPais[];
-      }
-
-      // Update motores relation
-      if (data.requiereMotor && data.motores) {
-        // Delete existing motor relations
-        await AppDataSource.getRepository(ProductoMotor)
-          .createQueryBuilder()
-          .delete()
-          .where("productoId = :productoId", { productoId })
-          .execute();
-
-        // Create new motor relations
-        const motorRepo = AppDataSource.getRepository(ProductoMotor);
-        const newMotorRelations = await Promise.all(
-          data.motores.map(async (motor) => {
-            const productoMotor = new ProductoMotor();
-            productoMotor.producto = { id: productoId } as Producto;
-            productoMotor.motor = { id: motor.motor.id } as Producto;
-            productoMotor.cantidad = motor.cantidad;
-            return motorRepo.save(productoMotor);
-          })
-        );
-
-        // Update target's motores with the new relations
-        target.motores = newMotorRelations;
-      } else {
-        // If requiereMotor is false, clear the motores
-        target.motores = [];
       }
 
       // Save the target with updated relations
@@ -551,118 +428,6 @@ ProductosRouter.delete(
   }
 );
 
-// PUT - Actualizar Precios
-ProductosRouter.put(
-  "/:productoId/precios/:paisId",
-  verificarPrivilegio({
-    entidad: Producto.name,
-    accion: Acciones.actualizar,
-    valor: true,
-  }),
-  async (req: Request, res: Response) => {
-    try {
-      const { productoId, paisId } = req.params;
-      const {
-        precioLista,
-        precioExw,
-        precioOferta,
-        enOferta,
-        inicioOferta,
-        finOferta,
-      } = req.body.precios as IPrecioProducto;
-
-      if (!productoId || !paisId) throw new Error("Parametros inválidos");
-
-      // First check if the producto exists
-      const producto = await AppDataSource.getRepository(Producto).findOne({
-        where: { id: productoId },
-        relations: ["paises"],
-      });
-
-      if (!producto) {
-        throw new Error("Producto no encontrado");
-      }
-
-      const precio = await AppDataSource.getRepository(Precio)
-        .createQueryBuilder("precio")
-        .where("precio.producto = :productoId", { productoId })
-        .andWhere("precio.pais = :paisId", { paisId })
-        .getOne();
-
-      if (precio) {
-        // Log the update operation
-        console.log("Updating precio:", precio.id, "with data:", {
-          precioLista,
-          precioExw,
-          precioOferta,
-          enOferta,
-          inicioOferta,
-          finOferta,
-        });
-
-        await AppDataSource.getRepository(Precio)
-          .createQueryBuilder()
-          .update(Precio)
-          .set({
-            precioLista,
-            precioExw,
-            precioOferta,
-            enOferta,
-            inicioOferta,
-            finOferta,
-          })
-          .where("id = :id", { id: precio.id })
-          .execute();
-
-        // Verify the update
-        const updatedPrecio = await AppDataSource.getRepository(Precio).findOne(
-          { where: { id: precio.id } }
-        );
-
-        console.log("Updated precio:", updatedPrecio);
-      } else {
-        // Create new price
-        const newPrecio = new Precio();
-        newPrecio.precioLista = precioLista;
-        newPrecio.precioExw = precioExw;
-        newPrecio.precioOferta = precioOferta;
-        newPrecio.enOferta = enOferta;
-        newPrecio.inicioOferta = inicioOferta;
-        newPrecio.finOferta = finOferta;
-        newPrecio.producto = { id: productoId } as Producto;
-        newPrecio.pais = { id: paisId } as any;
-
-        console.log("Creating new precio with data:", newPrecio);
-        await AppDataSource.getRepository(Precio).save(newPrecio);
-        console.log("Created new precio");
-
-        // Update product's paises relation if needed
-        const paisExists = producto.paises?.some((p) => p.id === paisId);
-        if (!paisExists && producto.paises) {
-          await AppDataSource.getRepository(Producto).update(productoId, {
-            paises: [...producto.paises, { id: paisId }],
-          });
-        }
-      }
-
-      // Return the updated or new precio in the response
-      const updatedPrecio = await AppDataSource.getRepository(Precio)
-        .createQueryBuilder("precio")
-        .where("precio.producto = :productoId", { productoId })
-        .andWhere("precio.pais = :paisId", { paisId })
-        .getOne();
-
-      res.status(200).json({
-        message: "Precios actualizados",
-        precio: updatedPrecio,
-      });
-    } catch (e: any) {
-      console.error(e);
-      return res.status(500).json({ error: e.message });
-    }
-  }
-);
-
 // PUT - Actualizar Stock
 ProductosRouter.put(
   "/:productoId/stock/:almacenId",
@@ -745,6 +510,7 @@ ProductosRouter.put(
     try {
       const { productoId } = req.params;
       const data = req.body.archivo as IArchivo;
+      if (!productoId) throw new Error("Parametros inválidos");
 
       const archivo = new Archivo();
       archivo.nombre = data.nombre;
@@ -789,99 +555,6 @@ ProductosRouter.delete(
       res.status(200).json({ message: "Portada eliminada" });
     } catch (e: any) {
       console.error(e);
-      return res.status(500).json({ error: e.message });
-    }
-  }
-);
-
-// POST - Copiar Precios entre Países
-ProductosRouter.post(
-  "/precios/copiar",
-  verificarPrivilegio({
-    entidad: Producto.name,
-    accion: Acciones.actualizar,
-    valor: true,
-  }),
-  async (req: Request, res: Response) => {
-    try {
-      const { paisOrigenId, paisDestinoId } = req.body;
-
-      if (!paisOrigenId || !paisDestinoId) {
-        throw new Error("Se requieren país de origen y destino");
-      }
-
-      // Get all prices from source country
-      const preciosOrigen = await AppDataSource.getRepository(Precio)
-        .createQueryBuilder("precio")
-        .innerJoinAndSelect("precio.producto", "producto")
-        .where("precio.pais = :paisOrigenId", { paisOrigenId })
-        .andWhere("precio.precioLista IS NOT NULL")
-        .getMany();
-
-      console.log("Precios origen encontrados:", preciosOrigen.length);
-
-      let creados = 0;
-      let actualizados = 0;
-
-      // For each price, create or update price in destination country
-      for (const precioOrigen of preciosOrigen) {
-        if (!precioOrigen.producto) {
-          console.warn("Precio sin producto asociado, saltando...");
-          continue;
-        }
-
-        try {
-          const existingPrecio = await AppDataSource.getRepository(Precio)
-            .createQueryBuilder("precio")
-            .where("precio.producto = :productoId", {
-              productoId: precioOrigen.producto.id,
-            })
-            .andWhere("precio.pais = :paisId", {
-              paisId: paisDestinoId,
-            })
-            .getOne();
-
-          if (existingPrecio) {
-            await AppDataSource.getRepository(Precio).update(
-              existingPrecio.id,
-              {
-                precioLista: precioOrigen.precioLista,
-                precioOferta: precioOrigen.precioOferta,
-                precioExw: precioOrigen.precioExw,
-                enOferta: precioOrigen.enOferta,
-                inicioOferta: precioOrigen.inicioOferta,
-                finOferta: precioOrigen.finOferta,
-              }
-            );
-            actualizados++;
-          } else {
-            await AppDataSource.getRepository(Precio).save({
-              producto: { id: precioOrigen.producto.id },
-              pais: { id: paisDestinoId },
-              precioLista: precioOrigen.precioLista,
-              precioOferta: precioOrigen.precioOferta,
-              precioExw: precioOrigen.precioExw,
-              enOferta: precioOrigen.enOferta,
-              inicioOferta: precioOrigen.inicioOferta,
-              finOferta: precioOrigen.finOferta,
-            });
-            creados++;
-          }
-        } catch (error) {
-          console.error("Error procesando precio:", error);
-          console.error("Datos del precio:", {
-            productoId: precioOrigen.producto?.id,
-            paisId: paisDestinoId,
-            precioData: precioOrigen,
-          });
-        }
-      }
-
-      res.status(200).json({
-        message: `Precios copiados exitosamente. ${creados} creados, ${actualizados} actualizados.`,
-      });
-    } catch (e: any) {
-      console.error("Error general:", e);
       return res.status(500).json({ error: e.message });
     }
   }

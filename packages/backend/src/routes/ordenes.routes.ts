@@ -12,7 +12,6 @@ import {
   TipoTransaccion,
   UnidadesLongitud,
   UnidadesPeso,
-  PeriodosGarantia,
 } from "shared/enums";
 import { Usuario } from "../orm/entity/usuario";
 import { Archivo } from "../orm/entity/archivo";
@@ -21,8 +20,6 @@ import { currencyFormat, isSuperAdmin } from "shared/helpers";
 import { Producto } from "../orm/entity/producto";
 import { partition } from "lodash";
 import slugify from "slugify";
-import { Precio } from "../orm/entity/precio";
-import { Pais } from "../orm/entity/pais";
 import { Dimension } from "../orm/entity/dimension";
 import { Transaccion } from "../orm/entity/transaccion";
 import { processTransaction } from "./transacciones.routes";
@@ -56,7 +53,6 @@ OrdenesRouter.get(
         .leftJoinAndSelect("orden.sucursal", "sucursal")
         .leftJoinAndSelect("orden.vendedor", "vendedor")
         .leftJoinAndSelect("orden.cliente", "cliente")
-        .leftJoinAndSelect("cliente.pais", "pais")
         .leftJoinAndSelect("orden.archivos", "ordenArchivos")
         .leftJoinAndSelect("orden.items", "items")
         .leftJoinAndSelect("items.producto", "producto")
@@ -199,7 +195,6 @@ async function handleCustomProducts(orden: Orden): Promise<void> {
   const productoRepo = AppDataSource.getRepository(Producto);
 
   const newProducts = [] as Producto[];
-  const newPrecios = [] as Precio[];
   const newDimensiones = [] as Dimension[];
   const newEmbalajes = [] as Dimension[];
 
@@ -231,24 +226,7 @@ async function handleCustomProducts(orden: Orden): Promise<void> {
     newProduct.garantia = item.producto.garantia;
     newProduct.categoria = item.producto.categoria;
     newProduct.subcategoria = item.producto.subcategoria;
-    newProduct.requiereMotor = item.producto.requiereMotor;
-    newProduct.paises = item.producto.paises;
-    newPrecios.push(
-      ...item.producto.precios.map((precio) => {
-        const newPrecio = new Precio();
-        newPrecio.id = crypto.randomUUID();
-        newPrecio.producto = { id: newProduct.id } as Producto;
-        newPrecio.pais = { id: precio.pais.id } as Pais;
-        newPrecio.precioLista = item.precio || item.precioLista;
-        newPrecio.enOferta = precio.enOferta;
-        newPrecio.precioOferta = precio.precioOferta;
-        newPrecio.inicioOferta = precio.inicioOferta;
-        newPrecio.finOferta = precio.finOferta;
-        newPrecio.descuento = precio.descuento;
-        newPrecio.tipoDescuento = precio.tipoDescuento;
-        return newPrecio;
-      })
-    );
+
     // Dimensiones de producto
     const newDimension = new Dimension();
     newDimension.id = crypto.randomUUID();
@@ -291,10 +269,6 @@ async function handleCustomProducts(orden: Orden): Promise<void> {
 
   // Save the new products
   await productoRepo.save(newProducts, { chunk: 500 });
-
-  // las relaciones 1:N se guardan después de la entidad padre
-  // Save the new precios
-  await AppDataSource.getRepository(Precio).save(newPrecios, { chunk: 500 });
 
   // Save the updated items
   await AppDataSource.getRepository(ItemOrden).save([
@@ -397,10 +371,7 @@ OrdenesRouter.post(
       const savedItems = await AppDataSource.getRepository(ItemOrden).save(
         data.items.map((item) => ({
           ...item,
-          garantia:
-            item.garantia ||
-            item.producto.garantia ||
-            PeriodosGarantia.sin_garantia,
+          garantia: item.garantia || item.producto.garantia || "Sin garantía",
         })),
         { chunk: 100 }
       );
@@ -730,12 +701,8 @@ OrdenesRouter.put(
             existingItem.total = newItem.total;
             existingItem.notas = newItem.notas || "";
             existingItem.almacen = newItem.almacen;
-            existingItem.qbTipoInventario =
-              newItem.qbTipoInventario || QbTipoInventario.inventory;
             existingItem.garantia =
-              newItem.garantia ||
-              newItem.producto.garantia ||
-              PeriodosGarantia.sin_garantia;
+              newItem.garantia || newItem.producto.garantia || "Sin garantía";
 
             // Handle files for existing item
             const filesToRemove = existingItem.archivos.filter(
@@ -789,12 +756,8 @@ OrdenesRouter.put(
             item.total = newItem.total;
             item.notas = newItem.notas || "";
             item.almacen = newItem.almacen;
-            item.qbTipoInventario =
-              newItem.qbTipoInventario || QbTipoInventario.inventory;
             item.garantia =
-              newItem.garantia ||
-              newItem.producto.garantia ||
-              PeriodosGarantia.sin_garantia;
+              newItem.garantia || newItem.producto.garantia || "Sin garantía";
 
             // Handle files for new item
             if (newItem.archivos?.length) {
@@ -1020,48 +983,6 @@ OrdenesRouter.put(
         subject,
         body
       );
-
-      // Generar certificados de garantia para cada item de la orden
-      // si el item tiene garantia y el estatus es entregado
-      const items = updatedOrden.items;
-      const certLinks: { label: string; url: string }[] = [];
-      if (updatedOrden.estatus === EstatusOrden.entregado) {
-        for (const item of items) {
-          if (
-            item.garantia &&
-            item.garantia !== PeriodosGarantia.sin_garantia
-          ) {
-            const certificado = new Certificado();
-            certificado.item = item;
-            certificado.orden = updatedOrden;
-            await AppDataSource.getRepository(Certificado).save(certificado);
-            const certLink = `${process.env.CERT_URL}/${item.id}`;
-            certLinks.push({
-              label: `${item.producto.sku} - ${item.producto.nombre}`,
-              url: certLink,
-            });
-          }
-        }
-        // Email cliente con los certificados de garantia
-        const certsSubject = `Certificados de Garantía para la Orden #${updatedOrden.serial}`;
-        const certsBody = `
-        <p>Estimado cliente,</p>
-        <p>Adjuntamos los certificados de garantía para la orden #${
-          updatedOrden.serial
-        }.</p>
-        <p>Gracias por su compra.</p>
-        ${certLinks
-          .map((link) => `<a href="${link.url}">${link.label}</a>`)
-          .join("<br>")}
-      `;
-        await sendEmail(
-          process.env.NO_REPLY_EMAIL_ADDRESS as string,
-          updatedOrden.cliente?.email as string,
-          certsSubject,
-          certsBody,
-          certsBody
-        );
-      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });

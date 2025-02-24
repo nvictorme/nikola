@@ -107,15 +107,12 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     ? await ordenesRepository
         .createQueryBuilder("orden")
         .leftJoin("orden.vendedor", "vendedor")
-        .leftJoin("vendedor.pais", "pais")
-        .select("pais.nombre", "country")
         .addSelect("COUNT(orden.id)", "quantity")
         .addSelect("SUM(orden.total)", "total")
         .where("orden.fechaCreado BETWEEN :start AND :end", {
           start: monthStart,
           end: monthEnd,
         })
-        .groupBy("pais.nombre")
         .getRawMany()
     : [];
 

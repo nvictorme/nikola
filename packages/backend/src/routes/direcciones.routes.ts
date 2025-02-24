@@ -57,7 +57,6 @@ DireccionesRouter.post(
       const address = new Direccion();
       address.alias = data.alias;
       address.destinatario = data.destinatario;
-      address.pais = data.pais;
       address.region = data.region;
       address.ciudad = data.ciudad;
       address.codigoPostal = data.codigoPostal;

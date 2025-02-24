@@ -2,7 +2,6 @@ import { AppDataSource } from "../data-source";
 import { roles } from "shared/constants";
 import { crearRol } from "../../helpers/privilegios.helpers";
 import { Usuario } from "../entity/usuario";
-import { Pais } from "../entity/pais";
 import { Rol } from "../entity/rol";
 
 async function run(): Promise<void> {
@@ -11,18 +10,12 @@ async function run(): Promise<void> {
     await crearRol(rol);
   }
 
-  // find pais by name
-  const pais = await AppDataSource.getRepository(Pais).findOneBy({
-    nombre: "Estados Unidos",
-  });
-
   // Create a super user
   const superUsuario = new Usuario();
   superUsuario.nombre = "Victor";
   superUsuario.apellido = "Noguera";
   superUsuario.email = "nvictor@pm.me";
   superUsuario.password = "Benito2023$";
-  superUsuario.pais = pais!;
   superUsuario.super = true;
 
   await AppDataSource.manager.save(superUsuario);
@@ -36,7 +29,6 @@ async function run(): Promise<void> {
   distribuidor.nombre = "Victor Noguera";
   distribuidor.email = "nvictor@tuta.io";
   distribuidor.password = "Benito2023$";
-  distribuidor.pais = pais!;
   distribuidor.rol = roleDistribuidor!;
 
   await AppDataSource.manager.save(distribuidor);

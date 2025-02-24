@@ -1,97 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrackingUrl = exports.getEstatusColor = exports.calcularStockDisponible = exports.calcularTotalOrden = exports.replaceUuidWithSlug = exports.getInitials = exports.canSeeBalance = exports.canCreateOrders = exports.isSuperAdmin = exports.currencyFormat = exports.isValidPassword = exports.emulateDownload = exports.traducirCategoria = exports.subCategoryFactory = void 0;
+exports.getTrackingUrl = exports.getEstatusColor = exports.calcularStockDisponible = exports.calcularTotalOrden = exports.replaceUuidWithSlug = exports.getInitials = exports.canSeeBalance = exports.canCreateOrders = exports.isSuperAdmin = exports.currencyFormat = exports.isValidPassword = exports.emulateDownload = void 0;
 exports.generateComplexPassword = generateComplexPassword;
 const constants_1 = require("./constants");
 const enums_1 = require("./enums");
-/**
- *
- * @param category category to get the subcategories
- * @returns subcategories for the given category
- */
-const subCategoryFactory = (category) => {
-    switch (category) {
-        case enums_1.Categorias.diversion: {
-            return [
-                enums_1.Subcategorias.brinca_brinca,
-                enums_1.Subcategorias.brinca_brinca_con_deslizador,
-                enums_1.Subcategorias.deslizador,
-                enums_1.Subcategorias.deportivos,
-                enums_1.Subcategorias.obstaculos,
-                enums_1.Subcategorias.acuatico,
-                enums_1.Subcategorias.accesorios,
-            ];
-        }
-        case enums_1.Categorias.publicitarios: {
-            return [
-                enums_1.Subcategorias.igloo,
-                enums_1.Subcategorias.toldo_plegable,
-                enums_1.Subcategorias.bandera_de_viento,
-                enums_1.Subcategorias.arco,
-                enums_1.Subcategorias.tunel,
-                enums_1.Subcategorias.totem,
-                enums_1.Subcategorias.pantalla,
-                enums_1.Subcategorias.sky_dancer,
-                enums_1.Subcategorias.replica,
-                enums_1.Subcategorias.disfraz,
-                enums_1.Subcategorias.pelota,
-                enums_1.Subcategorias.aplaudidor,
-                enums_1.Subcategorias.zeppelin,
-            ];
-        }
-        case enums_1.Categorias.maquinas: {
-            return [
-                enums_1.Subcategorias.popcorn,
-                enums_1.Subcategorias.cotton_candy,
-                enums_1.Subcategorias.waffle,
-                enums_1.Subcategorias.nacho,
-                enums_1.Subcategorias.hot_dog,
-                enums_1.Subcategorias.gourmet_popcorn,
-                enums_1.Subcategorias.sno_kones,
-                enums_1.Subcategorias.frozen,
-                enums_1.Subcategorias.fryers,
-            ];
-        }
-        case enums_1.Categorias.consumibles: {
-            return [
-                enums_1.Subcategorias.popcorn,
-                enums_1.Subcategorias.cotton_candy,
-                enums_1.Subcategorias.sno_kones,
-            ];
-        }
-        default: {
-            return [];
-        }
-    }
-};
-exports.subCategoryFactory = subCategoryFactory;
-const traducirCategoria = (categoria) => {
-    switch (categoria) {
-        case enums_1.Categorias.diversion:
-            return "Fun";
-        case enums_1.Categorias.playsoft:
-            return "PlaySoft";
-        case enums_1.Categorias.inflaplay:
-            return "InflaPlay";
-        case enums_1.Categorias.maquinas:
-            return "Machines";
-        case enums_1.Categorias.publicitarios:
-            return "Advertising";
-        case enums_1.Categorias.trampolines:
-            return "Trampolines";
-        case enums_1.Categorias.motores:
-            return "Blowers";
-        case enums_1.Categorias.consumibles:
-            return "Consumables";
-        case enums_1.Categorias.materia_prima:
-            return "Raw Material";
-        case enums_1.Categorias.personalizado:
-            return "Custom";
-        default:
-            return "";
-    }
-};
-exports.traducirCategoria = traducirCategoria;
 /**
  *
  * @param downloadUrl URL to download the file

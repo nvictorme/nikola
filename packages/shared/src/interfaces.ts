@@ -5,14 +5,12 @@ import {
   UnidadesLongitud,
   Acciones,
   UnidadesPeso,
-  PeriodosGarantia,
   EstatusOrden,
   EstatusArchivo,
   TipoTransaccion,
   EstatusPago,
   MetodoPago,
   Transportistas,
-  QbTipoInventario,
   TipoOrden,
   TipoReporte,
   SocketTipoMensaje,
@@ -24,14 +22,6 @@ export interface IBase {
   fechaCreado: string;
   fechaActualizado: string;
   fechaEliminado: string;
-}
-
-export interface IPais extends IBase {
-  nombre: string;
-  name: string;
-  iso2: string;
-  iso3: string;
-  phoneCode: string;
 }
 
 export interface IRol extends IBase {
@@ -76,7 +66,6 @@ export interface IInvitacion extends IBase {
 export interface IDireccion extends IBase {
   alias: string;
   destinatario: string;
-  pais: IPais;
   region: string;
   ciudad: string;
   codigoPostal: string;
@@ -99,7 +88,6 @@ export interface IPersona extends IBase {
   telefono?: string;
   avatar?: string;
   notas?: string;
-  pais: IPais;
   direcciones?: IDireccion[];
 }
 
@@ -115,7 +103,6 @@ export interface IUsuario extends IPersona {
 
 export interface ISucursal extends IBase {
   nombre: string;
-  pais: IPais;
   impuesto: number;
   impuestoIncluido: boolean;
   simboloMoneda: string;
@@ -126,24 +113,7 @@ export interface ISucursal extends IBase {
 
 export interface IAlmacen extends IBase {
   nombre: string;
-  pais: IPais;
   direccion: IDireccion;
-}
-
-// Cada producto tiene un precio diferente por pais
-export interface IPrecioProducto extends IBase {
-  producto: IProducto;
-  precioLista: number;
-  precioOferta: number;
-  precioExw: number;
-  enOferta: boolean;
-  /** ISO 8601 date string (e.g. "2024-03-20T15:30:00.000Z") or null */
-  inicioOferta: string | null;
-  /** ISO 8601 date string (e.g. "2024-03-20T15:30:00.000Z") or null */
-  finOferta: string | null;
-  descuento: number;
-  tipoDescuento: TipoDescuento;
-  pais: IPais;
 }
 
 export interface IStockProducto extends IBase {
@@ -189,58 +159,30 @@ export interface IProducto extends IBase {
   ean?: string;
   isbn?: string;
 
-  dimensiones: IDimensiones;
-  embalaje: IDimensiones;
-
   categoria: ICategoria;
   subcategoria?: ISubcategoria;
 
+  garantia: string;
   costo: number;
+  precio: number;
+  stock: IStockProducto[];
 
-  requiereMotor: boolean;
-  motores: IMotorProducto[];
-
-  garantia: PeriodosGarantia;
+  dimensiones: IDimensiones;
+  embalaje: IDimensiones;
 
   portada?: IArchivo;
   galeria: IArchivo[];
-
-  // precios por pais
-  precios: IPrecioProducto[];
-  // stock por almacen
-  stock: IStockProducto[];
-
-  // paises para los que está habilitado
-  paises: IPais[];
-
-  traduccion: ITraduccionProducto;
-}
-
-export interface IMotorProducto extends IBase {
-  producto: IProducto;
-  motor: IProducto;
-  cantidad: number;
-}
-
-export interface ITraduccionProducto extends IBase {
-  producto: IProducto;
-  nombre: string;
-  descripcion: string;
-  modelo: string;
-  slug: string;
 }
 
 export interface IItemOrden extends IBase {
   producto: IProducto;
   cantidad: number;
   precio: number;
-  precioLista: number;
   total: number;
   notas: string;
   archivos: IArchivo[];
   almacen: IAlmacen | null;
-  qbTipoInventario: QbTipoInventario;
-  garantia: PeriodosGarantia;
+  garantia: string;
 }
 
 export interface IOrden extends IBase {
@@ -261,14 +203,10 @@ export interface IOrden extends IBase {
 
   subtotal: number;
   total: number;
-  totalLista: number;
 
   items: IItemOrden[];
 
   notas: string;
-
-  qbInvoiceId: string;
-  qbInvoiceDocNumber: string;
 
   archivos: IArchivo[];
   envios: IEnvio[];
@@ -293,8 +231,6 @@ export interface ITransaccion extends IBase {
   estatusPago: EstatusPago | null;
   metodoPago: MetodoPago | null;
   archivos: IArchivo[];
-  qbInvoiceId: string;
-  qbInvoiceDocNumber: string;
 }
 
 export interface IEnvio extends IBase {
@@ -315,43 +251,6 @@ export interface IApp extends IBase {
   clientId: string;
   clientSecret: string;
   redirectUri?: string;
-}
-
-/**
- * Configuration for QuickBooks integration.
- */
-export interface IQuickBooksConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string; // for OAuth callback
-  environment: "sandbox" | "production";
-  realmId?: string; // The "Company ID" from QuickBooks; might be unknown until OAuth callback
-}
-
-/**
- * The tokens returned by QuickBooks.
- */
-export interface IQuickBooksTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number; // (seconds) access token expiry
-  refreshTokenExpiresIn: number; // (seconds) refresh token expiry
-  expiresAt: number; // timestamp (ms)
-  refreshTokenExpiresAt: number; // timestamp (ms)
-}
-
-/**
- * Minimal data structure for creating an invoice.
- */
-export interface ICreateInvoicePayload {
-  CustomerRef: { value: string };
-  Line: Array<{
-    Amount: number;
-    DetailType: "SalesItemLineDetail";
-    SalesItemLineDetail: {
-      ItemRef: { value: string };
-    };
-  }>;
 }
 
 export interface ReporteParams {

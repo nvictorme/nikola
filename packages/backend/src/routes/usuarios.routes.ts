@@ -25,25 +25,18 @@ UsuariosRouter.get(
   }),
   async (req: Request, res: Response) => {
     try {
-      const { page = "1", limit = "10", nif, email, pais } = req.query;
+      const { page = "1", limit = "10", nif, email } = req.query;
       const [usuarios, total] = await AppDataSource.getRepository(
         Usuario
       ).findAndCount({
         where:
-          pais || nif || email
+          nif || email
             ? {
-                ...(pais && { pais: { id: pais as string } }),
                 ...(nif && { nif: Like(`%${nif}%`) }),
                 ...(email && { email: Like(`%${email}%`) }),
               }
             : undefined,
-        relations: [
-          "rol",
-          "pais",
-          "sucursales",
-          "sucursales.pais",
-          "sucursales.almacenes",
-        ],
+        relations: ["rol", "sucursales", "sucursales.almacenes"],
         take: parseInt(limit as string),
         skip: (parseInt(page as string) - 1) * parseInt(limit as string),
         order: { fechaCreado: "DESC" },
@@ -66,7 +59,7 @@ UsuariosRouter.get(
 
 // GET - Distribuidores
 UsuariosRouter.get(
-  "/distribuidores",
+  "/vendedores",
   verificarPrivilegio({
     entidad: Usuario.name,
     accion: Acciones.leer,
@@ -82,10 +75,9 @@ UsuariosRouter.get(
           .json({ message: "No tienes permisos para realizar esta acción." });
       }
 
-      const distribuidores = await AppDataSource.getRepository(Usuario)
+      const vendedores = await AppDataSource.getRepository(Usuario)
         .createQueryBuilder("usuario")
         .leftJoinAndSelect("usuario.rol", "rol")
-        .leftJoinAndSelect("usuario.pais", "pais")
         .where("usuario.activo = :activo", { activo: true })
         .andWhere("rol.nombre = :rolNombre", {
           rolNombre: RolesBase.distribuidor,
@@ -98,12 +90,11 @@ UsuariosRouter.get(
           "usuario.apellido",
           "usuario.email",
           "usuario.balance",
-          "pais",
         ])
-        .orderBy("pais.nombre", "ASC")
+        .orderBy("usuario.nombre", "ASC")
         .getMany();
 
-      res.status(200).json({ distribuidores });
+      res.status(200).json({ vendedores });
     } catch (error: any) {
       console.error(error);
       res.status(500).json({ error: error.message });
@@ -126,7 +117,7 @@ UsuariosRouter.get(
       const isAdmin = isSuperAdmin(user);
 
       const usuarios = await AppDataSource.getRepository(Usuario).find({
-        select: ["id", "nombre", "apellido", "email", "avatar", "pais"],
+        select: ["id", "nombre", "apellido", "email", "avatar"],
         where: {
           activo: true,
           id: Not(user.id),
@@ -136,7 +127,6 @@ UsuariosRouter.get(
             },
           }),
         },
-        relations: ["pais"],
       });
 
       res.status(200).json({ usuarios });
@@ -160,13 +150,7 @@ UsuariosRouter.get(
       const { userId } = req.params;
       const usuario = await AppDataSource.getRepository(Usuario).findOne({
         where: { id: userId },
-        relations: [
-          "rol",
-          "pais",
-          "sucursales",
-          "sucursales.pais",
-          "sucursales.almacenes",
-        ],
+        relations: ["rol", "sucursales", "sucursales.almacenes"],
       });
       if (!usuario)
         return res.status(404).json({ message: `Usuario no existe.` });
@@ -253,7 +237,7 @@ UsuariosRouter.put(
       // Find existing user with relationships
       const existingUser = await userRepository.findOne({
         where: { id: idUsuario },
-        relations: ["rol", "pais", "sucursales", "sucursales.pais"],
+        relations: ["rol", "sucursales", "sucursales.almacenes"],
       });
 
       if (!existingUser) {
@@ -267,30 +251,7 @@ UsuariosRouter.put(
       }
 
       // Declare validSucursales outside the if block
-      let validSucursales = usuarioData.sucursales || [];
-
-      // If updating sucursales and pais, filter out those from different countries
-      if (usuarioData.sucursales?.length && usuarioData.pais) {
-        // Fetch full sucursal data to check their countries
-        const sucursalesWithPais = (await AppDataSource.createQueryBuilder()
-          .select("sucursal")
-          .from(Sucursal, "sucursal")
-          .leftJoinAndSelect("sucursal.pais", "pais")
-          .where("sucursal.id IN (:...ids)", {
-            ids: usuarioData.sucursales.map((s) => s.id),
-          })
-          .getMany()) as Sucursal[];
-
-        // Filter sucursales to only include those from the same country
-        validSucursales = sucursalesWithPais.filter(
-          (sucursal) => sucursal.pais.id === usuarioData.pais.id
-        );
-
-        // Update the sucursales array to only include valid ones
-        usuarioData.sucursales = validSucursales.map((s) => ({
-          id: s.id,
-        })) as Sucursal[];
-      }
+      const validSucursales = usuarioData.sucursales || [];
 
       // Prepare update data - only update allowed fields
       const updateData = {
@@ -309,9 +270,6 @@ UsuariosRouter.put(
         seudonimo: usuarioData.seudonimo,
         // Handle relationships
         rol: usuarioData.rol ? { id: usuarioData.rol.id } : existingUser.rol,
-        pais: usuarioData.pais
-          ? { id: usuarioData.pais.id }
-          : existingUser.pais,
         // Map sucursales to just their IDs for the relation
         sucursales:
           usuarioData.sucursales?.map((s) => ({ id: s.id })) ||
@@ -327,9 +285,7 @@ UsuariosRouter.put(
         relations: [
           "rol",
           "rol.privilegios",
-          "pais",
           "sucursales",
-          "sucursales.pais",
           "sucursales.almacenes",
         ],
       });

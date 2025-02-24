@@ -1,20 +1,3 @@
-export enum Paises {
-  bolivia = "Bolivia",
-  chile = "Chile",
-  china = "China",
-  costa_rica = "Costa Rica",
-  ecuador = "Ecuador",
-  el_salvador = "El Salvador",
-  españa = "España",
-  estados_unidos = "Estados Unidos",
-  guatemala = "Guatemala",
-  honduras = "Honduras",
-  panama = "Panamá",
-  peru = "Perú",
-  republica_dominicana = "República Dominicana",
-  venezuela = "Venezuela",
-}
-
 export enum RouteRuleCheck {
   isAdmin = "isAdmin",
   canCreateOrders = "canCreateOrders",
@@ -27,96 +10,6 @@ export enum NivelResultado {
   info = "info",
   success = "success",
   warning = "warning",
-}
-
-export enum Categorias {
-  diversion = "Diversión",
-  playsoft = "PlaySoft",
-  inflaplay = "InflaPlay",
-  maquinas = "Máquinas",
-  publicitarios = "Publicitarios",
-  trampolines = "Trampolines",
-  motores = "Motores",
-  consumibles = "Consumibles",
-  materia_prima = "Materia Prima",
-  personalizado = "Personalizado",
-}
-
-export enum CategoriasTraducidas {
-  diversion = "Fun",
-  playsoft = "PlaySoft",
-  inflaplay = "InflaPlay",
-  maquinas = "Machines",
-  publicitarios = "Advertising",
-  trampolines = "Trampolines",
-  motores = "Blowers",
-  consumibles = "Consumables",
-  materia_prima = "Raw Material",
-  personalizado = "Custom",
-}
-
-export enum Subcategorias {
-  brinca_brinca = "Brinca Brinca",
-  brinca_brinca_con_deslizador = "Brinca Brinca con Deslizador",
-  deslizador = "Deslizador",
-  deportivos = "Deportivos",
-  obstaculos = "Obstáculos",
-  acuatico = "Acuático",
-  accesorios = "Accesorios",
-  igloo = "Iglú",
-  toldo_plegable = "Toldo Plegable",
-  bandera_de_viento = "Bandera de Viento",
-  arco = "Arco",
-  tunel = "Túnel",
-  totem = "Tótem",
-  pantalla = "Pantalla",
-  sky_dancer = "Sky Dancer",
-  replica = "Réplica",
-  disfraz = "Disfraz",
-  pelota = "Pelota",
-  aplaudidor = "Aplaudidor",
-  zeppelin = "Zeppelin",
-  popcorn = "Popcorn",
-  cotton_candy = "Cotton Candy",
-  waffle = "Waffle",
-  nacho = "Nacho",
-  hot_dog = "Hot Dog",
-  gourmet_popcorn = "Gourmet Popcorn",
-  sno_kones = "Sno kones",
-  frozen = "Frozen",
-  fryers = "Fryers",
-}
-
-export enum SubcategoriasTraducidas {
-  brinca_brinca = "Bounce House",
-  brinca_brinca_con_deslizador = "Bounce House with Slide",
-  deslizador = "Slide",
-  deportivos = "Sports",
-  obstaculos = "Obstacles",
-  acuatico = "Aquatic",
-  accesorios = "Accessories",
-  igloo = "Igloo",
-  toldo_plegable = "Folding Tent",
-  bandera_de_viento = "Wind Flag",
-  arco = "Arch",
-  tunel = "Tunnel",
-  totem = "Totem",
-  pantalla = "Screen",
-  sky_dancer = "Air Dancer",
-  replica = "Replica",
-  disfraz = "Costume",
-  pelota = "Ball",
-  aplaudidor = "Thundersticks",
-  zeppelin = "Zeppelin",
-  popcorn = "Popcorn",
-  cotton_candy = "Cotton Candy",
-  waffle = "Waffle",
-  nacho = "Nacho",
-  hot_dog = "Hot Dog",
-  gourmet_popcorn = "Gourmet Popcorn",
-  sno_kones = "Sno Kones",
-  frozen = "Frozen",
-  fryers = "Fryers",
 }
 
 export enum RolesBase {
@@ -146,7 +39,6 @@ export enum EntidadesProtegidas {
   sucursal = "Sucursal",
   almacen = "Almacen",
   transaccion = "Transaccion",
-  pais = "Pais",
   categoria = "Categoria",
   subcategoria = "Subcategoria",
 }
@@ -249,22 +141,17 @@ export enum EstatusPago {
 }
 
 export enum MetodoPago {
-  tarjeta = "Tarjeta de Crédito o Débito",
+  efectivo = "Efectivo",
+  tarjeta = "Tarjeta",
   cheque = "Cheque",
   deposito = "Depósito",
   transferencia = "Transferencia",
+  pago_movil = "Pago Móvil",
   zelle = "Zelle",
   paypal = "PayPal",
   stripe = "Stripe",
   remesa = "Remesa",
   cripto = "Criptomoneda",
-}
-
-export enum PeriodosGarantia {
-  sin_garantia = "Sin Garantía",
-  seis_meses = "Seis Meses",
-  un_año = "Un Año",
-  dos_años = "Dos Años",
 }
 
 export enum TipoDocumento {

@@ -1,12 +1,5 @@
-import { Categorias, EstatusOrden, Subcategorias, TipoDescuento } from "./enums";
+import { EstatusOrden, TipoDescuento } from "./enums";
 import { IEnvio, IStockProducto, IUsuario } from "./interfaces";
-/**
- *
- * @param category category to get the subcategories
- * @returns subcategories for the given category
- */
-export declare const subCategoryFactory: (category: Categorias) => Subcategorias[];
-export declare const traducirCategoria: (categoria: Categorias) => string;
 /**
  *
  * @param downloadUrl URL to download the file

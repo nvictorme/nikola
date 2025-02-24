@@ -12,14 +12,7 @@ Passport.serializeUser((user: any, done) => {
 Passport.deserializeUser(async (id: string, done) => {
   const user = await AppDataSource.getRepository(Usuario).findOne({
     where: { id },
-    relations: [
-      "pais",
-      "rol",
-      "rol.privilegios",
-      "sucursales",
-      "sucursales.pais",
-      "sucursales.almacenes",
-    ],
+    relations: ["rol", "rol.privilegios", "sucursales", "sucursales.almacenes"],
   });
   done(null, user);
 });
@@ -39,11 +32,9 @@ Passport.use(
         const user = await AppDataSource.getRepository(Usuario).findOne({
           where: { email: username },
           relations: [
-            "pais",
             "rol",
             "rol.privilegios",
             "sucursales",
-            "sucursales.pais",
             "sucursales.almacenes",
           ],
         });
@@ -77,11 +68,9 @@ Passport.use(
         const user = await AppDataSource.getRepository(Usuario).findOne({
           where: { id: token.user.id },
           relations: [
-            "pais",
             "rol",
             "rol.privilegios",
             "sucursales",
-            "sucursales.pais",
             "sucursales.almacenes",
           ],
         });

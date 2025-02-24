@@ -23,7 +23,6 @@ import {
   OrdenesRouter,
   AlmacenesRouter,
   PublicRouter,
-  PaisesRouter,
   CategoriasRouter,
   ReportesRouter,
   DashboardRouter,
@@ -35,7 +34,6 @@ import { PersonasRouter } from "./routes/personas.routes";
 import { withUserContext } from "./orm/audit/AuditContext";
 import { TransaccionesRouter } from "./routes/transacciones.routes";
 import { initScheduledTasks } from "./providers/cron";
-import { CertificadosRouter } from "./routes/api/certificados.routes";
 
 // Initialize the database connection
 AppDataSource.initialize()
@@ -96,7 +94,6 @@ AppDataSource.initialize()
     app.use("/transacciones", TransaccionesRouter);
     app.use("/direcciones", DireccionesRouter);
     app.use("/archivos", ArchivosRouter);
-    app.use("/paises", PaisesRouter);
     app.use("/categorias", CategoriasRouter);
     app.use("/reportes", ReportesRouter);
 

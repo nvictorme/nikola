@@ -59,7 +59,7 @@ ReportesRouter.post("/generar", async (req: Request, res: Response) => {
     const timestamp = format(new Date(), "yyyy-MM-dd-HH-mm-ss");
 
     // Get names for the filter entities
-    let sucursalName, vendedorName, categoriaName, paisName;
+    let sucursalName, vendedorName, categoriaName;
 
     if (params.sucursalId) {
       const sucursal = await AppDataSource.getRepository("Sucursal")
@@ -90,15 +90,6 @@ ReportesRouter.post("/generar", async (req: Request, res: Response) => {
       categoriaName = categoria?.nombre;
     }
 
-    if (params.paisId) {
-      const pais = await AppDataSource.getRepository("Pais")
-        .createQueryBuilder("pais")
-        .select("pais.nombre")
-        .where("pais.id = :id", { id: params.paisId })
-        .getOne();
-      paisName = pais?.nombre;
-    }
-
     // Build filename with descriptive names
     let fileNameParts = [`reporte-${params.tipo}`];
 
@@ -121,9 +112,6 @@ ReportesRouter.post("/generar", async (req: Request, res: Response) => {
     }
     if (categoriaName) {
       fileNameParts.push(`categoria-${categoriaName}`);
-    }
-    if (paisName) {
-      fileNameParts.push(`pais-${paisName}`);
     }
 
     if (params.tipo !== "ventas") {
@@ -262,36 +250,17 @@ ReportesRouter.post("/generar", async (req: Request, res: Response) => {
           .leftJoinAndSelect("producto.categoria", "categoria")
           .leftJoinAndSelect("producto.subcategoria", "subcategoria");
 
-        if (params.paisId) {
-          query
-            .leftJoinAndSelect("producto.paises", "paises")
-            .leftJoinAndSelect("producto.precios", "precios")
-            .leftJoin("precios.pais", "precioPais")
-            .andWhere("paises.id = :paisId", { paisId: params.paisId })
-            .andWhere("precioPais.id = :paisId", { paisId: params.paisId });
-        }
-
         query.addOrderBy("producto.sku", "ASC", "NULLS LAST");
         const productos = await query.getMany();
 
-        // Map data after query execution
-        data = params.paisId
-          ? productos.map((producto) => ({
-              SKU: producto.sku,
-              Producto: producto.nombre,
-              Modelo: producto.modelo,
-              Categoria: producto.categoria.nombre,
-              Subcategoria: producto.subcategoria?.nombre,
-              PrecioLista: producto.precios[0]?.precioLista || 0,
-            }))
-          : productos.map((producto) => ({
-              SKU: producto.sku,
-              Producto: producto.nombre,
-              Modelo: producto.modelo,
-              Categoria: producto.categoria.nombre,
-              Subcategoria: producto.subcategoria?.nombre,
-              Costo: producto.costo,
-            }));
+        data = productos.map((producto) => ({
+          SKU: producto.sku,
+          Producto: producto.nombre,
+          Modelo: producto.modelo,
+          Categoria: producto.categoria.nombre,
+          Subcategoria: producto.subcategoria?.nombre,
+          Costo: producto.costo,
+        }));
 
         break;
       }

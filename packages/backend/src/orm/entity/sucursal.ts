@@ -10,23 +10,21 @@ import {
 } from "typeorm";
 import { Base } from "./base";
 import { Direccion } from "./direccion";
-import { Usuario } from "./usuario";
 import { Almacen } from "./almacen";
 import { ISucursal } from "shared/interfaces";
 import { decimalTransformer } from "shared/constants";
-import { Pais } from "./pais";
 
 export interface ORMSucursal extends ISucursal {
   direccion: Direccion;
   almacenes: Almacen[];
-  pais: Pais;
 }
 
 @Entity("sucursales")
-@Unique("UQ_sucursal_nombre_pais", ["nombre", "pais"])
 export class Sucursal extends Base implements ORMSucursal {
   @Column({
     length: 100,
+    unique: true,
+    nullable: false,
   })
   nombre: string;
 
@@ -47,10 +45,6 @@ export class Sucursal extends Base implements ORMSucursal {
 
   @Column({ length: 5, default: "USD" })
   codigoMoneda: string;
-
-  @ManyToOne(() => Pais, (pais) => pais)
-  @JoinColumn()
-  pais: Pais;
 
   @OneToOne(() => Direccion, (address) => address)
   @JoinColumn()

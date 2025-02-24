@@ -42,7 +42,6 @@ AuthRouter.post("/signup", async (req: Request, res: Response) => {
     usuario.nombre = data.nombre;
     usuario.apellido = data.apellido;
     usuario.nif = data.nif;
-    usuario.pais = data.pais;
     data.empresa && (usuario.empresa = data.empresa);
     data.telefono && (usuario.telefono = data.telefono);
 

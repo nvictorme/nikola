@@ -1,6 +1,4 @@
-import { PeriodosGarantia } from "shared/enums";
 import path from "path";
-import { ItemOrden } from "../../orm/entity/itemOrden";
 import { AppDataSource } from "../../orm/data-source";
 import { PDFDocument } from "pdf-lib";
 import * as qrcode from "qrcode";
@@ -23,11 +21,11 @@ export class PDFProvider {
     },
   };
 
-  private getTemplatePath(garantia: PeriodosGarantia): string {
+  private getTemplatePath(garantia: string): string {
     const templateMap = {
-      [PeriodosGarantia.un_año]: "cert_1_ano.pdf",
-      [PeriodosGarantia.dos_años]: "cert_2_anos.pdf",
-      [PeriodosGarantia.seis_meses]: "cert_6_meses.pdf",
+      ["1 año"]: "cert_1_ano.pdf",
+      ["2 años"]: "cert_2_anos.pdf",
+      ["6 meses"]: "cert_6_meses.pdf",
     };
 
     const templateName = templateMap[garantia as keyof typeof templateMap];

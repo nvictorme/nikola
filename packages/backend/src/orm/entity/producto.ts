@@ -9,16 +9,11 @@ import {
   ManyToOne,
 } from "typeorm";
 import { Base } from "./base";
-import { Precio } from "./precio";
 import { IProducto } from "shared/interfaces";
-import { PeriodosGarantia } from "shared/enums";
 import { Dimension } from "./dimension";
 import { Archivo } from "./archivo";
 import { decimalTransformer } from "shared/constants";
 import { Stock } from "./stock";
-import { TraduccionProducto } from "./traduccion";
-import { ProductoMotor } from "./productoMotor";
-import { Pais } from "./pais";
 import { Categoria } from "./categoria";
 import { Subcategoria } from "./subcategoria";
 
@@ -27,11 +22,7 @@ export interface ORMProducto extends IProducto {
   embalaje: Dimension;
   portada: Archivo;
   galeria: Archivo[];
-  precios: Precio[];
   stock: Stock[];
-  traduccion: TraduccionProducto;
-  motores: ProductoMotor[];
-  paises: Pais[];
   categoria: Categoria;
   subcategoria: Subcategoria;
 }
@@ -55,6 +46,15 @@ export class Producto extends Base implements ORMProducto {
   })
   costo: number;
 
+  @Column({
+    type: "numeric",
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  precio: number;
+
   @Column({ length: 30, nullable: false, unique: true })
   sku: string;
 
@@ -75,21 +75,14 @@ export class Producto extends Base implements ORMProducto {
   @JoinColumn({ name: "embalajeId" })
   embalaje: Dimension;
 
-  @Column({ nullable: false, default: false })
-  requiereMotor: boolean;
-
-  // Relación con los motores
-  @OneToMany(() => ProductoMotor, (motor) => motor.producto)
-  motores: ProductoMotor[];
-
   @Column({ length: 100, nullable: false })
   modelo: string;
 
   @Column({ length: 100, nullable: false })
   slug: string;
 
-  @Column({ nullable: false, default: PeriodosGarantia.sin_garantia })
-  garantia: PeriodosGarantia;
+  @Column({ nullable: false, default: "Sin Garantía" })
+  garantia: string;
 
   @OneToOne(() => Archivo)
   @JoinColumn()
@@ -98,9 +91,6 @@ export class Producto extends Base implements ORMProducto {
   @ManyToMany(() => Archivo)
   @JoinTable()
   galeria: Archivo[];
-
-  @OneToMany(() => Precio, (precio) => precio.producto)
-  precios: Precio[];
 
   @OneToMany(() => Stock, (stock) => stock.producto)
   stock: Stock[];
@@ -112,11 +102,4 @@ export class Producto extends Base implements ORMProducto {
   @ManyToOne(() => Subcategoria, (subcategoria) => subcategoria)
   @JoinColumn()
   subcategoria: Subcategoria;
-
-  @OneToOne(() => TraduccionProducto, (traduccion) => traduccion.producto)
-  traduccion: TraduccionProducto;
-
-  @ManyToMany(() => Pais, (pais) => pais)
-  @JoinTable()
-  paises: Pais[];
 }

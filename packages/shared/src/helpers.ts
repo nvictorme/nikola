@@ -1,101 +1,11 @@
 import { passwordValidationPattern } from "./constants";
 import {
-  Categorias,
   EstatusOrden,
   RolesBase,
-  Subcategorias,
   TipoDescuento,
   Transportistas,
 } from "./enums";
 import { IEnvio, IStockProducto, IUsuario } from "./interfaces";
-
-/**
- *
- * @param category category to get the subcategories
- * @returns subcategories for the given category
- */
-export const subCategoryFactory = (category: Categorias): Subcategorias[] => {
-  switch (category) {
-    case Categorias.diversion: {
-      return [
-        Subcategorias.brinca_brinca,
-        Subcategorias.brinca_brinca_con_deslizador,
-        Subcategorias.deslizador,
-        Subcategorias.deportivos,
-        Subcategorias.obstaculos,
-        Subcategorias.acuatico,
-        Subcategorias.accesorios,
-      ];
-    }
-    case Categorias.publicitarios: {
-      return [
-        Subcategorias.igloo,
-        Subcategorias.toldo_plegable,
-        Subcategorias.bandera_de_viento,
-        Subcategorias.arco,
-        Subcategorias.tunel,
-        Subcategorias.totem,
-        Subcategorias.pantalla,
-        Subcategorias.sky_dancer,
-        Subcategorias.replica,
-        Subcategorias.disfraz,
-        Subcategorias.pelota,
-        Subcategorias.aplaudidor,
-        Subcategorias.zeppelin,
-      ];
-    }
-    case Categorias.maquinas: {
-      return [
-        Subcategorias.popcorn,
-        Subcategorias.cotton_candy,
-        Subcategorias.waffle,
-        Subcategorias.nacho,
-        Subcategorias.hot_dog,
-        Subcategorias.gourmet_popcorn,
-        Subcategorias.sno_kones,
-        Subcategorias.frozen,
-        Subcategorias.fryers,
-      ];
-    }
-    case Categorias.consumibles: {
-      return [
-        Subcategorias.popcorn,
-        Subcategorias.cotton_candy,
-        Subcategorias.sno_kones,
-      ];
-    }
-    default: {
-      return [];
-    }
-  }
-};
-
-export const traducirCategoria = (categoria: Categorias): string => {
-  switch (categoria) {
-    case Categorias.diversion:
-      return "Fun";
-    case Categorias.playsoft:
-      return "PlaySoft";
-    case Categorias.inflaplay:
-      return "InflaPlay";
-    case Categorias.maquinas:
-      return "Machines";
-    case Categorias.publicitarios:
-      return "Advertising";
-    case Categorias.trampolines:
-      return "Trampolines";
-    case Categorias.motores:
-      return "Blowers";
-    case Categorias.consumibles:
-      return "Consumables";
-    case Categorias.materia_prima:
-      return "Raw Material";
-    case Categorias.personalizado:
-      return "Custom";
-    default:
-      return "";
-  }
-};
 
 /**
  *
