@@ -136,7 +136,7 @@ ReportesRouter.post("/generar", async (req: Request, res: Response) => {
           .leftJoinAndSelect("items.producto", "producto")
           .where("orden.fechaEliminado IS NULL")
           .andWhere("orden.tipo IN (:...tipos)", {
-            tipos: [TipoOrden.compra, TipoOrden.credito],
+            tipos: [TipoOrden.venta, TipoOrden.credito],
           })
           .andWhere("orden.estatus = :estatus", {
             estatus: EstatusOrden.entregado,

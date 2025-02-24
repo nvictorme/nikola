@@ -21,7 +21,7 @@ export interface ORMItemOrden extends IItemOrden {
   archivos: Archivo[];
 }
 
-@Entity("orden_items")
+@Entity("ordenes_items")
 export class ItemOrden extends Base implements ORMItemOrden {
   @Column({ type: "int", nullable: false, default: 1 })
   cantidad: number;
@@ -53,6 +53,9 @@ export class ItemOrden extends Base implements ORMItemOrden {
   })
   total: number;
 
+  @Column({ type: "varchar", length: 50, nullable: true })
+  serial: string;
+
   @Column({ type: "text", nullable: true })
   notas: string;
 
@@ -64,7 +67,7 @@ export class ItemOrden extends Base implements ORMItemOrden {
     eager: true,
   })
   @JoinTable({
-    name: "orden_items_archivos",
+    name: "ordenes_items_archivos",
   })
   archivos: Archivo[];
 

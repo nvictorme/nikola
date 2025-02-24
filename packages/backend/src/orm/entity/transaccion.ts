@@ -82,7 +82,7 @@ export class Transaccion extends Base implements ORMTransaccion {
   // relacion con archivos
   @ManyToMany(() => Archivo)
   @JoinTable({
-    name: "transaccion_archivos",
+    name: "transacciones_archivos",
     joinColumn: { name: "transaccionId", referencedColumnName: "id" },
     inverseJoinColumn: { name: "archivoId", referencedColumnName: "id" },
   })

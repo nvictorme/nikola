@@ -46,11 +46,11 @@ export class Orden extends Base implements ORMOrden {
   @Column({
     type: "enum",
     enum: TipoOrden,
-    default: TipoOrden.compra,
+    default: TipoOrden.venta,
   })
   tipo: TipoOrden;
 
-  @Column({ type: "int", nullable: false, default: 15 })
+  @Column({ type: "int", nullable: true, default: 1 })
   validez: number;
 
   @Column({
@@ -124,12 +124,6 @@ export class Orden extends Base implements ORMOrden {
   @Column({ type: "text", nullable: true })
   notas: string;
 
-  @Column({ type: "varchar", nullable: true })
-  qbInvoiceId: string;
-
-  @Column({ type: "varchar", nullable: true })
-  qbInvoiceDocNumber: string;
-
   @ManyToOne(() => Sucursal)
   @JoinColumn()
   sucursal: Sucursal;
@@ -150,7 +144,7 @@ export class Orden extends Base implements ORMOrden {
     eager: true,
   })
   @JoinTable({
-    name: "orden_archivos",
+    name: "ordenes_archivos",
   })
   archivos: Archivo[];
 
@@ -159,7 +153,7 @@ export class Orden extends Base implements ORMOrden {
     eager: true,
   })
   @JoinTable({
-    name: "orden_envios",
+    name: "ordenes_envios",
   })
   envios: Envio[];
 

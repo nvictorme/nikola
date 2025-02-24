@@ -12,7 +12,7 @@ export interface ORMOrdenHistorial extends IOrdenHistorial {
   envio: Envio;
 }
 
-@Entity("orden_historial")
+@Entity("ordenes_historial")
 export class HistorialOrden extends Base implements ORMOrdenHistorial {
   @Column({
     type: "enum",

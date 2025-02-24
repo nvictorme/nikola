@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TipoReporte = exports.TipoOrden = exports.QbTipoInventario = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
+exports.TipoReporte = exports.TipoOrden = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
 var RouteRuleCheck;
 (function (RouteRuleCheck) {
     RouteRuleCheck["isAdmin"] = "isAdmin";
@@ -192,19 +192,12 @@ var QRCodeOutput;
     QRCodeOutput["file_stream"] = "file_stream";
     QRCodeOutput["string"] = "string";
 })(QRCodeOutput || (exports.QRCodeOutput = QRCodeOutput = {}));
-var QbTipoInventario;
-(function (QbTipoInventario) {
-    QbTipoInventario["inventory"] = "Inventory";
-    QbTipoInventario["nonInventory"] = "NonInventory";
-    QbTipoInventario["service"] = "Service";
-    QbTipoInventario["bundle"] = "Bundle";
-})(QbTipoInventario || (exports.QbTipoInventario = QbTipoInventario = {}));
 var TipoOrden;
 (function (TipoOrden) {
-    TipoOrden["compra"] = "Compra";
+    TipoOrden["cotizacion"] = "Cotizaci\u00F3n";
+    TipoOrden["venta"] = "Venta";
     TipoOrden["credito"] = "Cr\u00E9dito";
     TipoOrden["reposicion"] = "Reposici\u00F3n";
-    TipoOrden["cotizacion"] = "Cotizaci\u00F3n";
 })(TipoOrden || (exports.TipoOrden = TipoOrden = {}));
 var TipoReporte;
 (function (TipoReporte) {

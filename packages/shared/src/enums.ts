@@ -189,18 +189,11 @@ export enum QRCodeOutput {
   string = "string",
 }
 
-export enum QbTipoInventario {
-  inventory = "Inventory",
-  nonInventory = "NonInventory",
-  service = "Service",
-  bundle = "Bundle",
-}
-
 export enum TipoOrden {
-  compra = "Compra",
+  cotizacion = "Cotización",
+  venta = "Venta",
   credito = "Crédito",
   reposicion = "Reposición",
-  cotizacion = "Cotización",
 }
 
 export enum TipoReporte {

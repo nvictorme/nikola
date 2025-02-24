@@ -3,7 +3,6 @@ import { AppDataSource } from "../../orm/data-source";
 import { PDFDocument } from "pdf-lib";
 import * as qrcode from "qrcode";
 import fs from "fs/promises";
-import { Certificado } from "../../orm/entity/certificado";
 
 export class PDFProvider {
   private readonly LETTER = {
@@ -45,22 +44,27 @@ export class PDFProvider {
     try {
       console.log("Starting PDF generation for itemId:", itemId);
 
-      // Get the ItemOrden from database
-      const certificadoRepository = AppDataSource.getRepository(Certificado);
-      const certificado = await certificadoRepository.findOne({
-        where: { item: { id: itemId } },
-        relations: [
-          "item",
-          "item.producto",
-          "orden",
-          "orden.cliente",
-          "orden.vendedor",
-        ],
-      });
-
-      if (!certificado) {
-        throw new Error("Item not found");
-      }
+      const certificado = {
+        id: "1",
+        serial: "1234567890",
+        fechaCreado: "2021-01-01",
+        orden: {
+          id: "1",
+          cliente: {
+            empresa: "Empresa",
+            nombre: "Nombre",
+            apellido: "Apellido",
+          },
+        },
+        item: {
+          id: "1",
+          garantia: "1 año",
+          producto: {
+            nombre: "Producto",
+            sku: "1234567890",
+          },
+        },
+      };
 
       console.log("Found certificado:", {
         id: certificado.id,

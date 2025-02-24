@@ -168,17 +168,11 @@ export declare enum QRCodeOutput {
     file_stream = "file_stream",
     string = "string"
 }
-export declare enum QbTipoInventario {
-    inventory = "Inventory",
-    nonInventory = "NonInventory",
-    service = "Service",
-    bundle = "Bundle"
-}
 export declare enum TipoOrden {
-    compra = "Compra",
+    cotizacion = "Cotizaci\u00F3n",
+    venta = "Venta",
     credito = "Cr\u00E9dito",
-    reposicion = "Reposici\u00F3n",
-    cotizacion = "Cotizaci\u00F3n"
+    reposicion = "Reposici\u00F3n"
 }
 export declare enum TipoReporte {
     productos = "productos",

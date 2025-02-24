@@ -6,7 +6,6 @@ import { verificarPrivilegio } from "../helpers/privilegios.helpers";
 import {
   Acciones,
   EstatusOrden,
-  QbTipoInventario,
   RolesBase,
   TipoOrden,
   TipoTransaccion,
@@ -26,7 +25,6 @@ import { processTransaction } from "./transacciones.routes";
 import { Stock } from "../orm/entity/stock";
 import { Envio } from "../orm/entity/envio";
 import { HistorialOrden } from "../orm/entity/historial";
-import { Certificado } from "../orm/entity/certificado";
 import { emitSocketEvent } from "../providers/sockets";
 
 const OrdenesRouter: Router = Router();
@@ -321,7 +319,7 @@ OrdenesRouter.post(
       newOrden.total = subtotalAfterDiscount + taxAmount;
 
       // Order metadata
-      newOrden.tipo = data.tipo || TipoOrden.compra;
+      newOrden.tipo = data.tipo || TipoOrden.venta;
       newOrden.validez = data.validez;
       newOrden.estatus = EstatusOrden.pendiente;
       newOrden.notas = data.notas;
@@ -527,7 +525,7 @@ OrdenesRouter.put(
       if (!before) {
         return res.status(404).json({ error: "Orden no encontrada" });
       }
-      await repo.update(ordenId, { tipo: TipoOrden.compra as TipoOrden });
+      await repo.update(ordenId, { tipo: TipoOrden.venta as TipoOrden });
       res.status(200).json({
         message: `Cotización #${before.serial} convertida en orden`,
       });
@@ -857,7 +855,7 @@ OrdenesRouter.put(
       });
 
       if (
-        (updatedOrden.tipo === TipoOrden.compra ||
+        (updatedOrden.tipo === TipoOrden.venta ||
           updatedOrden.tipo === TipoOrden.credito) &&
         updatedOrden.estatus === EstatusOrden.confirmado
       ) {
@@ -886,9 +884,9 @@ OrdenesRouter.put(
         timestamp: new Date().toISOString(),
       });
 
-      // aplicar reglas de stock para cada item de la orden si es compra o credito y el estatus es confirmado o entregado
+      // aplicar reglas de stock para cada item de la orden si es venta o credito y el estatus es confirmado o entregado
       if (
-        [TipoOrden.compra, TipoOrden.credito].includes(updatedOrden.tipo) &&
+        [TipoOrden.venta, TipoOrden.credito].includes(updatedOrden.tipo) &&
         [EstatusOrden.confirmado, EstatusOrden.entregado].includes(
           updatedOrden.estatus
         )
