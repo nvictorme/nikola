@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -11,22 +10,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller, useForm } from "react-hook-form";
-import { periodosGarantia } from "shared/constants";
-import { IPais, IProducto } from "shared/interfaces";
-import { PeriodosGarantia, UnidadesLongitud, UnidadesPeso } from "shared/enums";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import ProductSelector from "./ProductoSelector";
+import { IProducto } from "shared/interfaces";
+import { UnidadesLongitud, UnidadesPeso } from "shared/enums";
 import { Textarea } from "@/components/ui/textarea";
 import { useProductosStore } from "@/store/productos.store";
 import { useCategoriasStore } from "@/store/categorias.store";
-import { usePaisesStore } from "@/store/paises.store";
 import { useEffect, useState } from "react";
 import { Spinner } from "@/components/Spinner";
 import { ApiClient } from "@/api/api.client";
@@ -37,11 +25,9 @@ export default function ProductoForm() {
   const { productoId } = useParams();
   const [producto, setProducto] = useState<IProducto | null>(null);
   const [loading, setLoading] = useState(false);
-  const [isMotoresDialogOpen, setIsMotoresDialogOpen] = useState(false);
 
   const { categorias, subcategorias, listarCategorias, listarSubcategorias } =
     useCategoriasStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
   const { crearProducto, actualizarProducto } = useProductosStore();
 
   const navigate = useNavigate();
@@ -69,7 +55,6 @@ export default function ProductoForm() {
     watch,
     control,
     reset,
-    setValue,
     formState: { errors },
   } = useForm<IProducto>({
     defaultValues: producto || {},
@@ -87,26 +72,17 @@ export default function ProductoForm() {
 
   // watch values
   const nombre = watch("nombre");
-  const requiereMotor = watch("requiereMotor");
-  const motores = watch("motores");
 
   // useEffect to list categorias and paises
   useEffect(() => {
     listarCategorias();
-    listarTodosLosPaises();
     if (producto?.categoria?.id) {
       listarSubcategorias(producto.categoria.id);
     }
     return () => {
       reset();
     };
-  }, [
-    listarCategorias,
-    listarTodosLosPaises,
-    reset,
-    producto?.categoria?.id,
-    listarSubcategorias,
-  ]);
+  }, [listarCategorias, reset, producto?.categoria?.id, listarSubcategorias]);
 
   useEffect(() => {
     if (producto) {
@@ -255,149 +231,16 @@ export default function ProductoForm() {
           <div className="grid grid-cols-3 gap-3 items-center">
             <div className="flex flex-col">
               <div className="flex flex-col gap-2 w-full mt-4">
-                <Controller
-                  name="garantia"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      onValueChange={(val) => {
-                        field.onChange(val);
-                      }}
-                      defaultValue={
-                        producto?.garantia || PeriodosGarantia.sin_garantia
-                      }
-                    >
-                      <SelectTrigger>
-                        <Label>Garantia</Label>
-                        <SelectValue placeholder="Garantia" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {periodosGarantia.map((g) => (
-                          <SelectItem key={g} {...field} value={g}>
-                            {g}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
+                <Label>Garantía</Label>
+                <Input
+                  id="garantia"
+                  defaultValue={producto?.garantia || "Sin Garantía"}
+                  type="text"
+                  {...register("garantia")}
                 />
               </div>
             </div>
-            <div className="flex flex-col">
-              <Controller
-                name="requiereMotor"
-                control={control}
-                render={({ field }) => (
-                  <div className="flex items-center gap-2 justify-center">
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                    <Label htmlFor="requiereMotor">Requiere motor?</Label>
-                  </div>
-                )}
-              />
-            </div>
-            <div className="flex flex-col">
-              <Dialog
-                open={isMotoresDialogOpen}
-                onOpenChange={setIsMotoresDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    disabled={!requiereMotor}
-                  >
-                    Seleccionar Motores
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Seleccione Motores</DialogTitle>
-                    <DialogDescription>
-                      <Controller
-                        name="motores"
-                        control={control}
-                        render={({ field }) => (
-                          <ProductSelector
-                            soloMotores
-                            onSelected={(motores) => {
-                              field.onChange(
-                                motores.map((m) => ({
-                                  motor: m,
-                                  cantidad: 1,
-                                }))
-                              );
-                              setIsMotoresDialogOpen(false);
-                            }}
-                            initialSelected={producto?.motores?.map(
-                              (m) => m.motor
-                            )}
-                          />
-                        )}
-                      />
-                    </DialogDescription>
-                  </DialogHeader>
-                </DialogContent>
-              </Dialog>
-            </div>
           </div>
-
-          {/* Add the motors display section */}
-          {requiereMotor && motores?.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              <Label>Motores Seleccionados</Label>
-              <div className="space-y-2">
-                {motores?.map((motor) => (
-                  <div
-                    key={motor.motor.id}
-                    className="flex items-center justify-between p-2 border rounded"
-                  >
-                    <span>{motor.motor.nombre}</span>
-                    <div className="flex items-center gap-2">
-                      <Label>Cantidad:</Label>
-                      <Input
-                        type="number"
-                        min={1}
-                        className="w-20"
-                        value={motor.cantidad}
-                        onChange={(e) => {
-                          const value = Math.max(
-                            1,
-                            parseInt(e.target.value) || 1
-                          );
-                          const newMotores = watch("motores").map((m) =>
-                            m.motor.id === motor.motor.id
-                              ? {
-                                  ...m,
-                                  cantidad: value,
-                                }
-                              : m
-                          );
-                          setValue("motores", newMotores);
-                        }}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        type="button"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-100 h-8 px-2"
-                        onClick={() => {
-                          const newMotores = watch("motores").filter(
-                            (m) => m.motor.id !== motor.motor.id
-                          );
-                          setValue("motores", newMotores);
-                        }}
-                      >
-                        Quitar
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
 
           <div>
             <Controller
@@ -728,38 +571,6 @@ export default function ProductoForm() {
                 {errors.descripcion.message}
               </p>
             )}
-          </div>
-
-          <div>
-            <div className="text-lg font-semibold w-full text-left border-b pb-2">
-              Países de Comercialización
-            </div>
-            <Controller
-              name="paises"
-              control={control}
-              render={({ field }) => (
-                <div className="flex flex-row gap-4 flex-wrap mt-4">
-                  {paises.map((p: IPais) => (
-                    <div
-                      key={`pais-${p.id}`}
-                      className="flex gap-1 align-middle items-start"
-                    >
-                      <Checkbox
-                        checked={field.value?.some((pais) => pais.id === p.id)}
-                        onCheckedChange={(checked) => {
-                          return checked
-                            ? field.onChange(field.value?.concat(p) || [p])
-                            : field.onChange(
-                                field.value?.filter((pais) => pais.id !== p.id)
-                              );
-                        }}
-                      />
-                      <Label htmlFor={`pais-${p}`}>{p.nombre}</Label>
-                    </div>
-                  ))}
-                </div>
-              )}
-            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">

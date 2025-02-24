@@ -13,14 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { IAlmacen } from "shared/interfaces";
-import { usePaisesStore } from "@/store/paises.store";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import { useForm } from "react-hook-form";
 
 const AlmacenForm = ({
@@ -31,7 +24,6 @@ const AlmacenForm = ({
   onSuccess: () => void;
 }) => {
   const { crearAlmacen, actualizarAlmacen, loading } = useAlmacenesStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
 
   const {
     register,
@@ -55,13 +47,8 @@ const AlmacenForm = ({
   });
 
   useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
-
-  useEffect(() => {
     if (almacen) {
       setValue("nombre", almacen.nombre);
-      setValue("pais", almacen.pais);
       setValue("direccion.calle", almacen.direccion?.calle || "");
       setValue("direccion.ciudad", almacen.direccion?.ciudad || "");
       setValue("direccion.codigoPostal", almacen.direccion?.codigoPostal || "");
@@ -76,7 +63,6 @@ const AlmacenForm = ({
       const almacenData = {
         ...data,
         id: almacen?.id,
-        pais: { id: data.pais.id },
       };
 
       if (almacen) {
@@ -100,30 +86,6 @@ const AlmacenForm = ({
         {errors.nombre && (
           <span className="text-sm text-red-500">{errors.nombre.message}</span>
         )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">País</label>
-        <Select
-          defaultValue={almacen?.pais?.id}
-          onValueChange={(value) => {
-            const selectedPais = paises.find((p) => p.id === value);
-            if (selectedPais) {
-              setValue("pais", selectedPais);
-            }
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccione un país" />
-          </SelectTrigger>
-          <SelectContent>
-            {paises.map((pais) => (
-              <SelectItem key={pais.id} value={pais.id}>
-                {pais.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <div>
@@ -178,15 +140,9 @@ const AlmacenForm = ({
 const AlmacenesPage: React.FC = () => {
   const { almacenes, page, pageCount, limit, setPage, setLimit } =
     useAlmacenesStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
-  const { setPais } = useAlmacenesStore();
 
   const [open, setOpen] = useState(false);
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
-
-  useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
 
   const handleEdit = (almacen: Almacen) => {
     setSelectedAlmacen(almacen);
@@ -208,25 +164,6 @@ const AlmacenesPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Almacenes</h2>
         <div className="flex items-center gap-4">
-          <Select
-            defaultValue="Todos"
-            onValueChange={(value) => {
-              setPais(value === "Todos" ? null : value);
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="País" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos los países</SelectItem>
-              {paises.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleNew}>

@@ -78,14 +78,6 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: routes.paises.path,
-        element: (
-          <ProtectedRoute routeRuleCheck={RouteRuleCheck.isAdmin}>
-            <routes.paises.element />
-          </ProtectedRoute>
-        ),
-      },
-      {
         path: routes.categorias.path,
         element: (
           <ProtectedRoute routeRuleCheck={RouteRuleCheck.isAdmin}>

@@ -25,13 +25,13 @@ export default function TransactionPage() {
 
   const [usuario, setUsuario] = useState<IUsuario | null>(user);
 
-  const { distribuidores, listarDistribuidores } = useUsuariosStore();
+  const { vendedores, listarVendedores } = useUsuariosStore();
 
   useEffect(() => {
     if (isAdmin) {
-      listarDistribuidores();
+      listarVendedores();
     }
-  }, [listarDistribuidores, isAdmin]);
+  }, [listarVendedores, isAdmin]);
 
   const {
     transacciones,
@@ -131,7 +131,7 @@ export default function TransactionPage() {
             <Select
               defaultValue={usuario?.id}
               onValueChange={(value) => {
-                let selected = distribuidores.find((d) => d.id === value);
+                let selected = vendedores.find((v) => v.id === value);
                 if (!selected) {
                   selected = user;
                 }
@@ -145,7 +145,6 @@ export default function TransactionPage() {
                 <SelectItem value={user.id}>
                   <div className="flex items-center gap-2">
                     <span className="font-semibold">Tú:</span>
-                    <span>{user.pais.nombre},</span>
                     <span>
                       {user.nombre} {user.apellido}:
                     </span>
@@ -157,18 +156,17 @@ export default function TransactionPage() {
                     </span>
                   </div>
                 </SelectItem>
-                {distribuidores.map((d) => (
-                  <SelectItem key={d.id} value={d.id}>
+                {vendedores.map((v) => (
+                  <SelectItem key={v.id} value={v.id}>
                     <div className="flex items-center gap-2">
-                      <span>{d.pais.nombre},</span>
                       <span>
-                        {d.nombre} {d.apellido}:
+                        {v.nombre} {v.apellido}:
                       </span>
                       <span className="text-gray-500">
                         {new Intl.NumberFormat("en-US", {
                           style: "currency",
                           currency: "USD",
-                        }).format(d.balance)}
+                        }).format(v.balance)}
                       </span>
                     </div>
                   </SelectItem>

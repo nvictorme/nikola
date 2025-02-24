@@ -8,7 +8,6 @@ import {
   isSuperAdmin,
 } from "shared/helpers";
 import { useAuthStore } from "@/store/auth.store";
-import { Paises } from "shared/enums";
 import { Button } from "@/components/ui/button";
 import { FilePen, Package, Image, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -21,7 +20,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export type Producto = Pick<
   IProducto,
-  "sku" | "nombre" | "modelo" | "portada" | "costo" | "precios"
+  "sku" | "nombre" | "modelo" | "portada" | "costo" | "precio"
 >;
 
 export const columnasProductos: ColumnDef<Producto>[] = [
@@ -113,80 +112,14 @@ export const columnasProductos: ColumnDef<Producto>[] = [
     },
   },
   {
+    id: "costo",
+    header: "Costo",
+    accessorFn: (row) => currencyFormat({ value: row.costo }),
+  },
+  {
     id: "precio",
     header: "Precio",
-    cell: ({ row }) => {
-      const producto = row.original as IProducto;
-      const { user } = useAuthStore();
-      const isAdmin = isSuperAdmin(user);
-
-      if (isAdmin) {
-        return (
-          <div className="flex flex-col items-end">
-            {currencyFormat({
-              value: producto.costo,
-              fractionDigits: 2,
-              currency: user?.pais.nombre === Paises.españa ? "EUR" : "USD",
-              locale: user?.pais.nombre === Paises.españa ? "es-ES" : "en-US",
-            })}
-          </div>
-        );
-      }
-
-      const isAvailableInCountry = producto.paises.some(
-        (p) => p.id === user?.pais?.id
-      );
-
-      const precios = isAvailableInCountry
-        ? producto.precios.find((p) => p.pais.id === user?.pais?.id)
-        : null;
-
-      if (!precios) {
-        return (
-          <span className="text-muted-foreground italic">No disponible</span>
-        );
-      }
-
-      const { precioLista, precioExw, precioOferta, enOferta } = precios;
-
-      const formatPrice = (value: number) =>
-        currencyFormat({
-          value,
-          fractionDigits: 2,
-          currency: user?.pais.nombre === Paises.españa ? "EUR" : "USD",
-          locale: user?.pais.nombre === Paises.españa ? "es-ES" : "en-US",
-        });
-
-      if (user?.exw && precioExw > 0) {
-        return (
-          <div className="flex flex-col items-end gap-0.5">
-            <span className="font-medium text-primary w-fit rounded-full bg-primary/10 px-2 py-0.5">
-              {formatPrice(precioExw)}
-            </span>
-            <span className="text-xs text-muted-foreground">EXW</span>
-          </div>
-        );
-      }
-
-      if (enOferta && precioOferta > 0) {
-        return (
-          <div className="flex flex-col items-end gap-1">
-            <span className="font-medium text-primary w-fit rounded-full bg-primary/10 px-3 py-1">
-              {formatPrice(precioOferta)}
-            </span>
-            <span className="text-sm text-muted-foreground line-through opacity-75">
-              {formatPrice(precioLista || 0)}
-            </span>
-          </div>
-        );
-      }
-
-      return (
-        <div className="flex flex-col items-end font-medium">
-          {formatPrice(precioLista || 0)}
-        </div>
-      );
-    },
+    accessorFn: (row) => currencyFormat({ value: row.precio }),
   },
   {
     id: "acciones",

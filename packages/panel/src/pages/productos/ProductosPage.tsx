@@ -15,7 +15,6 @@ import { useAuthStore } from "@/store/auth.store";
 import { isSuperAdmin } from "shared/helpers";
 import { Spinner } from "@/components/Spinner";
 import { useCategoriasStore } from "@/store/categorias.store";
-import { usePaisesStore } from "@/store/paises.store";
 import ProductoDetails from "./ProductoDetails";
 import { Checkbox } from "@/components/ui/checkbox";
 import ProductoStockModal from "./ProductoStockModal";
@@ -25,19 +24,6 @@ import { DataTable } from "@/components/DataTable";
 import { columnasProductos, Producto } from "./columnas.productos";
 import { useDebounce } from "@/hooks/useDebounce";
 import { ProductoGaleriaDrawer } from "./ProductoGaleriaDrawer";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { CopyIcon } from "lucide-react";
-import { toast } from "sonner";
 
 const ProductosPage: React.FC = () => {
   const navigate = useNavigate();
@@ -57,12 +43,10 @@ const ProductosPage: React.FC = () => {
     setPage,
     setLimit,
     term,
-    pais,
     categoria,
     enOferta,
     setTerm,
     setCategoria,
-    setPais,
     setEnOferta,
     setShowGallery,
     showGallery,
@@ -70,19 +54,12 @@ const ProductosPage: React.FC = () => {
     showDetails,
     setShowStockModal,
     showStockModal,
-    copiarPrecios,
-    copiandoPrecios,
   } = useProductosStore();
 
   const { categorias, listarCategorias } = useCategoriasStore();
 
-  const { paises, listarTodosLosPaises } = usePaisesStore();
-
   const [searchTerm, setSearchTerm] = useState<string>(term || "");
   const debouncedSearchTerm = useDebounce(searchTerm);
-
-  const [paisOrigen, setPaisOrigen] = useState<string>("");
-  const [paisDestino, setPaisDestino] = useState<string>("");
 
   // Add effect to update search when debounced value changes
   useEffect(() => {
@@ -100,21 +77,6 @@ const ProductosPage: React.FC = () => {
   useEffect(() => {
     listarProductos();
   }, [listarProductos]);
-
-  // listar paises
-  useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
-
-  const handleCopiarPrecios = async () => {
-    if (!paisOrigen || !paisDestino) {
-      toast.error("Seleccione país de origen y destino");
-      return;
-    }
-    await copiarPrecios(paisOrigen, paisDestino);
-    setPaisOrigen("");
-    setPaisDestino("");
-  };
 
   return (
     <div className="space-y-4">
@@ -157,38 +119,11 @@ const ProductosPage: React.FC = () => {
             </Select>
           </div>
 
-          {isAdmin && (
-            <div className="w-[180px]">
-              <Label htmlFor="pais" className="text-left block mb-2">
-                País
-              </Label>
-              <Select
-                defaultValue="Todos"
-                value={pais || "Todos"}
-                onValueChange={(value) => {
-                  setPais(value === "Todos" ? null : (value as string));
-                }}
-              >
-                <SelectTrigger id="pais">
-                  <SelectValue placeholder="País" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Todos">Todos los países</SelectItem>
-                  {paises.map((p) => (
-                    <SelectItem key={p.id} value={p.id}>
-                      {p.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
           <div className="flex flex-col justify-end h-[60px]">
             <div className="flex items-center gap-2 h-[40px]">
               <Checkbox
                 id="offers"
-                disabled={isAdmin && !pais}
+                disabled={isAdmin}
                 checked={enOferta}
                 onCheckedChange={(checked) => {
                   setEnOferta(checked as boolean);
@@ -202,93 +137,6 @@ const ProductosPage: React.FC = () => {
               </label>
             </div>
           </div>
-
-          {isAdmin && (
-            <div className="flex flex-col justify-end h-[60px]">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" className="gap-2 h-[40px]">
-                    {copiandoPrecios ? (
-                      <>
-                        <Spinner />
-                        Copiando...
-                      </>
-                    ) : (
-                      <>
-                        <CopyIcon size={16} />
-                        Copiar Precios
-                      </>
-                    )}
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Copiar Precios entre Países
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Seleccione el país de origen y destino para copiar los
-                      precios de todos los productos.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label>País de Origen</Label>
-                      <Select value={paisOrigen} onValueChange={setPaisOrigen}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione país origen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {paises.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>País de Destino</Label>
-                      <Select
-                        value={paisDestino}
-                        onValueChange={setPaisDestino}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccione país destino" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {paises.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={handleCopiarPrecios}
-                      disabled={copiandoPrecios}
-                    >
-                      {copiandoPrecios ? (
-                        <>
-                          <Spinner />
-                          Copiando...
-                        </>
-                      ) : (
-                        "Copiar Precios"
-                      )}
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </div>
-          )}
 
           {isAdmin ? (
             <div className="flex flex-col justify-end h-[60px]">

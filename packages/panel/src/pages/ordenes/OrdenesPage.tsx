@@ -59,7 +59,7 @@ const OrdenesPage: React.FC = () => {
     listarOrdenes();
     listarProductos();
     listarSucursales();
-    listarPersonas({ pais: !isAdmin ? user?.pais.id : undefined });
+    listarPersonas({});
     return () => {
       setShowForm(false);
     };
@@ -138,8 +138,11 @@ const OrdenesPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
-                <SelectItem value={TipoOrden.compra}>
-                  {TipoOrden.compra}
+                <SelectItem value={TipoOrden.cotizacion}>
+                  {TipoOrden.cotizacion}
+                </SelectItem>
+                <SelectItem value={TipoOrden.venta}>
+                  {TipoOrden.venta}
                 </SelectItem>
                 <SelectItem value={TipoOrden.credito}>
                   {TipoOrden.credito}

@@ -5,7 +5,6 @@ import BalancePage from "@/pages/balance/BalancePage";
 import { CategoriasPage } from "@/pages/categorias/CategoriasPage";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import OrdenesPage from "@/pages/ordenes/OrdenesPage";
-import PaisesPage from "@/pages/paises/PaisesPage";
 import PersonasPage from "@/pages/personas/PersonasPage";
 import ProductoForm from "@/pages/productos/ProductoForm";
 import ProductosPage from "@/pages/productos/ProductosPage";
@@ -25,7 +24,6 @@ import {
   FileChartColumn,
   IdCard,
   KeyRoundIcon,
-  EarthIcon,
 } from "lucide-react";
 
 export const routes = {
@@ -106,12 +104,6 @@ export const routes = {
     title: "Reportes",
     icon: FileChartColumn,
     element: ReportesPage,
-  },
-  paises: {
-    path: "/paises",
-    title: "Países",
-    icon: EarthIcon,
-    element: PaisesPage,
   },
   categorias: {
     path: "/categorias",

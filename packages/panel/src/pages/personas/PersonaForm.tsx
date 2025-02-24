@@ -1,34 +1,18 @@
-import { useForm, Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { IPersona } from "shared/interfaces";
 import { usePersonasStore } from "@/store/personas.store";
-import { usePaisesStore } from "@/store/paises.store";
-import { useEffect } from "react";
 
 export default function PersonaForm() {
   const { persona, crearPersona, actualizarPersona, hideSheet } =
     usePersonasStore();
 
-  const { paises, listarTodosLosPaises } = usePaisesStore();
-
-  useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
-
   const {
     register,
     handleSubmit,
-    control,
     formState: { errors },
   } = useForm<IPersona>({
     defaultValues: persona || {},
@@ -114,34 +98,6 @@ export default function PersonaForm() {
       <div>
         <Label htmlFor="notas">Notas</Label>
         <Textarea id="notas" {...register("notas")} />
-      </div>
-
-      <div>
-        <Label htmlFor="pais">País</Label>
-        <Controller
-          name="pais"
-          control={control}
-          rules={{ required: "País es requerido" }}
-          render={({ field }) => (
-            <Select onValueChange={field.onChange} value={field.value?.id}>
-              <SelectTrigger>
-                <SelectValue placeholder="Elige un país" />
-              </SelectTrigger>
-              <SelectContent>
-                {paises.map((pais) => (
-                  <SelectItem key={pais.id} value={pais.id}>
-                    {pais.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.pais && (
-          <span className="text-red-500 text-sm mt-1 block">
-            {errors.pais.message}
-          </span>
-        )}
       </div>
 
       <Button type="submit" className="w-full">

@@ -165,6 +165,12 @@ export interface IProducto extends IBase {
   garantia: string;
   costo: number;
   precio: number;
+
+  enOferta?: boolean;
+  precioOferta?: number;
+  inicioOferta?: string;
+  finOferta?: string;
+
   stock: IStockProducto[];
 
   dimensiones: IDimensiones;

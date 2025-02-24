@@ -32,7 +32,6 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
     const searchParams: {
       nif?: string;
       email?: string;
-      pais?: string;
       empresa?: string;
       nombre?: string;
     } = {};
@@ -42,7 +41,6 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
       searchParams.email = searchTerm;
       searchParams.empresa = searchTerm;
       searchParams.nombre = searchTerm;
-      searchParams.pais = user?.pais.id;
     }
 
     const timeoutId = setTimeout(() => {

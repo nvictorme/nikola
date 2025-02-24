@@ -7,7 +7,7 @@ export type AlmacenesStore = {
   almacenes: IAlmacen[];
   almacen: IAlmacen | null;
   crearAlmacen: (almacen: IAlmacen) => Promise<void>;
-  listarAlmacenes: (params?: { pais?: string }) => Promise<void>;
+  listarAlmacenes: () => Promise<void>;
   actualizarAlmacen: (almacen: IAlmacen) => Promise<void>;
   eliminarAlmacen: (id: string) => Promise<void>;
   openSheet: boolean;
@@ -20,8 +20,6 @@ export type AlmacenesStore = {
   pageCount: number;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
-  pais: string | null;
-  setPais: (pais: string | null) => void;
   listarAlmacenesPorProducto: (productoId: string) => Promise<IAlmacen[]>;
   listarAlmacenesPorSucursal: (
     sucursalId: string,
@@ -33,7 +31,6 @@ const initialState: Pick<
   AlmacenesStore,
   | "almacenes"
   | "almacen"
-  | "pais"
   | "openSheet"
   | "total"
   | "page"
@@ -44,7 +41,6 @@ const initialState: Pick<
   loading: false,
   almacenes: [],
   almacen: null,
-  pais: null,
   openSheet: false,
   total: 0,
   page: 1,
@@ -73,7 +69,6 @@ export const useAlmacenesStore = create<AlmacenesStore>()(
           const { data } = await new ApiClient().get("/almacenes", {
             page: get().page,
             limit: get().limit,
-            pais: get().pais,
           });
           set({ ...data });
         } catch (error) {
@@ -103,10 +98,6 @@ export const useAlmacenesStore = create<AlmacenesStore>()(
       },
       setLimit: (limit: number) => {
         set({ limit });
-        get().listarAlmacenes();
-      },
-      setPais: (pais) => {
-        set({ pais, page: 1 });
         get().listarAlmacenes();
       },
       eliminarAlmacen: async (id: string) => {

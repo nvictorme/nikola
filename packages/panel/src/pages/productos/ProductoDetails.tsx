@@ -5,8 +5,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { currencyFormat } from "shared/helpers";
-import { useAuthStore } from "@/store/auth.store";
-import { Paises } from "shared/enums";
 import { useProductosStore } from "@/store/productos.store";
 import { useEffect, useState } from "react";
 import { IProducto } from "shared/interfaces";
@@ -22,7 +20,6 @@ export default function ProductoDetails({
   open,
   onClose,
 }: ProductoDetailsProps) {
-  const { user } = useAuthStore();
   const { producto: target } = useProductosStore();
   const [producto, setProducto] = useState<IProducto | null>(null);
   const [loading, setLoading] = useState(false);
@@ -44,6 +41,8 @@ export default function ProductoDetails({
     return null;
   }
 
+  const { precio, enOferta, precioOferta } = producto;
+
   if (loading) {
     return (
       <div className="flex justify-center items-center">
@@ -51,9 +50,6 @@ export default function ProductoDetails({
       </div>
     );
   }
-
-  const precios = producto?.precios?.[0];
-  const { precioLista, precioExw, precioOferta, enOferta } = precios || {};
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -125,67 +121,31 @@ export default function ProductoDetails({
               </div>
             </div>
 
-            {precios ? (
-              <div className="space-y-2">
-                <h3 className="font-semibold">Precios</h3>
-                <div className="space-y-1">
-                  {precioLista ? (
-                    <p className="text-sm">
-                      Precio Lista:{" "}
-                      {currencyFormat({
-                        value: precioLista,
-                        fractionDigits: 2,
-                        currency:
-                          user?.pais.nombre === Paises.españa ? "EUR" : "USD",
-                        locale:
-                          user?.pais.nombre === Paises.españa
-                            ? "es-ES"
-                            : "en-US",
-                      })}
-                    </p>
-                  ) : null}
+            <div className="space-y-2">
+              <h3 className="font-semibold">Precios</h3>
+              <div className="space-y-1">
+                {precio ? (
+                  <p className="text-sm">
+                    Precio:{" "}
+                    {currencyFormat({
+                      value: precio,
+                      fractionDigits: 2,
+                    })}
+                  </p>
+                ) : null}
 
-                  {user?.exw && precioExw ? (
-                    <p className="text-sm">
-                      Precio EXW:{" "}
-                      {currencyFormat({
-                        value: precioExw,
-                        fractionDigits: 2,
-                        currency:
-                          user?.pais.nombre === Paises.españa ? "EUR" : "USD",
-                        locale:
-                          user?.pais.nombre === Paises.españa
-                            ? "es-ES"
-                            : "en-US",
-                      })}
-                    </p>
-                  ) : null}
+                {enOferta && precioOferta ? (
+                  <p className="text-sm text-green-600">
+                    Precio Oferta:{" "}
+                    {currencyFormat({
+                      value: precioOferta,
+                      fractionDigits: 2,
+                    })}
+                  </p>
+                ) : null}
+              </div>
+            </div>
 
-                  {enOferta && precioOferta ? (
-                    <p className="text-sm text-green-600">
-                      Precio Oferta:{" "}
-                      {currencyFormat({
-                        value: precioOferta,
-                        fractionDigits: 2,
-                        currency:
-                          user?.pais.nombre === Paises.españa ? "EUR" : "USD",
-                        locale:
-                          user?.pais.nombre === Paises.españa
-                            ? "es-ES"
-                            : "en-US",
-                      })}
-                    </p>
-                  ) : null}
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <h3 className="font-semibold">Precios</h3>
-                <p className="text-sm text-muted-foreground">
-                  No hay precios disponibles para tu región
-                </p>
-              </div>
-            )}
             <div>
               <h3 className="font-semibold">Garantía</h3>
               <p className="text-sm text-muted-foreground">
@@ -198,19 +158,6 @@ export default function ProductoDetails({
                 {producto.descripcion || "Sin descripción"}
               </p>
             </div>
-
-            {producto.requiereMotor && producto.motores?.length > 0 && (
-              <div>
-                <h3 className="font-semibold">Requiere Motor</h3>
-                <div className="space-y-1">
-                  {producto.motores.map((motor) => (
-                    <p key={motor.id} className="text-sm text-muted-foreground">
-                      {motor.motor.nombre?.trim()} - Cantidad: {motor.cantidad}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </DialogContent>

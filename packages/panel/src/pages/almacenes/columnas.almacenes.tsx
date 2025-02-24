@@ -3,7 +3,7 @@ import { IAlmacen } from "shared/interfaces";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 
-export type Almacen = Pick<IAlmacen, "id" | "pais" | "nombre" | "direccion">;
+export type Almacen = Pick<IAlmacen, "id" | "nombre" | "direccion">;
 
 type ColumnActions = {
   handleEdit: (almacen: Almacen) => void;
@@ -12,14 +12,6 @@ type ColumnActions = {
 export const columnasAlmacenes = ({
   handleEdit,
 }: ColumnActions): ColumnDef<Almacen>[] => [
-  {
-    accessorKey: "pais",
-    header: "País",
-    cell: ({ row }) => {
-      const almacen = row.original as IAlmacen;
-      return <p>{almacen.pais?.nombre}</p>;
-    },
-  },
   {
     accessorKey: "nombre",
     header: "Nombre",

@@ -31,7 +31,6 @@ export type ProductosStore = {
   getStock: (productoId: string, almacenId: string) => Promise<void>;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
-  setPais: (pais: string | null) => void;
   setTerm: (term: string | null) => void;
   setCategoria: (categoria: string | null) => void;
   setEnOferta: (enOferta: boolean) => void;
@@ -39,7 +38,6 @@ export type ProductosStore = {
   limit: number;
   pageCount: number;
   total: number;
-  pais: string | null;
   term: string | null;
   categoria: string | null;
   enOferta: boolean;
@@ -49,8 +47,6 @@ export type ProductosStore = {
   setShowGallery: (showGallery: boolean) => void;
   showStockModal: boolean;
   setShowStockModal: (showStockModal: boolean) => void;
-  copiarPrecios: (paisOrigenId: string, paisDestinoId: string) => Promise<void>;
-  copiandoPrecios: boolean;
   resetFilters: () => void;
 };
 
@@ -64,14 +60,12 @@ const initialState: Pick<
   | "limit"
   | "pageCount"
   | "total"
-  | "pais"
   | "term"
   | "categoria"
   | "enOferta"
   | "showDetails"
   | "showGallery"
   | "showStockModal"
-  | "copiandoPrecios"
 > = {
   productos: [],
   producto: null,
@@ -81,14 +75,12 @@ const initialState: Pick<
   limit: 10,
   pageCount: 10,
   total: 0,
-  pais: null,
   term: null,
   categoria: null,
   enOferta: false,
   showDetails: false,
   showGallery: false,
   showStockModal: false,
-  copiandoPrecios: false,
 };
 
 export const useProductosStore = create<ProductosStore>()(
@@ -109,7 +101,6 @@ export const useProductosStore = create<ProductosStore>()(
           const { data } = await new ApiClient().get(`/productos`, {
             page: get().page,
             limit: get().limit,
-            pais: get().pais,
             term: get().term,
             categoria: get().categoria,
             enOferta: get().enOferta,
@@ -220,10 +211,6 @@ export const useProductosStore = create<ProductosStore>()(
         set({ limit, page: 1 });
         get().listarProductos();
       },
-      setPais: (pais) => {
-        set({ pais, page: 1 });
-        get().listarProductos();
-      },
       setTerm: (term) => {
         set({ term, page: term ? get().page : 1 });
         get().listarProductos();
@@ -245,24 +232,8 @@ export const useProductosStore = create<ProductosStore>()(
       setShowStockModal: (showStockModal) => {
         set({ showStockModal });
       },
-      copiarPrecios: async (paisOrigenId: string, paisDestinoId: string) => {
-        try {
-          set({ copiandoPrecios: true });
-          await new ApiClient().post("/productos/precios/copiar", {
-            paisOrigenId,
-            paisDestinoId,
-          });
-          toast.success("Precios copiados exitosamente");
-        } catch (error) {
-          console.error(error);
-          toast.error("Error al copiar los precios");
-        } finally {
-          set({ copiandoPrecios: false });
-        }
-      },
       resetFilters: () => {
         set({
-          pais: null,
           categoria: null,
           enOferta: false,
           term: null,

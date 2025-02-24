@@ -8,13 +8,11 @@ export type PersonasStore = {
   persona: IPersona | null;
   crearPersona: (persona: IPersona) => Promise<void>;
   listarPersonas: ({
-    pais,
     nif,
     email,
     empresa,
     nombre,
   }: {
-    pais?: string;
     nif?: string;
     email?: string;
     empresa?: string;
@@ -68,13 +66,12 @@ export const usePersonasStore = create<PersonasStore>()(
           console.error(error);
         }
       },
-      listarPersonas: async ({ pais, nif, email, empresa, nombre }) => {
+      listarPersonas: async ({ nif, email, empresa, nombre }) => {
         try {
           const { term } = get();
           const { data } = await new ApiClient().get(`/personas`, {
             page: get().page,
             limit: get().limit,
-            ...(pais && { pais }),
             ...(term && { term }),
             ...(nif && { nif }),
             ...(email && { email }),

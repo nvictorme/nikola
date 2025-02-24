@@ -33,6 +33,11 @@ export default function ProductoStockModal({
   onClose,
 }: ProductoStockModalProps) {
   const { almacenes, listarAlmacenes } = useAlmacenesStore();
+
+  useEffect(() => {
+    listarAlmacenes();
+  }, [listarAlmacenes]);
+
   const { producto, loading, actualizarStock, getStock, stock } =
     useProductosStore();
 
@@ -95,17 +100,6 @@ export default function ProductoStockModal({
     }
   }, [stock]);
 
-  // Reset almacén and stock when país changes
-  useEffect(() => {
-    setSelectedAlmacen("");
-    setCurrentStock({
-      actual: 0,
-      reservado: 0,
-      transito: 0,
-      rma: 0,
-    });
-  }, [selectedPais]);
-
   // Update the effect that handles product data changes
   useEffect(() => {
     const defaultPrecio = {
@@ -138,12 +132,11 @@ export default function ProductoStockModal({
           }
         : defaultStock
     );
-  }, [selectedPais, producto, selectedAlmacen]);
+  }, [producto, selectedAlmacen]);
 
   // Reset state when modal closes
   useEffect(() => {
     if (!open) {
-      setPais(null);
       setSelectedAlmacen("");
       setCurrentStock({
         actual: 0,
@@ -153,12 +146,12 @@ export default function ProductoStockModal({
       });
       useAlmacenesStore.setState({ almacenes: [] });
     }
-  }, [open, setPais]);
+  }, [open]);
 
   if (!producto) return null;
 
   const handlePreciosSubmit = async () => {
-    if (!producto || !selectedPais) return;
+    if (!producto) return;
 
     // Validate required fields when enOferta is true
     if (currentPrecio.enOferta && !currentPrecio.inicioOferta) {
@@ -168,7 +161,7 @@ export default function ProductoStockModal({
       return;
     }
 
-    await actualizarPrecios(producto.id, selectedPais, currentPrecio);
+    await actualizarPrecios(producto.id, currentPrecio);
   };
 
   const handleStockSubmit = async () => {
@@ -187,244 +180,220 @@ export default function ProductoStockModal({
         </DialogHeader>
 
         <div className="space-y-6">
-          <div className="space-y-2">
-            <Label>País</Label>
-            <Select
-              value={selectedPais || ""}
-              onValueChange={(value) => {
-                setPais(value || null);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Seleccionar país" />
-              </SelectTrigger>
-              <SelectContent>
-                {[{ id: "1", nombre: "Venezuela" }].map((pais) => (
-                  <SelectItem key={pais.id} value={pais.id}>
-                    {pais.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {loading ? (
             <Spinner />
           ) : (
-            selectedPais && (
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Precios</h3>
+            <div className="grid grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <h3 className="font-semibold">Precios</h3>
+                <div className="space-y-2">
+                  <Label>Precio Lista</Label>
+                  <Input
+                    type="number"
+                    value={currentPrecio.precioLista?.toString() || "0"}
+                    onChange={(e) =>
+                      setCurrentPrecio({
+                        ...currentPrecio,
+                        precioLista: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Precio EXW</Label>
+                  <Input
+                    type="number"
+                    value={currentPrecio.precioExw?.toString() || "0"}
+                    onChange={(e) =>
+                      setCurrentPrecio({
+                        ...currentPrecio,
+                        precioExw: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    checked={currentPrecio.enOferta || false}
+                    onCheckedChange={(checked) =>
+                      setCurrentPrecio({
+                        ...currentPrecio,
+                        enOferta: checked as boolean,
+                      })
+                    }
+                  />
+                  <Label>En Oferta</Label>
+                </div>
+                {currentPrecio.enOferta && (
                   <div className="space-y-2">
-                    <Label>Precio Lista</Label>
+                    <Label>Precio Oferta</Label>
                     <Input
                       type="number"
-                      value={currentPrecio.precioLista?.toString() || "0"}
+                      value={currentPrecio.precioOferta?.toString() || "0"}
                       onChange={(e) =>
                         setCurrentPrecio({
                           ...currentPrecio,
-                          precioLista: parseFloat(e.target.value) || 0,
+                          precioOferta: parseFloat(e.target.value) || 0,
                         })
                       }
                     />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Precio EXW</Label>
-                    <Input
-                      type="number"
-                      value={currentPrecio.precioExw?.toString() || "0"}
-                      onChange={(e) =>
-                        setCurrentPrecio({
-                          ...currentPrecio,
-                          precioExw: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={currentPrecio.enOferta || false}
-                      onCheckedChange={(checked) =>
-                        setCurrentPrecio({
-                          ...currentPrecio,
-                          enOferta: checked as boolean,
-                        })
-                      }
-                    />
-                    <Label>En Oferta</Label>
-                  </div>
-                  {currentPrecio.enOferta && (
                     <div className="space-y-2">
-                      <Label>Precio Oferta</Label>
+                      <Label
+                        className={
+                          currentPrecio.enOferta
+                            ? "after:content-['*'] after:ml-0.5 after:text-red-500"
+                            : ""
+                        }
+                      >
+                        Inicio Oferta
+                      </Label>
+                      <Input
+                        type="date"
+                        value={
+                          currentPrecio.inicioOferta
+                            ? new Date(currentPrecio.inicioOferta)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setCurrentPrecio(
+                            (prev: Partial<IPrecioProducto>) => ({
+                              ...prev,
+                              inicioOferta: e.target.value
+                                ? new Date(e.target.value).toISOString()
+                                : null,
+                            })
+                          )
+                        }
+                        min={new Date().toISOString().split("T")[0]}
+                        required={currentPrecio.enOferta}
+                        className={
+                          currentPrecio.enOferta && !currentPrecio.inicioOferta
+                            ? "border-red-500"
+                            : ""
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Fin Oferta</Label>
+                      <Input
+                        type="date"
+                        value={
+                          currentPrecio.finOferta
+                            ? new Date(currentPrecio.finOferta)
+                                .toISOString()
+                                .split("T")[0]
+                            : ""
+                        }
+                        onChange={(e) =>
+                          setCurrentPrecio(
+                            (prev: Partial<IPrecioProducto>) => ({
+                              ...prev,
+                              finOferta: e.target.value
+                                ? new Date(e.target.value).toISOString()
+                                : null,
+                            })
+                          )
+                        }
+                        min={
+                          currentPrecio.inicioOferta
+                            ? new Date(currentPrecio.inicioOferta)
+                                .toISOString()
+                                .split("T")[0]
+                            : new Date().toISOString().split("T")[0]
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+                <Button onClick={handlePreciosSubmit}>
+                  Actualizar Precios
+                </Button>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-semibold">Stock</h3>
+                <div className="space-y-2">
+                  <Label>Almacén</Label>
+                  <Select
+                    value={selectedAlmacen}
+                    onValueChange={setSelectedAlmacen}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccionar almacén" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {almacenes.map((almacen) => (
+                        <SelectItem key={almacen.id} value={almacen.id}>
+                          {almacen.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {selectedAlmacen && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Actual</Label>
                       <Input
                         type="number"
-                        value={currentPrecio.precioOferta?.toString() || "0"}
+                        value={currentStock.actual?.toString() || "0"}
                         onChange={(e) =>
-                          setCurrentPrecio({
-                            ...currentPrecio,
-                            precioOferta: parseFloat(e.target.value) || 0,
+                          setCurrentStock({
+                            ...currentStock,
+                            actual: parseInt(e.target.value) || 0,
                           })
                         }
                       />
-                      <div className="space-y-2">
-                        <Label
-                          className={
-                            currentPrecio.enOferta
-                              ? "after:content-['*'] after:ml-0.5 after:text-red-500"
-                              : ""
-                          }
-                        >
-                          Inicio Oferta
-                        </Label>
-                        <Input
-                          type="date"
-                          value={
-                            currentPrecio.inicioOferta
-                              ? new Date(currentPrecio.inicioOferta)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : ""
-                          }
-                          onChange={(e) =>
-                            setCurrentPrecio(
-                              (prev: Partial<IPrecioProducto>) => ({
-                                ...prev,
-                                inicioOferta: e.target.value
-                                  ? new Date(e.target.value).toISOString()
-                                  : null,
-                              })
-                            )
-                          }
-                          min={new Date().toISOString().split("T")[0]}
-                          required={currentPrecio.enOferta}
-                          className={
-                            currentPrecio.enOferta &&
-                            !currentPrecio.inicioOferta
-                              ? "border-red-500"
-                              : ""
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Fin Oferta</Label>
-                        <Input
-                          type="date"
-                          value={
-                            currentPrecio.finOferta
-                              ? new Date(currentPrecio.finOferta)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : ""
-                          }
-                          onChange={(e) =>
-                            setCurrentPrecio(
-                              (prev: Partial<IPrecioProducto>) => ({
-                                ...prev,
-                                finOferta: e.target.value
-                                  ? new Date(e.target.value).toISOString()
-                                  : null,
-                              })
-                            )
-                          }
-                          min={
-                            currentPrecio.inicioOferta
-                              ? new Date(currentPrecio.inicioOferta)
-                                  .toISOString()
-                                  .split("T")[0]
-                              : new Date().toISOString().split("T")[0]
-                          }
-                        />
-                      </div>
                     </div>
-                  )}
-                  <Button onClick={handlePreciosSubmit}>
-                    Actualizar Precios
-                  </Button>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="font-semibold">Stock</h3>
-                  <div className="space-y-2">
-                    <Label>Almacén</Label>
-                    <Select
-                      value={selectedAlmacen}
-                      onValueChange={setSelectedAlmacen}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar almacén" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {almacenes.map((almacen) => (
-                          <SelectItem key={almacen.id} value={almacen.id}>
-                            {almacen.nombre}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {selectedAlmacen && (
-                    <>
-                      <div className="space-y-2">
-                        <Label>Actual</Label>
-                        <Input
-                          type="number"
-                          value={currentStock.actual?.toString() || "0"}
-                          onChange={(e) =>
-                            setCurrentStock({
-                              ...currentStock,
-                              actual: parseInt(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Reservado</Label>
-                        <Input
-                          type="number"
-                          value={currentStock.reservado?.toString() || "0"}
-                          onChange={(e) =>
-                            setCurrentStock({
-                              ...currentStock,
-                              reservado: parseInt(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>En Tránsito</Label>
-                        <Input
-                          type="number"
-                          value={currentStock.transito?.toString() || "0"}
-                          onChange={(e) =>
-                            setCurrentStock({
-                              ...currentStock,
-                              transito: parseInt(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>RMA</Label>
-                        <Input
-                          type="number"
-                          value={currentStock.rma?.toString() || "0"}
-                          onChange={(e) =>
-                            setCurrentStock({
-                              ...currentStock,
-                              rma: parseInt(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      </div>
-                      <Button onClick={handleStockSubmit}>
-                        Actualizar Stock
-                      </Button>
-                    </>
-                  )}
-                </div>
+                    <div className="space-y-2">
+                      <Label>Reservado</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.reservado?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            reservado: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>En Tránsito</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.transito?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            transito: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>RMA</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.rma?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            rma: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <Button onClick={handleStockSubmit}>
+                      Actualizar Stock
+                    </Button>
+                  </>
+                )}
               </div>
-            )
+            </div>
           )}
         </div>
       </DialogContent>

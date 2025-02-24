@@ -38,7 +38,7 @@ import {
 } from "shared/helpers";
 import { Accordion } from "@/components/ui/accordion";
 import { v4 as uuidv4 } from "uuid";
-import { QbTipoInventario, TipoDescuento, TipoOrden } from "shared/enums";
+import { TipoDescuento, TipoOrden } from "shared/enums";
 import { Separator } from "@/components/ui/separator";
 import { useSucursalesStore } from "@/store/sucursales.store";
 import { useState, useEffect, useCallback } from "react";
@@ -129,7 +129,7 @@ export default function OrdenForm({
       : {
           id: idOrden || undefined,
           ...(user && { vendedor: user }),
-          tipo: TipoOrden.compra,
+          tipo: TipoOrden.venta,
           credito: 0,
           descuento: 0,
           impuesto: 0,
@@ -384,7 +384,7 @@ export default function OrdenForm({
               <Controller
                 name="tipo"
                 control={control}
-                defaultValue={TipoOrden.compra}
+                defaultValue={TipoOrden.venta}
                 render={({ field }) => (
                   <Select
                     defaultValue={field.value}
@@ -408,8 +408,11 @@ export default function OrdenForm({
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value={TipoOrden.compra}>
-                        {TipoOrden.compra}
+                      <SelectItem value={TipoOrden.cotizacion}>
+                        {TipoOrden.cotizacion}
+                      </SelectItem>
+                      <SelectItem value={TipoOrden.venta}>
+                        {TipoOrden.venta}
                       </SelectItem>
                       <SelectItem value={TipoOrden.credito}>
                         {TipoOrden.credito}
@@ -486,43 +489,23 @@ export default function OrdenForm({
                                     cantidad: 1,
                                   };
 
-                                  // si es un personalizado, usar el tipo de inventario nonInventory
-                                  if (p.sku.startsWith("ZZ")) {
-                                    item.qbTipoInventario =
-                                      QbTipoInventario.nonInventory;
-                                  }
-
-                                  // Obtener el precio del producto segun el pais del usuario
-                                  const precios = p.precios?.find(
-                                    (p) => p?.pais?.id === user?.pais?.id
-                                  );
-
                                   // si el producto esta en oferta, y la fecha actual
                                   // esta entre la fecha de inicio y fin de la oferta, usar el precio de oferta
                                   // si la fecha de fin de oferta es null, se considera que la oferta es permanente
                                   if (
-                                    precios?.enOferta &&
-                                    precios?.precioOferta &&
-                                    precios.inicioOferta &&
-                                    (!precios.finOferta
-                                      ? new Date() >=
-                                        new Date(precios.inicioOferta)
+                                    p.enOferta &&
+                                    p.precioOferta &&
+                                    p.inicioOferta &&
+                                    (!p.finOferta
+                                      ? new Date() >= new Date(p.inicioOferta)
                                       : new Date() >=
-                                          new Date(precios.inicioOferta) &&
-                                        new Date() <=
-                                          new Date(precios.finOferta))
+                                          new Date(p.inicioOferta) &&
+                                        new Date() <= new Date(p.finOferta))
                                   ) {
-                                    item.precio = precios?.precioOferta;
-                                    item.precioLista = precios?.precioOferta;
-                                  } else if (user?.exw && precios?.precioExw) {
-                                    // Si el usuario es exportador y hay un precio EXW, usarlo
-                                    item.precio = precios?.precioExw;
-                                    item.precioLista = precios?.precioExw;
+                                    item.precio = p.precioOferta;
                                   } else {
-                                    // si no hay precio EXW ni oferta, usar el precio de lista
-                                    item.precio = precios?.precioLista || 0;
-                                    item.precioLista =
-                                      precios?.precioLista || 0;
+                                    // si no hay precio de oferta, usar el precio normal
+                                    item.precio = p.precio || 0;
                                   }
 
                                   item.total =

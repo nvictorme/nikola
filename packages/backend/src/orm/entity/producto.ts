@@ -55,6 +55,24 @@ export class Producto extends Base implements ORMProducto {
   })
   precio: number;
 
+  @Column({
+    type: "numeric",
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  precioOferta: number;
+
+  @Column({ nullable: false, default: false })
+  enOferta: boolean;
+
+  @Column({ nullable: true })
+  inicioOferta: string;
+
+  @Column({ nullable: true })
+  finOferta: string;
+
   @Column({ length: 30, nullable: false, unique: true })
   sku: string;
 

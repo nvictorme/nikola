@@ -6,7 +6,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search } from "lucide-react";
 import { IProducto } from "shared/interfaces";
 import { useProductosStore } from "@/store/productos.store";
-import { Categorias } from "shared/enums";
 
 interface ProductSelectorProps {
   onSelected: (selected: IProducto[]) => void;
@@ -34,18 +33,13 @@ export default function ProductSelector({
   }, [resetFilters]);
 
   const filteredProducts = useMemo(() => {
-    let filtered = products.filter(
+    const filtered = products.filter(
       (product) =>
         product.nombre.toLowerCase().includes(term?.toLowerCase() || "") ||
         product.sku.toLowerCase().includes(term?.toLowerCase() || "")
     );
-    if (soloMotores) {
-      filtered = filtered.filter(
-        (product) => product.categoria.nombre === Categorias.motores
-      );
-    }
     return filtered;
-  }, [products, term, soloMotores]);
+  }, [products, term]);
 
   const handleCheck = (product: IProducto) => {
     setCheckedProducts((prev) => {

@@ -12,7 +12,7 @@ export type InvitacionPayload = {
 export type UsuariosStore = {
   usuario: IUsuario | null;
   usuarios: IUsuario[];
-  distribuidores: IUsuario[];
+  vendedores: IUsuario[];
   invitarUsuario: (payload: InvitacionPayload) => Promise<void>;
   crearUsuario: (persona: IUsuario) => Promise<void>;
   listarUsuarios: ({
@@ -22,7 +22,7 @@ export type UsuariosStore = {
     nif?: string;
     email?: string;
   }) => Promise<void>;
-  listarDistribuidores: () => Promise<void>;
+  listarVendedores: () => Promise<void>;
   actualizarUsuario: (user: IUsuario) => Promise<void>;
   setUsuario: (usuario: IUsuario | null) => void;
   openSheet: boolean;
@@ -40,7 +40,7 @@ const initialState: Pick<
   UsuariosStore,
   | "usuarios"
   | "usuario"
-  | "distribuidores"
+  | "vendedores"
   | "openSheet"
   | "total"
   | "page"
@@ -49,7 +49,7 @@ const initialState: Pick<
 > = {
   usuario: null,
   usuarios: [],
-  distribuidores: [],
+  vendedores: [],
   openSheet: false,
   total: 0,
   page: 1,
@@ -89,12 +89,12 @@ export const useUsuariosStore = create<UsuariosStore>()(
           console.error(error);
         }
       },
-      listarDistribuidores: async () => {
+      listarVendedores: async () => {
         try {
           const {
-            data: { distribuidores },
-          } = await new ApiClient().get(`/usuarios/distribuidores`, {});
-          set({ distribuidores });
+            data: { vendedores },
+          } = await new ApiClient().get(`/usuarios/vendedores`, {});
+          set({ vendedores });
         } catch (error) {
           console.error(error);
         }

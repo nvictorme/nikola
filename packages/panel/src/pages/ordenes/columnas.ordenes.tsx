@@ -58,8 +58,6 @@ export type Orden = Pick<
   | "sucursal"
   | "cliente"
   | "notas"
-  | "qbInvoiceId"
-  | "qbInvoiceDocNumber"
   | "archivos"
   | "envios"
 >;
@@ -250,30 +248,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
     header: "Notas",
     cell: ({ row }) => {
       const orden = row.original as IOrden;
-      const { user } = useAuthStore();
-      const isAdmin = isSuperAdmin(user);
-      return (
-        <div className="text-xs">
-          {orden.notas}
-          <br />
-          {orden.qbInvoiceDocNumber && isAdmin && (
-            <Button
-              variant="link"
-              className="text-xs p-0 h-auto"
-              onClick={() => {
-                window.open(
-                  `${import.meta.env.VITE_QBO_URL}/invoice?txnId=${
-                    orden.qbInvoiceId
-                  }`,
-                  "_blank"
-                );
-              }}
-            >
-              Factura #{orden.qbInvoiceDocNumber}
-            </Button>
-          )}
-        </div>
-      );
+      return <div className="text-xs">{orden.notas}</div>;
     },
   },
   {
@@ -337,14 +312,12 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       const [openEnvio, setOpenEnvio] = useState<boolean>(false);
 
       const canEdit = useMemo(() => {
-        // If order has qbInvoiceId, editing is not allowed
-        if (orden.qbInvoiceId) return false;
         return [
           EstatusOrden.pendiente,
           EstatusOrden.rechazado,
           EstatusOrden.aprobado,
         ].includes(orden.estatus);
-      }, [orden.estatus, orden.qbInvoiceId]);
+      }, [orden.estatus]);
 
       const canAddTracking = useMemo(() => {
         return [EstatusOrden.procesando, EstatusOrden.enviado].includes(
@@ -407,7 +380,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
               </AlertDialog>
             ) : null}
 
-            {(orden.tipo === TipoOrden.compra ||
+            {(orden.tipo === TipoOrden.venta ||
               orden.tipo === TipoOrden.credito) &&
             estatusOrden[orden.estatus] > 4 &&
             estatusOrden[orden.estatus] < 7 ? (

@@ -28,8 +28,6 @@ export type Transaccion = Pick<
   | "estatusPago"
   | "metodoPago"
   | "archivos"
-  | "qbInvoiceId"
-  | "qbInvoiceDocNumber"
 >;
 
 export const columnasTransacciones: ColumnDef<Transaccion>[] = [
@@ -51,32 +49,7 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
     header: "Descripción",
     cell: ({ row }) => {
       const transaccion = row.original as Transaccion;
-      const { user } = useAuthStore();
-      const isAdmin = isSuperAdmin(user);
-      if (isAdmin && transaccion.qbInvoiceDocNumber) {
-        return (
-          <div className="text-xs">
-            {transaccion.qbInvoiceDocNumber && isAdmin && (
-              <Button
-                variant="link"
-                className="text-xs p-0 h-auto"
-                onClick={() => {
-                  window.open(
-                    `${import.meta.env.VITE_QBO_URL}/invoice?txnId=${
-                      transaccion.qbInvoiceId
-                    }`,
-                    "_blank"
-                  );
-                }}
-              >
-                {transaccion.descripcion}
-              </Button>
-            )}
-          </div>
-        );
-      } else {
-        return <div className="text-xs">{transaccion.descripcion}</div>;
-      }
+      return <div className="text-xs">{transaccion.descripcion}</div>;
     },
   },
   {

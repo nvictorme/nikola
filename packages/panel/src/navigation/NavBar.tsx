@@ -193,15 +193,6 @@ const NavBar: React.FC = () => {
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <a
-                  href={routes.paises.path}
-                  className={`flex gap-2 align-middle transition-colors hover:text-foreground`}
-                >
-                  <routes.paises.icon className="h-4 w-4" />{" "}
-                  {routes.paises.title}
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <a
                   href={routes.sucursales.path}
                   className={`flex gap-2 align-middle transition-colors hover:text-foreground`}
                 >
