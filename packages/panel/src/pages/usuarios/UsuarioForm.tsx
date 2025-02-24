@@ -21,7 +21,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { usePaisesStore } from "@/store/paises.store";
 
 export default function UsuarioForm() {
   const { usuario, crearUsuario, actualizarUsuario, hideSheet } =
@@ -29,21 +28,16 @@ export default function UsuarioForm() {
 
   const { roles, listarRoles } = useRolesStore();
 
-  const { sucursales, listarSucursalesPorPais } = useSucursalesStore();
-
-  const { paises, listarTodosLosPaises } = usePaisesStore();
+  const { sucursales, listarTodasLasSucursales } = useSucursalesStore();
 
   const {
     register,
     handleSubmit,
     control,
-    watch,
     formState: { errors },
   } = useForm<IUsuario>({
     defaultValues: usuario || {},
   });
-
-  const pais = watch("pais");
 
   const onSubmit = (data: IUsuario) => {
     if (usuario) {
@@ -59,17 +53,10 @@ export default function UsuarioForm() {
     if (!roles.length) listarRoles();
   }, [roles, listarRoles]);
 
-  // cargar sucursales por pais
+  // cargar sucursales
   useEffect(() => {
-    if (pais) listarSucursalesPorPais(pais);
-  }, [pais, listarSucursalesPorPais]);
-
-  // cargar paises
-  useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
-
-  if (!paises.length) return null;
+    listarTodasLasSucursales();
+  }, [listarTodasLasSucursales]);
 
   return (
     <form
@@ -173,53 +160,17 @@ export default function UsuarioForm() {
         )}
       </div>
 
-      <div>
-        <Label htmlFor="pais">País</Label>
-        <Controller
-          name="pais"
-          control={control}
-          rules={{ required: "País es requerido" }}
-          render={({ field }) => (
-            <Select
-              onValueChange={(value) => {
-                const selectedPais = paises.find((p) => p.id === value);
-                field.onChange(selectedPais);
-              }}
-              defaultValue={field.value?.id}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Elige un país" />
-              </SelectTrigger>
-              <SelectContent>
-                {paises?.map((pais) => (
-                  <SelectItem key={pais.id} value={pais.id}>
-                    {pais.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )}
-        />
-        {errors.pais && (
-          <span className="text-red-500 text-sm mt-1">
-            {errors.pais.message}
-          </span>
-        )}
-      </div>
-
       <div className="flex items-center space-x-2">
         <Popover modal>
           <PopoverTrigger asChild>
-            <Button type="button" variant="outline" disabled={!pais}>
+            <Button type="button" variant="outline">
               Seleccionar Sucursales
             </Button>
           </PopoverTrigger>
           <PopoverContent className="w-80">
             <div className="grid gap-4">
               <div className="space-y-2">
-                <h4 className="font-medium leading-none">
-                  Sucursales en {pais?.nombre}
-                </h4>
+                <h4 className="font-medium leading-none">Sucursales</h4>
                 <p className="text-sm text-muted-foreground">
                   Seleccione las sucursales a las que tiene acceso el usuario
                 </p>

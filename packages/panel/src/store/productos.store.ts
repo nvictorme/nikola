@@ -1,13 +1,8 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { ApiClient } from "../api/api.client";
-import {
-  IArchivo,
-  IProducto,
-  IPrecioProducto,
-  IStockProducto,
-} from "shared/interfaces";
-import { Categorias, EstatusArchivo } from "shared/enums";
+import { IArchivo, IProducto, IStockProducto } from "shared/interfaces";
+import { EstatusArchivo } from "shared/enums";
 import { toast } from "sonner";
 
 export type ProductosStore = {
@@ -26,14 +21,8 @@ export type ProductosStore = {
     isPortada?: boolean
   ) => Promise<void>;
   eliminarItemGaleria: (productoId: string, archivoId: string) => Promise<void>;
-  listarMotores: () => IProducto[];
   setProducto: (producto: IProducto | null) => void;
   reset: () => void;
-  actualizarPrecios: (
-    productoId: string,
-    paisId: string,
-    precios: Partial<IPrecioProducto>
-  ) => Promise<void>;
   actualizarStock: (
     productoId: string,
     almacenId: string,
@@ -193,11 +182,6 @@ export const useProductosStore = create<ProductosStore>()(
           throw error;
         }
       },
-      listarMotores: () => {
-        return get().productos.filter(
-          (p) => p.categoria.nombre === Categorias.motores
-        );
-      },
       setProducto: (producto) => {
         set({ producto });
       },
@@ -211,21 +195,6 @@ export const useProductosStore = create<ProductosStore>()(
           set({ stock: data.stock });
         } catch (error) {
           console.error(error);
-        }
-      },
-      actualizarPrecios: async (productoId, paisId, precios) => {
-        try {
-          await new ApiClient().put(
-            `/productos/${productoId}/precios/${paisId}`,
-            {
-              precios,
-            }
-          );
-          await get().getProducto(productoId);
-          toast.success("Precios actualizados correctamente");
-        } catch (error) {
-          console.error(error);
-          toast.error("Error al actualizar los precios");
         }
       },
       actualizarStock: async (productoId, almacenId, stock) => {

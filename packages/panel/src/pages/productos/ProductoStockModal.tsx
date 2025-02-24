@@ -17,10 +17,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useProductosStore } from "@/store/productos.store";
-import { usePaisesStore } from "@/store/paises.store";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { useState, useEffect } from "react";
-import { IPrecioProducto, IStockProducto } from "shared/interfaces";
+import { IStockProducto } from "shared/interfaces";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 
@@ -33,50 +32,12 @@ export default function ProductoStockModal({
   open,
   onClose,
 }: ProductoStockModalProps) {
-  const { paises } = usePaisesStore();
-  const { almacenes, pais: selectedPais, setPais } = useAlmacenesStore();
-  const {
-    producto,
-    loading,
-    actualizarPrecios,
-    actualizarStock,
-    getStock,
-    stock,
-  } = useProductosStore();
+  const { almacenes, listarAlmacenes } = useAlmacenesStore();
+  const { producto, loading, actualizarStock, getStock, stock } =
+    useProductosStore();
 
   // Initialize with empty values
   const [selectedAlmacen, setSelectedAlmacen] = useState<string>("");
-  const [currentPrecio, setCurrentPrecio] = useState<Partial<IPrecioProducto>>(
-    () => {
-      const defaultPrecio = {
-        precioLista: 0,
-        precioExw: 0,
-        precioOferta: 0,
-        enOferta: false,
-        inicioOferta: null,
-        finOferta: null,
-      };
-
-      if (!producto?.precios?.length || !selectedPais) {
-        return defaultPrecio;
-      }
-
-      // Find precio matching the selected country
-      const precio = producto.precios.find((p) => p.pais.id === selectedPais);
-      if (!precio) {
-        return defaultPrecio;
-      }
-
-      return {
-        precioLista: precio.precioLista,
-        precioExw: precio.precioExw,
-        precioOferta: precio.precioOferta,
-        enOferta: precio.enOferta,
-        inicioOferta: precio.inicioOferta,
-        finOferta: precio.finOferta,
-      };
-    }
-  );
 
   const [currentStock, setCurrentStock] = useState<Partial<IStockProducto>>(
     () => {
@@ -87,13 +48,13 @@ export default function ProductoStockModal({
         rma: 0,
       };
 
-      if (!producto?.stock?.length || !selectedPais) {
+      if (!producto?.stock?.length) {
         return defaultStock;
       }
 
       // Find stock matching the selected country
       const stock = producto.stock.find(
-        (s) => s.almacen?.pais?.id === selectedPais
+        (s) => s.almacen?.id === selectedAlmacen
       );
       if (!stock) {
         return defaultStock;
@@ -163,39 +124,9 @@ export default function ProductoStockModal({
       rma: 0,
     };
 
-    if (!producto?.precios?.length || !selectedPais) {
-      setCurrentPrecio(defaultPrecio);
-      setCurrentStock(defaultStock);
-      return;
-    }
-
-    // Update precio
-    const precio = producto.precios.find((p) => p.pais.id === selectedPais);
-    if (!precio) {
-      setCurrentPrecio(defaultPrecio);
-      return;
-    }
-
-    // Ensure dates are properly handled
-    const inicioOferta = precio.inicioOferta
-      ? new Date(precio.inicioOferta).toISOString()
-      : null;
-    const finOferta = precio.finOferta
-      ? new Date(precio.finOferta).toISOString()
-      : null;
-
-    setCurrentPrecio({
-      precioLista: precio.precioLista,
-      precioExw: precio.precioExw,
-      precioOferta: precio.precioOferta,
-      enOferta: precio.enOferta,
-      inicioOferta,
-      finOferta,
-    });
-
     // Update stock
     const stock = producto.stock?.find(
-      (s) => s.almacen?.pais?.id === selectedPais
+      (s) => s.almacen?.id === selectedAlmacen
     );
     setCurrentStock(
       stock
@@ -207,7 +138,7 @@ export default function ProductoStockModal({
           }
         : defaultStock
     );
-  }, [selectedPais, producto]);
+  }, [selectedPais, producto, selectedAlmacen]);
 
   // Reset state when modal closes
   useEffect(() => {
@@ -268,7 +199,7 @@ export default function ProductoStockModal({
                 <SelectValue placeholder="Seleccionar país" />
               </SelectTrigger>
               <SelectContent>
-                {paises.map((pais) => (
+                {[{ id: "1", nombre: "Venezuela" }].map((pais) => (
                   <SelectItem key={pais.id} value={pais.id}>
                     {pais.nombre}
                   </SelectItem>
@@ -355,12 +286,14 @@ export default function ProductoStockModal({
                               : ""
                           }
                           onChange={(e) =>
-                            setCurrentPrecio((prev) => ({
-                              ...prev,
-                              inicioOferta: e.target.value
-                                ? new Date(e.target.value).toISOString()
-                                : null,
-                            }))
+                            setCurrentPrecio(
+                              (prev: Partial<IPrecioProducto>) => ({
+                                ...prev,
+                                inicioOferta: e.target.value
+                                  ? new Date(e.target.value).toISOString()
+                                  : null,
+                              })
+                            )
                           }
                           min={new Date().toISOString().split("T")[0]}
                           required={currentPrecio.enOferta}
@@ -384,12 +317,14 @@ export default function ProductoStockModal({
                               : ""
                           }
                           onChange={(e) =>
-                            setCurrentPrecio((prev) => ({
-                              ...prev,
-                              finOferta: e.target.value
-                                ? new Date(e.target.value).toISOString()
-                                : null,
-                            }))
+                            setCurrentPrecio(
+                              (prev: Partial<IPrecioProducto>) => ({
+                                ...prev,
+                                finOferta: e.target.value
+                                  ? new Date(e.target.value).toISOString()
+                                  : null,
+                              })
+                            )
                           }
                           min={
                             currentPrecio.inicioOferta

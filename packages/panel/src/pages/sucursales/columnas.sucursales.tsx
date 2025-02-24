@@ -3,7 +3,7 @@ import { ISucursal } from "shared/interfaces";
 import { Button } from "@/components/ui/button";
 import { Edit } from "lucide-react";
 
-export type Sucursal = Pick<ISucursal, "id" | "pais" | "nombre" | "direccion">;
+export type Sucursal = Pick<ISucursal, "id" | "nombre" | "direccion">;
 
 type ColumnActions = {
   handleEdit: (sucursal: ISucursal) => void;
@@ -12,14 +12,6 @@ type ColumnActions = {
 export const columnasSucursales = ({
   handleEdit,
 }: ColumnActions): ColumnDef<ISucursal>[] => [
-  {
-    accessorKey: "pais",
-    header: "País",
-    cell: ({ row }) => {
-      const sucursal = row.original as ISucursal;
-      return <p>{sucursal.pais?.nombre}</p>;
-    },
-  },
   {
     accessorKey: "nombre",
     header: "Nombre",

@@ -1,5 +1,6 @@
 import { AppDataSource } from "../data-source";
 import { roles } from "shared/constants";
+import { RolesBase } from "shared/enums";
 import { crearRol } from "../../helpers/privilegios.helpers";
 import { Usuario } from "../entity/usuario";
 import { Rol } from "../entity/rol";
@@ -20,18 +21,18 @@ async function run(): Promise<void> {
 
   await AppDataSource.manager.save(superUsuario);
 
-  // Create a distribuidor user
-  const roleDistribuidor = await AppDataSource.getRepository(Rol).findOneBy({
-    nombre: "Distribuidor",
+  // Create a ventas user
+  const rolVentas = await AppDataSource.getRepository(Rol).findOneBy({
+    nombre: RolesBase.ventas,
   });
 
-  const distribuidor = new Usuario();
-  distribuidor.nombre = "Victor Noguera";
-  distribuidor.email = "nvictor@tuta.io";
-  distribuidor.password = "Benito2023$";
-  distribuidor.rol = roleDistribuidor!;
+  const vendedor = new Usuario();
+  vendedor.nombre = "Victor Noguera";
+  vendedor.email = "nvictor@tuta.io";
+  vendedor.password = "Benito2023$";
+  vendedor.rol = rolVentas!;
 
-  await AppDataSource.manager.save(distribuidor);
+  await AppDataSource.manager.save(vendedor);
 }
 
 run()

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
-import { IPais, ISucursal } from "shared/interfaces";
+import { ISucursal } from "shared/interfaces";
 import { ApiClient } from "../api/api.client";
 
 export type SucursalesStore = {
@@ -9,7 +9,6 @@ export type SucursalesStore = {
   sucursal: ISucursal | null;
   crearSucursal: (sucursal: ISucursal) => Promise<void>;
   listarSucursales: () => Promise<void>;
-  listarSucursalesPorPais: (pais: IPais) => Promise<void>;
   listarTodasLasSucursales: () => Promise<void>;
   actualizarSucursal: (sucursal: ISucursal) => Promise<void>;
   openSheet: boolean;
@@ -21,8 +20,6 @@ export type SucursalesStore = {
   pageCount: number;
   setPage: (page: number) => void;
   setLimit: (limit: number) => void;
-  pais: IPais | null;
-  setPais: (pais: IPais | null) => void;
   obtenerSucursal: (id: string) => Promise<void>;
   eliminarSucursal: (id: string) => Promise<void>;
   isLoading: boolean;
@@ -38,7 +35,6 @@ const initialState: Pick<
   | "total"
   | "limit"
   | "pageCount"
-  | "pais"
   | "isLoading"
   | "error"
 > = {
@@ -49,7 +45,6 @@ const initialState: Pick<
   total: 0,
   limit: 10,
   pageCount: 1,
-  pais: null,
   isLoading: false,
   error: null,
 };
@@ -75,21 +70,9 @@ export const useSucursalesStore = create<SucursalesStore>()(
           });
         }
       },
-      listarSucursalesPorPais: async (pais: IPais) => {
-        try {
-          const { data } = await new ApiClient().get(
-            `/sucursales/pais/${pais.id}`,
-            {}
-          );
-          set({ sucursales: data.sucursales });
-        } catch (error) {
-          console.error(error);
-        }
-      },
       listarSucursales: async () => {
         try {
           const { data } = await new ApiClient().get("/sucursales", {
-            ...(get().pais && { pais: get().pais?.id }),
             page: Number(get().page),
             limit: Number(get().limit),
           });
@@ -132,10 +115,6 @@ export const useSucursalesStore = create<SucursalesStore>()(
       },
       setLimit: (limit: number) => {
         set({ limit });
-        get().listarSucursales();
-      },
-      setPais: (pais) => {
-        set({ pais, page: 1 });
         get().listarSucursales();
       },
       obtenerSucursal: async (id: string) => {

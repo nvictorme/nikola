@@ -17,7 +17,6 @@ export type Usuario = Pick<
   | "email"
   | "nombre"
   | "apellido"
-  | "pais"
   | "activo"
   | "notas"
   | "rol"
@@ -54,11 +53,6 @@ export const columnasUsuarios: ColumnDef<Usuario>[] = [
   {
     accessorKey: "apellido",
     header: "Apellido",
-  },
-  {
-    accessorKey: "pais",
-    header: "País",
-    accessorFn: (row) => row.pais?.nombre || "Sin país",
   },
   {
     accessorKey: "activo",

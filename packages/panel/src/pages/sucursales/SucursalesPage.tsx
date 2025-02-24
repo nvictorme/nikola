@@ -12,8 +12,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { IAlmacen, IPais, ISucursal } from "shared/interfaces";
-import { usePaisesStore } from "@/store/paises.store";
+import { IAlmacen, ISucursal } from "shared/interfaces";
 import {
   Select,
   SelectContent,
@@ -33,8 +32,7 @@ const SucursalForm = ({
   onSuccess: () => void;
 }) => {
   const { crearSucursal, actualizarSucursal, isLoading } = useSucursalesStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
-  const { almacenes, setPais } = useAlmacenesStore();
+  const { almacenes, listarAlmacenes } = useAlmacenesStore();
   const [selectedAlmacenes, setSelectedAlmacenes] = useState<IAlmacen[]>([]);
 
   const {
@@ -49,18 +47,12 @@ const SucursalForm = ({
   });
 
   useEffect(() => {
-    listarTodosLosPaises();
-    if (sucursal?.pais) {
-      setPais(sucursal.pais.id);
-    } else {
-      setPais(null);
-    }
-  }, [listarTodosLosPaises, sucursal?.pais, setPais]);
+    listarAlmacenes();
+  }, [listarAlmacenes]);
 
   useEffect(() => {
     if (sucursal) {
       setValue("nombre", sucursal.nombre);
-      setValue("pais", sucursal.pais || null);
       setValue("direccion.calle", sucursal.direccion?.calle || "");
       setValue("direccion.ciudad", sucursal.direccion?.ciudad || "");
       setValue(
@@ -76,7 +68,6 @@ const SucursalForm = ({
       const sucursalData = {
         ...data,
         id: sucursal?.id,
-        pais: { id: data.pais.id },
         almacenes: selectedAlmacenes,
         impuesto: sucursal?.impuesto || 0,
         impuestoIncluido: sucursal?.impuestoIncluido || false,
@@ -104,31 +95,6 @@ const SucursalForm = ({
         />
         {errors.nombre && (
           <span className="text-sm text-red-500">{errors.nombre.message}</span>
-        )}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium mb-1">País</label>
-        <Select
-          defaultValue={sucursal?.pais?.id}
-          onValueChange={(value) => {
-            setValue("pais", paises.find((p) => p.id === value) as IPais);
-            setPais(paises.find((p) => p.id === value)?.id || null);
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Seleccione un país" />
-          </SelectTrigger>
-          <SelectContent>
-            {paises.map((pais) => (
-              <SelectItem key={pais.id} value={pais.id}>
-                {pais.nombre}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {errors.pais && (
-          <span className="text-sm text-red-500">{errors.pais.message}</span>
         )}
       </div>
 
@@ -243,9 +209,7 @@ const SucursalesPage: React.FC = () => {
     setPage,
     setLimit,
     error,
-    setPais,
   } = useSucursalesStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
   const [open, setOpen] = useState(false);
   const [selectedSucursal, setSelectedSucursal] = useState<ISucursal | null>(
     null
@@ -253,8 +217,7 @@ const SucursalesPage: React.FC = () => {
 
   useEffect(() => {
     listarSucursales();
-    listarTodosLosPaises();
-  }, [listarSucursales, listarTodosLosPaises]);
+  }, [listarSucursales]);
 
   const handleEdit = (sucursal: ISucursal) => {
     setSelectedSucursal(sucursal);
@@ -276,25 +239,6 @@ const SucursalesPage: React.FC = () => {
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Sucursales</h2>
         <div className="flex items-center gap-4">
-          <Select
-            defaultValue="Todos"
-            onValueChange={(value) => {
-              setPais(paises.find((p) => p.id === value) || null);
-            }}
-          >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="País" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Todos">Todos los países</SelectItem>
-              {paises.map((p) => (
-                <SelectItem key={p.id} value={p.id}>
-                  {p.nombre}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button onClick={handleNew}>

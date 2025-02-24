@@ -10,8 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { usePaisesStore } from "@/store/paises.store";
-import { useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { TipoReporte } from "shared/enums";
 
@@ -21,15 +19,8 @@ type FormValues = {
 
 export const ReporteProductosPorPais = () => {
   const { generarReporte, isLoading } = useReportesStore();
-  const { paises, listarTodosLosPaises } = usePaisesStore();
   const { toast } = useToast();
-  const { control, handleSubmit, watch } = useForm<FormValues>();
-
-  const paisId = watch("paisId");
-
-  useEffect(() => {
-    listarTodosLosPaises();
-  }, [listarTodosLosPaises]);
+  const { control, handleSubmit } = useForm<FormValues>();
 
   const onSubmit = async (values: FormValues) => {
     try {
@@ -73,7 +64,7 @@ export const ReporteProductosPorPais = () => {
                     <SelectValue placeholder="Seleccionar país" />
                   </SelectTrigger>
                   <SelectContent>
-                    {paises.map((pais) => (
+                    {[{ id: "1", nombre: "Venezuela" }].map((pais) => (
                       <SelectItem key={pais.id} value={pais.id}>
                         {pais.nombre}
                       </SelectItem>
@@ -83,11 +74,7 @@ export const ReporteProductosPorPais = () => {
               )}
             />
           </div>
-          <Button
-            type="submit"
-            disabled={isLoading || !paisId}
-            className="w-full"
-          >
+          <Button type="submit" disabled={isLoading} className="w-full">
             {isLoading ? "Generando..." : "Generar Reporte"}
           </Button>
         </form>
