@@ -39,6 +39,7 @@ export class Producto extends Base implements ORMProducto {
 
   @Column({
     type: "numeric",
+    default: 0,
     precision: 10,
     scale: 2,
     nullable: true,
@@ -48,6 +49,7 @@ export class Producto extends Base implements ORMProducto {
 
   @Column({
     type: "numeric",
+    default: 0,
     precision: 10,
     scale: 2,
     nullable: true,
@@ -57,6 +59,7 @@ export class Producto extends Base implements ORMProducto {
 
   @Column({
     type: "numeric",
+    default: 0,
     precision: 10,
     scale: 2,
     nullable: true,

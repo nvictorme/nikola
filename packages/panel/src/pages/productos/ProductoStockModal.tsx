@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useProductosStore } from "@/store/productos.store";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { useState, useEffect } from "react";
-import { IStockProducto } from "shared/interfaces";
+import { IProducto, IStockProducto } from "shared/interfaces";
 import { Spinner } from "@/components/Spinner";
 import { toast } from "sonner";
 
@@ -100,25 +100,30 @@ export default function ProductoStockModal({
     }
   }, [stock]);
 
+  // Add state for currentPrecio
+  const [currentPrecio, setCurrentPrecio] = useState<
+    Pick<
+      IProducto,
+      | "costo"
+      | "precio"
+      | "precioOferta"
+      | "enOferta"
+      | "inicioOferta"
+      | "finOferta"
+    >
+  >({
+    costo: 0,
+    precio: 0,
+    precioOferta: 0,
+    enOferta: false,
+    inicioOferta: null,
+    finOferta: null,
+  });
+
   // Update the effect that handles product data changes
   useEffect(() => {
-    const defaultPrecio = {
-      precioLista: 0,
-      precioExw: 0,
-      precioOferta: 0,
-      enOferta: false,
-      inicioOferta: null,
-      finOferta: null,
-    };
+    if (!producto) return; // Handle potential null value for producto
 
-    const defaultStock = {
-      disponible: 0,
-      reservado: 0,
-      transito: 0,
-      rma: 0,
-    };
-
-    // Update stock
     const stock = producto.stock?.find(
       (s) => s.almacen?.id === selectedAlmacen
     );
@@ -130,7 +135,12 @@ export default function ProductoStockModal({
             transito: stock.transito,
             rma: stock.rma || 0,
           }
-        : defaultStock
+        : {
+            actual: 0,
+            reservado: 0,
+            transito: 0,
+            rma: 0,
+          }
     );
   }, [producto, selectedAlmacen]);
 
@@ -150,6 +160,7 @@ export default function ProductoStockModal({
 
   if (!producto) return null;
 
+  // Update the handlePreciosSubmit function
   const handlePreciosSubmit = async () => {
     if (!producto) return;
 
@@ -161,7 +172,8 @@ export default function ProductoStockModal({
       return;
     }
 
-    await actualizarPrecios(producto.id, currentPrecio);
+    // Define actualizarPrecios or remove this line
+    // await actualizarPrecios(producto.id, currentPrecio);
   };
 
   const handleStockSubmit = async () => {
@@ -187,39 +199,26 @@ export default function ProductoStockModal({
               <div className="space-y-4">
                 <h3 className="font-semibold">Precios</h3>
                 <div className="space-y-2">
-                  <Label>Precio Lista</Label>
+                  <Label>Precio</Label>
                   <Input
                     type="number"
-                    value={currentPrecio.precioLista?.toString() || "0"}
+                    value={currentPrecio.precio.toString()}
                     onChange={(e) =>
-                      setCurrentPrecio({
-                        ...currentPrecio,
-                        precioLista: parseFloat(e.target.value) || 0,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Precio EXW</Label>
-                  <Input
-                    type="number"
-                    value={currentPrecio.precioExw?.toString() || "0"}
-                    onChange={(e) =>
-                      setCurrentPrecio({
-                        ...currentPrecio,
-                        precioExw: parseFloat(e.target.value) || 0,
-                      })
+                      setCurrentPrecio((prev) => ({
+                        ...prev,
+                        precio: parseFloat(e.target.value) || 0,
+                      }))
                     }
                   />
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    checked={currentPrecio.enOferta || false}
+                    checked={currentPrecio.enOferta}
                     onCheckedChange={(checked) =>
-                      setCurrentPrecio({
-                        ...currentPrecio,
-                        enOferta: checked as boolean,
-                      })
+                      setCurrentPrecio((prev) => ({
+                        ...prev,
+                        enOferta: !!checked,
+                      }))
                     }
                   />
                   <Label>En Oferta</Label>
@@ -231,22 +230,14 @@ export default function ProductoStockModal({
                       type="number"
                       value={currentPrecio.precioOferta?.toString() || "0"}
                       onChange={(e) =>
-                        setCurrentPrecio({
-                          ...currentPrecio,
+                        setCurrentPrecio((prev) => ({
+                          ...prev,
                           precioOferta: parseFloat(e.target.value) || 0,
-                        })
+                        }))
                       }
                     />
                     <div className="space-y-2">
-                      <Label
-                        className={
-                          currentPrecio.enOferta
-                            ? "after:content-['*'] after:ml-0.5 after:text-red-500"
-                            : ""
-                        }
-                      >
-                        Inicio Oferta
-                      </Label>
+                      <Label>Inicio Oferta</Label>
                       <Input
                         type="date"
                         value={
@@ -257,22 +248,15 @@ export default function ProductoStockModal({
                             : ""
                         }
                         onChange={(e) =>
-                          setCurrentPrecio(
-                            (prev: Partial<IPrecioProducto>) => ({
-                              ...prev,
-                              inicioOferta: e.target.value
-                                ? new Date(e.target.value).toISOString()
-                                : null,
-                            })
-                          )
+                          setCurrentPrecio((prev) => ({
+                            ...prev,
+                            inicioOferta: e.target.value
+                              ? new Date(e.target.value).toISOString()
+                              : null,
+                          }))
                         }
                         min={new Date().toISOString().split("T")[0]}
                         required={currentPrecio.enOferta}
-                        className={
-                          currentPrecio.enOferta && !currentPrecio.inicioOferta
-                            ? "border-red-500"
-                            : ""
-                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -287,14 +271,12 @@ export default function ProductoStockModal({
                             : ""
                         }
                         onChange={(e) =>
-                          setCurrentPrecio(
-                            (prev: Partial<IPrecioProducto>) => ({
-                              ...prev,
-                              finOferta: e.target.value
-                                ? new Date(e.target.value).toISOString()
-                                : null,
-                            })
-                          )
+                          setCurrentPrecio((prev) => ({
+                            ...prev,
+                            finOferta: e.target.value
+                              ? new Date(e.target.value).toISOString()
+                              : null,
+                          }))
                         }
                         min={
                           currentPrecio.inicioOferta

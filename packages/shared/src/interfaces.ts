@@ -166,10 +166,10 @@ export interface IProducto extends IBase {
   costo: number;
   precio: number;
 
-  enOferta?: boolean;
-  precioOferta?: number;
-  inicioOferta?: string;
-  finOferta?: string;
+  enOferta: boolean;
+  precioOferta: number;
+  inicioOferta: string | null;
+  finOferta: string | null;
 
   stock: IStockProducto[];
 

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { IProducto } from "../../../shared/src/interfaces";
-import { Categorias } from "../../../shared/src/enums";
 import { useProductsStore } from "@/store/products.store";
 
 export default function CataloguePage() {
@@ -49,31 +48,23 @@ export default function CataloguePage() {
               </Button>
               <Button
                 variant={
-                  selectedCategory === Categorias.diversion
-                    ? "default"
-                    : "outline"
+                  selectedCategory === "Diversión" ? "default" : "outline"
                 }
-                onClick={() => setSelectedCategory(Categorias.diversion)}
+                onClick={() => setSelectedCategory("Diversión")}
               >
                 Fun Inflatables
               </Button>
               <Button
                 variant={
-                  selectedCategory === Categorias.publicitarios
-                    ? "default"
-                    : "outline"
+                  selectedCategory === "Publicitarios" ? "default" : "outline"
                 }
-                onClick={() => setSelectedCategory(Categorias.publicitarios)}
+                onClick={() => setSelectedCategory("Publicitarios")}
               >
                 Advertising
               </Button>
               <Button
-                variant={
-                  selectedCategory === Categorias.motores
-                    ? "default"
-                    : "outline"
-                }
-                onClick={() => setSelectedCategory(Categorias.motores)}
+                variant={selectedCategory === "Motores" ? "default" : "outline"}
+                onClick={() => setSelectedCategory("Motores")}
               >
                 Blowers
               </Button>
