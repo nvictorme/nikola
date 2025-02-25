@@ -846,7 +846,6 @@ OrdenesRouter.put(
           "items.archivos",
           "items.almacen",
           "items.producto",
-          "items.producto.motores",
         ],
       });
 
@@ -860,6 +859,7 @@ OrdenesRouter.put(
         transaccion.usuario = updatedOrden.vendedor;
         transaccion.monto = updatedOrden.total;
         transaccion.tipo = TipoTransaccion.factura;
+        transaccion.descripcion = `Factura de venta #${updatedOrden.serial}`;
         await AppDataSource.manager.transaction(async (manager) => {
           await processTransaction(manager, transaccion);
         });

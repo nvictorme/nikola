@@ -109,6 +109,7 @@ export const canSeeBalance = (user: IUsuario | null): boolean => {
   if (!user) return false;
   return (
     isSuperAdmin(user) ||
+    user.rol?.nombre === RolesBase.ventas ||
     user.rol?.nombre === RolesBase.distribuidor ||
     user.rol?.nombre === RolesBase.contabilidad
   );

@@ -23,7 +23,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuthStore } from "@/store/auth.store";
-import { getEstatusColor, isSuperAdmin, getTrackingUrl } from "shared/helpers";
+import {
+  getEstatusColor,
+  isSuperAdmin,
+  getTrackingUrl,
+  canCreateOrders,
+} from "shared/helpers";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import {
   Select,
@@ -169,13 +174,13 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
     cell: ({ row }) => {
       const orden = row.original as IOrden;
       const { user } = useAuthStore();
-      const isAdmin = isSuperAdmin(user);
+      const canCreate = canCreateOrders(user);
       const { actualizarEstatusOrden, loading } = useOrdenesStore();
 
       // Obtener el nivel del estatus actual
       const estatusActualNivel = estatusOrden[orden.estatus];
 
-      return isAdmin ? (
+      return canCreate ? (
         <Select
           defaultValue={orden.estatus || EstatusOrden.pendiente}
           onValueChange={(value) => {
