@@ -44,7 +44,9 @@ const LoginPage: React.FC = () => {
         <Avatar className="w-20 h-20 mx-auto mb-4">
           <AvatarImage src="/favicon.png" />
         </Avatar>
-        <CardTitle className="text-xl">Inflalo Matrix</CardTitle>
+        <CardTitle className="text-xl">
+          {import.meta.env.VITE_COMPANY_NAME}
+        </CardTitle>
         <CardDescription>
           {showReset
             ? `Ingresa tu e-mail y haz click en el botón debajo para recibir un enlace de recuperación`

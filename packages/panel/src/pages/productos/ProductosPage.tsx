@@ -123,7 +123,6 @@ const ProductosPage: React.FC = () => {
             <div className="flex items-center gap-2 h-[40px]">
               <Checkbox
                 id="offers"
-                disabled={isAdmin}
                 checked={enOferta}
                 onCheckedChange={(checked) => {
                   setEnOferta(checked as boolean);

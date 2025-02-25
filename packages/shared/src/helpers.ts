@@ -98,6 +98,7 @@ export const isSuperAdmin = (user: IUsuario | null): boolean => {
 
 export const canCreateOrders = (user: IUsuario | null): boolean => {
   if (!user) return false;
+  if (isSuperAdmin(user)) return true;
   return (
     user.rol?.nombre === RolesBase.distribuidor ||
     user.rol?.nombre === RolesBase.ventas

@@ -37,9 +37,13 @@ ProductosRouter.get(
           "producto.sku",
           "producto.slug",
           "producto.activo",
-          "producto.requiereMotor",
           "producto.descripcion",
           "producto.garantia",
+          "producto.precio",
+          "producto.enOferta",
+          "producto.precioOferta",
+          "producto.inicioOferta",
+          "producto.finOferta",
           ...(isAdmin ? ["producto.costo"] : []),
         ])
         .leftJoin("producto.portada", "portada")

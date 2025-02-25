@@ -77,6 +77,8 @@ const canCreateOrders = (user) => {
     var _a, _b;
     if (!user)
         return false;
+    if ((0, exports.isSuperAdmin)(user))
+        return true;
     return (((_a = user.rol) === null || _a === void 0 ? void 0 : _a.nombre) === enums_1.RolesBase.distribuidor ||
         ((_b = user.rol) === null || _b === void 0 ? void 0 : _b.nombre) === enums_1.RolesBase.ventas);
 };
