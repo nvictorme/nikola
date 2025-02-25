@@ -296,8 +296,7 @@ OrdenesRouter.post(
       // Basic order details
       newOrden.subtotal = data.items.reduce((sum, item) => sum + item.total, 0);
       newOrden.totalLista = data.items.reduce((sum, item) => {
-        const precioLista = item.precioLista;
-        return sum + precioLista * item.cantidad;
+        return sum + item.precio * item.cantidad;
       }, 0);
       newOrden.descuento = data.descuento || 0;
       newOrden.tipoDescuento = data.tipoDescuento;
@@ -609,8 +608,7 @@ OrdenesRouter.put(
       // Calculate order totals
       orden.subtotal = data.items.reduce((sum, item) => sum + item.total, 0);
       orden.totalLista = data.items.reduce((sum, item) => {
-        const precioLista = item.precioLista;
-        return sum + precioLista * item.cantidad;
+        return sum + item.precio * item.cantidad;
       }, 0);
       orden.descuento = data.descuento || 0;
       orden.tipoDescuento = data.tipoDescuento;
@@ -695,7 +693,6 @@ OrdenesRouter.put(
             existingItem.producto = newItem.producto;
             existingItem.cantidad = newItem.cantidad;
             existingItem.precio = newItem.precio;
-            existingItem.precioLista = newItem.precioLista || newItem.precio;
             existingItem.total = newItem.total;
             existingItem.notas = newItem.notas || "";
             existingItem.almacen = newItem.almacen;
@@ -750,7 +747,6 @@ OrdenesRouter.put(
             item.producto = newItem.producto;
             item.cantidad = newItem.cantidad;
             item.precio = newItem.precio;
-            item.precioLista = newItem.precioLista || newItem.precio;
             item.total = newItem.total;
             item.notas = newItem.notas || "";
             item.almacen = newItem.almacen;

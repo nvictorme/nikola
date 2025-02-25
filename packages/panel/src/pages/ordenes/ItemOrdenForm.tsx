@@ -25,11 +25,7 @@ import {
 } from "shared/interfaces";
 import { EstatusArchivo } from "shared/enums";
 import { v4 as uuidv4 } from "uuid";
-import {
-  calcularStockDisponible,
-  currencyFormat,
-  isSuperAdmin,
-} from "shared/helpers";
+import { calcularStockDisponible, currencyFormat } from "shared/helpers";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -43,7 +39,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useCallback, useState, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
-import { useAuthStore } from "@/store/auth.store";
 import { Upload, FileIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
@@ -75,12 +70,9 @@ export const ItemOrdenForm = forwardRef<
   ref
 ) {
   const { listarAlmacenesPorSucursal } = useAlmacenesStore();
-  const { user } = useAuthStore();
   const [almacenes, setAlmacenes] = useState<AlmacenWithStock[]>([]);
   const [isLoadingAlmacenes, setIsLoadingAlmacenes] = useState(false);
   const [errorAlmacenes, setErrorAlmacenes] = useState<string | null>(null);
-
-  const isAdmin = isSuperAdmin(user);
 
   const cargarAlmacenes = useCallback(async () => {
     if (almacenes.length === 0) {

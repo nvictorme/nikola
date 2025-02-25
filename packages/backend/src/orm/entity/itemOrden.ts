@@ -42,15 +42,6 @@ export class ItemOrden extends Base implements ORMItemOrden {
     nullable: false,
     transformer: decimalTransformer,
   })
-  precioLista: number;
-
-  @Column({
-    type: "numeric",
-    precision: 10,
-    scale: 2,
-    nullable: false,
-    transformer: decimalTransformer,
-  })
   total: number;
 
   @Column({ type: "varchar", length: 50, nullable: true })
