@@ -230,7 +230,6 @@ export const ItemOrdenForm = forwardRef<
               min: { value: 0, message: "Debe ser mayor o igual a 0" },
             })}
             defaultValue={item.precio}
-            readOnly={!item.producto.sku.startsWith("ZZ") && !isAdmin}
             className="w-full p-2 border border-gray-300 rounded-lg item-precio"
             onChange={handlePrecioChange}
           />
