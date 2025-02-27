@@ -106,15 +106,21 @@ export interface IDimensiones extends IBase {
 }
 export interface ICategoria extends IBase {
     nombre: string;
-    name: string;
     orden: number;
     subcategorias: ISubcategoria[];
 }
 export interface ISubcategoria extends IBase {
     nombre: string;
-    name: string;
     orden: number;
     categoria: ICategoria;
+}
+export interface IProveedor extends IBase {
+    nombre: string;
+    marca: string;
+    direccion: string;
+    telefono: string;
+    email: string;
+    notas: string;
 }
 export interface IProducto extends IBase {
     nombre: string;
@@ -253,13 +259,13 @@ export interface ICategorySale {
     quantity: number;
     total: number;
 }
-export interface ICountrySale {
-    country: string;
+export interface ISucursalSale {
+    sucursal: string;
     quantity: number;
     total: number;
 }
 export interface IDashboardCharts {
     dailySales: IDailySale[];
     salesByCategory: ICategorySale[];
-    salesByCountry: ICountrySale[];
+    salesByBranch: ISucursalSale[];
 }

@@ -136,16 +136,23 @@ export interface IDimensiones extends IBase {
 
 export interface ICategoria extends IBase {
   nombre: string;
-  name: string;
   orden: number;
   subcategorias: ISubcategoria[];
 }
 
 export interface ISubcategoria extends IBase {
   nombre: string;
-  name: string;
   orden: number;
   categoria: ICategoria;
+}
+
+export interface IProveedor extends IBase {
+  nombre: string;
+  marca: string;
+  direccion: string;
+  telefono: string;
+  email: string;
+  notas: string;
 }
 
 export interface IProducto extends IBase {
