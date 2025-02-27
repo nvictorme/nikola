@@ -1,4 +1,4 @@
-sku,producto,marca,modelo,categoria,subcategoria
+sku,nombre,marca,modelo,categoria,subcategoria
 BAC1PC1A-CH,Breaker Termomagnetico AC - NXB-63-1P - Curva C - 1x1A,CHiNT,NXB-63-1P,Breaker Termomagnetico,AC
 BAC1PC2A-CH,Breaker Termomagnetico AC - NXB-63-1P - Curva C - 1x2A,CHiNT,NXB-63-1P,Breaker Termomagnetico,AC
 BAC1PC3A-CH,Breaker Termomagnetico AC - NXB-63-1P - Curva C - 1x3A,CHiNT,NXB-63-1P,Breaker Termomagnetico,AC

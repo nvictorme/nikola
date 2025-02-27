@@ -7,6 +7,7 @@ import {
   JoinTable,
   JoinColumn,
   ManyToOne,
+  BeforeUpdate,
 } from "typeorm";
 import { Base } from "./base";
 import { IProducto } from "shared/interfaces";
@@ -16,6 +17,7 @@ import { decimalTransformer } from "shared/constants";
 import { Stock } from "./stock";
 import { Categoria } from "./categoria";
 import { Subcategoria } from "./subcategoria";
+import slugify from "slugify";
 
 export interface ORMProducto extends IProducto {
   dimensiones: Dimension;
@@ -89,38 +91,51 @@ export class Producto extends Base implements ORMProducto {
   isbn: string;
 
   @OneToOne(() => Dimension)
-  @JoinColumn({ name: "dimensionesId" })
+  @JoinColumn({ name: "dimensionesId", referencedColumnName: "id" })
   dimensiones: Dimension;
 
   @OneToOne(() => Dimension)
-  @JoinColumn({ name: "embalajeId" })
+  @JoinColumn({ name: "embalajeId", referencedColumnName: "id" })
   embalaje: Dimension;
 
   @Column({ length: 100, nullable: false })
   modelo: string;
 
-  @Column({ length: 100, nullable: false })
+  @BeforeUpdate()
+  slugify() {
+    this.slug = slugify(`${this.nombre} ${this.modelo} ${this.sku}`, {
+      lower: true,
+      strict: true,
+      replacement: "-",
+      trim: true,
+    });
+  }
+  @Column({ length: 100, nullable: false, unique: true })
   slug: string;
 
   @Column({ nullable: false, default: "Sin Garantía" })
   garantia: string;
 
   @OneToOne(() => Archivo)
-  @JoinColumn()
+  @JoinColumn({ name: "portadaId", referencedColumnName: "id" })
   portada: Archivo;
 
   @ManyToMany(() => Archivo)
-  @JoinTable()
+  @JoinTable({
+    name: "productos_galeria",
+    joinColumn: { name: "productoId", referencedColumnName: "id" },
+    inverseJoinColumn: { name: "archivoId", referencedColumnName: "id" },
+  })
   galeria: Archivo[];
 
   @OneToMany(() => Stock, (stock) => stock.producto)
   stock: Stock[];
 
   @ManyToOne(() => Categoria, (categoria) => categoria)
-  @JoinColumn()
+  @JoinColumn({ name: "categoriaId", referencedColumnName: "id" })
   categoria: Categoria;
 
   @ManyToOne(() => Subcategoria, (subcategoria) => subcategoria)
-  @JoinColumn()
+  @JoinColumn({ name: "subcategoriaId", referencedColumnName: "id" })
   subcategoria: Subcategoria;
 }
