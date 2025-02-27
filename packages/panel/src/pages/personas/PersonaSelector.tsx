@@ -10,15 +10,13 @@ import { usePersonasStore } from "@/store/personas.store";
 import { getInitials } from "shared/helpers";
 import CreateButton from "@/components/CreateButton";
 import PersonaForm from "./PersonaForm";
-import { useAuthStore } from "@/store/auth.store";
 interface PersonaSelectorProps {
   onSelect: (persona: IPersona | null) => void;
 }
 
 export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedPersona, setSelectedPersona] = useState<IPersona | null>(null);
-  const { user } = useAuthStore();
+
   const {
     personas,
     openSheet,
@@ -26,34 +24,18 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
     hideSheet,
     setPersona,
     listarPersonas,
+    term,
+    setTerm,
   } = usePersonasStore();
 
   useEffect(() => {
-    const searchParams: {
-      nif?: string;
-      email?: string;
-      empresa?: string;
-      nombre?: string;
-    } = {};
-
-    if (searchTerm) {
-      searchParams.nif = searchTerm;
-      searchParams.email = searchTerm;
-      searchParams.empresa = searchTerm;
-      searchParams.nombre = searchTerm;
-    }
-
-    const timeoutId = setTimeout(() => {
-      listarPersonas(searchParams);
-    }, 300);
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm, listarPersonas, user]);
+    listarPersonas();
+  }, [listarPersonas]);
 
   const handleSelect = (persona: IPersona) => {
     setSelectedPersona(persona);
     onSelect(persona);
-    setSearchTerm("");
+    setTerm("");
   };
 
   const handleClearSelection = () => {
@@ -112,8 +94,8 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Buscar por nombre, empresa, NIF o email..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
               className="pl-8"
             />
           </div>

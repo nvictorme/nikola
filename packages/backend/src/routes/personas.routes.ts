@@ -4,8 +4,6 @@ import { verificarPrivilegio } from "../helpers/privilegios.helpers";
 import { Acciones } from "shared/enums";
 import { Persona } from "../orm/entity/persona";
 import { IPersona } from "shared/interfaces";
-import { Usuario } from "../orm/entity/usuario";
-import { ILike } from "typeorm";
 
 const PersonasRouter: Router = Router();
 
@@ -19,47 +17,24 @@ PersonasRouter.get(
   }),
   async (req: Request, res: Response) => {
     try {
-      const user = req.user as Usuario;
-      const {
-        page = "1",
-        limit = "10",
-        term,
-        nif,
-        email,
-        empresa,
-        nombre,
-      } = req.query;
+      const { page = "1", limit = "10", term } = req.query;
 
-      const where: any = {};
+      const queryBuilder = AppDataSource.getRepository(Persona)
+        .createQueryBuilder("persona")
+        .orderBy("persona.fechaCreado", "DESC")
+        .take(parseInt(limit as string))
+        .skip((parseInt(page as string) - 1) * parseInt(limit as string));
 
       if (term) {
-        where[0] = { nif: ILike(`%${term}%`) };
-        where[1] = { email: ILike(`%${term}%`) };
-        where[2] = { empresa: ILike(`%${term}%`) };
-        where[3] = { nombre: ILike(`%${term}%`) };
-        where[4] = { apellido: ILike(`%${term}%`) };
-      } else {
-        if (nif) where.nif = ILike(`%${nif}%`);
-        if (email) where.email = ILike(`%${email}%`);
-        if (empresa) where.empresa = ILike(`%${empresa}%`);
-        if (nombre) {
-          where[0] = { nombre: ILike(`%${nombre}%`) };
-          where[1] = { apellido: ILike(`%${nombre}%`) };
-        }
+        queryBuilder
+          .where("persona.nombre ILIKE :term", { term: `%${term}%` })
+          .orWhere("persona.apellido ILIKE :term", { term: `%${term}%` })
+          .orWhere("persona.nif ILIKE :term", { term: `%${term}%` })
+          .orWhere("persona.email ILIKE :term", { term: `%${term}%` })
+          .orWhere("persona.empresa ILIKE :term", { term: `%${term}%` });
       }
 
-      const [personas, total] = await AppDataSource.getRepository(
-        Persona
-      ).findAndCount({
-        where: term
-          ? [where[0], where[1], where[2], where[3], where[4]]
-          : nombre
-          ? [where[0], where[1]]
-          : where,
-        take: parseInt(limit as string),
-        skip: (parseInt(page as string) - 1) * parseInt(limit as string),
-        order: { fechaCreado: "DESC" },
-      });
+      const [personas, total] = await queryBuilder.getManyAndCount();
 
       res.status(200).json({
         personas,

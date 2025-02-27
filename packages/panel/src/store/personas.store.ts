@@ -7,17 +7,7 @@ export type PersonasStore = {
   personas: IPersona[];
   persona: IPersona | null;
   crearPersona: (persona: IPersona) => Promise<void>;
-  listarPersonas: ({
-    nif,
-    email,
-    empresa,
-    nombre,
-  }: {
-    nif?: string;
-    email?: string;
-    empresa?: string;
-    nombre?: string;
-  }) => Promise<void>;
+  listarPersonas: () => Promise<void>;
   actualizarPersona: (persona: IPersona) => Promise<void>;
   setPersona: (persona: IPersona | null) => void;
   openSheet: boolean;
@@ -61,22 +51,17 @@ export const usePersonasStore = create<PersonasStore>()(
       crearPersona: async (persona) => {
         try {
           await new ApiClient().post(`/personas`, { persona });
-          await get().listarPersonas({});
+          await get().listarPersonas();
         } catch (error) {
           console.error(error);
         }
       },
-      listarPersonas: async ({ nif, email, empresa, nombre }) => {
+      listarPersonas: async () => {
         try {
-          const { term } = get();
           const { data } = await new ApiClient().get(`/personas`, {
             page: get().page,
             limit: get().limit,
-            ...(term && { term }),
-            ...(nif && { nif }),
-            ...(email && { email }),
-            ...(empresa && { empresa }),
-            ...(nombre && { nombre }),
+            term: get().term,
           });
           set({ ...data });
         } catch (error) {
@@ -88,7 +73,7 @@ export const usePersonasStore = create<PersonasStore>()(
           await new ApiClient().put(`/personas/${persona.id}`, {
             persona,
           });
-          await get().listarPersonas({});
+          await get().listarPersonas();
         } catch (error) {
           console.error(error);
         }
@@ -98,15 +83,15 @@ export const usePersonasStore = create<PersonasStore>()(
       hideSheet: () => set({ openSheet: false }),
       setPage: (page) => {
         set({ page });
-        get().listarPersonas({});
+        get().listarPersonas();
       },
       setLimit: (limit) => {
         set({ limit });
-        get().listarPersonas({});
+        get().listarPersonas();
       },
       setTerm: (term: string) => {
         set({ term });
-        get().listarPersonas({});
+        get().listarPersonas();
       },
     }),
     {

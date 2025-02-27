@@ -84,12 +84,13 @@ const canCreateOrders = (user) => {
 };
 exports.canCreateOrders = canCreateOrders;
 const canSeeBalance = (user) => {
-    var _a, _b;
+    var _a, _b, _c;
     if (!user)
         return false;
     return ((0, exports.isSuperAdmin)(user) ||
-        ((_a = user.rol) === null || _a === void 0 ? void 0 : _a.nombre) === enums_1.RolesBase.distribuidor ||
-        ((_b = user.rol) === null || _b === void 0 ? void 0 : _b.nombre) === enums_1.RolesBase.contabilidad);
+        ((_a = user.rol) === null || _a === void 0 ? void 0 : _a.nombre) === enums_1.RolesBase.ventas ||
+        ((_b = user.rol) === null || _b === void 0 ? void 0 : _b.nombre) === enums_1.RolesBase.distribuidor ||
+        ((_c = user.rol) === null || _c === void 0 ? void 0 : _c.nombre) === enums_1.RolesBase.contabilidad);
 };
 exports.canSeeBalance = canSeeBalance;
 const getInitials = (nombre, apellido) => {
