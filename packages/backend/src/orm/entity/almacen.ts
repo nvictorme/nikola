@@ -16,7 +16,10 @@ export class Almacen extends Base implements ORMAlmacen {
   })
   nombre: string;
 
-  @OneToOne(() => Direccion, (direccion) => direccion)
-  @JoinColumn()
+  @OneToOne(() => Direccion)
+  @JoinColumn({
+    name: "direccionId",
+    referencedColumnName: "id",
+  })
   direccion: Direccion;
 }

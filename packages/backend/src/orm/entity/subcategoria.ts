@@ -9,11 +9,8 @@ export interface ORMSubcategoria extends ISubcategoria {
 
 @Entity("subcategorias")
 export class Subcategoria extends Base implements ORMSubcategoria {
-  @Column({ length: 100, nullable: false})
-  nombre: string;
-
   @Column({ length: 100, nullable: false })
-  name: string;
+  nombre: string;
 
   @Column({ type: "int", nullable: false, default: 0 })
   orden: number;
