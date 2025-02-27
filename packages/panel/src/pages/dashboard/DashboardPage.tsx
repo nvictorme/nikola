@@ -206,9 +206,9 @@ const DashboardPage: React.FC = () => {
       {isAdmin && (
         <Card className="overflow-hidden">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Ventas por País</CardTitle>
+            <CardTitle className="text-2xl">Ventas por Sucursal</CardTitle>
             <p className="text-sm text-muted-foreground">
-              Distribución de ventas por país durante el mes actual
+              Distribución de ventas por sucursal durante el mes actual
             </p>
           </CardHeader>
           <CardContent>
@@ -218,9 +218,9 @@ const DashboardPage: React.FC = () => {
               </div>
             ) : (
               <PieChart
-                data={charts.salesByCountry}
+                data={charts.salesByBranch}
                 categories={["total"]}
-                index="country"
+                index="branch"
                 colors={[
                   colors.primary,
                   colors.secondary,

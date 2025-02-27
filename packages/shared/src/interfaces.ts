@@ -312,8 +312,8 @@ export interface ICategorySale {
   total: number;
 }
 
-export interface ICountrySale {
-  country: string;
+export interface ISucursalSale {
+  sucursal: string;
   quantity: number;
   total: number;
 }
@@ -321,5 +321,5 @@ export interface ICountrySale {
 export interface IDashboardCharts {
   dailySales: IDailySale[];
   salesByCategory: ICategorySale[];
-  salesByCountry: ICountrySale[];
+  salesByBranch: ISucursalSale[];
 }

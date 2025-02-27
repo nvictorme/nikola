@@ -22,7 +22,8 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
 
   const ventasMensuales = await ordenesRepository
     .createQueryBuilder("orden")
-    .where(isAdmin ? "1=1" : "orden.vendedorId = :userId", {
+    .leftJoin("orden.vendedor", "vendedor")
+    .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
@@ -60,7 +61,8 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .createQueryBuilder("orden")
     .select("DATE(orden.fechaCreado)", "date")
     .addSelect("SUM(orden.total)", "total")
-    .where(isAdmin ? "1=1" : "orden.vendedorId = :userId", {
+    .leftJoin("orden.vendedor", "vendedor")
+    .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
@@ -76,10 +78,11 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .leftJoin("orden.items", "item")
     .leftJoin("item.producto", "producto")
     .leftJoin("producto.categoria", "categoria")
+    .leftJoin("orden.vendedor", "vendedor")
     .select("categoria.nombre", "category")
     .addSelect("SUM(item.cantidad)", "quantity")
     .addSelect("SUM(item.precio * item.cantidad)", "total")
-    .where(isAdmin ? "1=1" : "orden.vendedorId = :userId", {
+    .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
@@ -102,19 +105,23 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     };
   });
 
-  // Get sales by country (only for admin)
-  const salesByCountry = isAdmin
-    ? await ordenesRepository
-        .createQueryBuilder("orden")
-        .leftJoin("orden.vendedor", "vendedor")
-        .addSelect("COUNT(orden.id)", "quantity")
-        .addSelect("SUM(orden.total)", "total")
-        .where("orden.fechaCreado BETWEEN :start AND :end", {
-          start: monthStart,
-          end: monthEnd,
-        })
-        .getRawMany()
-    : [];
+  // Get sales by branch (sucursal)
+  const salesByBranch = await ordenesRepository
+    .createQueryBuilder("orden")
+    .select("sucursal.nombre", "branch")
+    .addSelect("COUNT(orden.id)", "quantity")
+    .addSelect("SUM(orden.total)", "total")
+    .leftJoin("orden.vendedor", "vendedor")
+    .leftJoin("orden.sucursal", "sucursal")
+    .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
+      userId: user.id,
+    })
+    .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
+      start: monthStart,
+      end: monthEnd,
+    })
+    .groupBy("sucursal.nombre")
+    .getRawMany();
 
   return res.status(200).json({
     dailySales: formattedDailySales,
@@ -123,10 +130,10 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
       total: Number(category.total),
       quantity: Number(category.quantity),
     })),
-    salesByCountry: salesByCountry.map((country) => ({
-      ...country,
-      total: Number(country.total),
-      quantity: Number(country.quantity),
+    salesByBranch: salesByBranch.map((branch) => ({
+      ...branch,
+      total: Number(branch.total),
+      quantity: Number(branch.quantity),
     })),
   });
 });

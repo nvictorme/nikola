@@ -26,7 +26,7 @@ const initialState: Omit<
   charts: {
     dailySales: [],
     salesByCategory: [],
-    salesByCountry: [],
+    salesByBranch: [],
   },
 };
 
