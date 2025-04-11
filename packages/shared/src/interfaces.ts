@@ -192,7 +192,6 @@ export interface IItemOrden extends IBase {
   precio: number;
   total: number;
   notas: string;
-  archivos: IArchivo[];
   almacen: IAlmacen | null;
   garantia: string;
 }

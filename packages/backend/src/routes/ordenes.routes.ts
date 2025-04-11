@@ -54,7 +54,6 @@ OrdenesRouter.get(
         .leftJoinAndSelect("orden.archivos", "ordenArchivos")
         .leftJoinAndSelect("orden.items", "items")
         .leftJoinAndSelect("items.producto", "producto")
-        .leftJoinAndSelect("items.archivos", "itemArchivos")
         .leftJoinAndSelect("items.almacen", "almacen");
 
       if (!isAdmin) {
@@ -128,7 +127,6 @@ OrdenesRouter.get(
           "archivos",
           "items",
           "items.producto",
-          "items.archivos",
           "items.almacen",
         ],
       });
@@ -331,7 +329,7 @@ OrdenesRouter.post(
       const archivos = [] as Archivo[];
       const { AWS_ENDPOINT, AWS_BUCKET } = process.env;
 
-      // Handle order files
+      // Manejo de archivos de soporte de la orden
       if (data.archivos?.length) {
         data.archivos.forEach((a) => {
           const archivo = new Archivo();
@@ -343,28 +341,14 @@ OrdenesRouter.post(
         });
       }
 
-      // Handle item files
-      for (const i of data.items) {
-        if (i.archivos?.length) {
-          i.archivos.forEach((a) => {
-            const archivo = new Archivo();
-            archivo.nombre = a.nombre;
-            archivo.tipo = a.tipo;
-            archivo.estatus = a.estatus;
-            archivo.url = `${AWS_ENDPOINT}/${AWS_BUCKET}/${a.url}`;
-            archivos.push(archivo);
-          });
-        }
-      }
-
-      // Save files first if any
+      // Guardar archivos de soporte
       if (archivos.length > 0) {
         await AppDataSource.getRepository(Archivo).save(archivos, {
           chunk: 100,
         });
       }
 
-      // Save order items
+      // Guardar items de la orden
       const savedItems = await AppDataSource.getRepository(ItemOrden).save(
         data.items.map((item) => ({
           ...item,
@@ -588,7 +572,7 @@ OrdenesRouter.put(
       const data = req.body.orden as Orden;
       const orden = await AppDataSource.getRepository(Orden).findOne({
         where: { id: ordenId },
-        relations: ["items", "items.archivos"],
+        relations: ["items"],
       });
       if (!orden) {
         return res.status(404).json({ error: "Orden no encontrada" });
@@ -643,7 +627,7 @@ OrdenesRouter.put(
       const archivosToRemove = [] as Archivo[];
       const { AWS_ENDPOINT, AWS_BUCKET } = process.env;
 
-      // Handle order files
+      // Manejo de archivos de soporte de la orden
       const filesToRemove = orden.archivos.filter(
         (a) => !data.archivos?.some((na) => na.id === a.id)
       );
@@ -677,19 +661,19 @@ OrdenesRouter.put(
         }
       }
 
-      // Remove items that are not in the new data while preserving existing IDs
+      // Eliminar items que no están en los nuevos datos mientras se preservan los IDs existentes
       const itemsToRemove = orden.items.filter(
         (i) => !data.items.some((ni) => ni.id === i.id)
       );
       await AppDataSource.getRepository(ItemOrden).remove(itemsToRemove);
 
-      // Update existing items while preserving their IDs
+      // Actualizar items existentes mientras se preservan sus IDs
       const updatedItems = await Promise.all(
         data.items.map(async (newItem) => {
           const existingItem = orden.items.find((i) => i.id === newItem.id);
 
           if (existingItem) {
-            // Update existing item while preserving its ID
+            // Actualizar item existente mientras se preservan su ID
             existingItem.producto = newItem.producto;
             existingItem.cantidad = newItem.cantidad;
             existingItem.precio = newItem.precio;
@@ -699,51 +683,11 @@ OrdenesRouter.put(
             existingItem.garantia =
               newItem.garantia || newItem.producto.garantia || "Sin garantía";
 
-            // Handle files for existing item
-            const filesToRemove = existingItem.archivos.filter(
-              (a) => !newItem.archivos?.some((na) => na.id === a.id)
-            );
-            archivosToRemove.push(...filesToRemove);
-
-            if (newItem.archivos?.length) {
-              // Keep existing files that are still present in newItem
-              const existingFiles = existingItem.archivos.filter((a) =>
-                newItem.archivos.some((na) => na.id === a.id)
-              );
-
-              // Add new files
-              const newFiles = newItem.archivos
-                .filter(
-                  (na) =>
-                    !na.id || !existingItem.archivos.some((a) => a.id === na.id)
-                )
-                .map((a) => {
-                  const archivo = new Archivo();
-                  archivo.nombre = a.nombre;
-                  archivo.tipo = a.tipo;
-                  archivo.estatus = a.estatus;
-                  archivo.url = a.url.startsWith("http")
-                    ? a.url
-                    : `${AWS_ENDPOINT}/${AWS_BUCKET}/${a.url}`;
-                  return archivo;
-                });
-
-              // Save new files first
-              if (newFiles.length > 0) {
-                const savedFiles = await AppDataSource.getRepository(
-                  Archivo
-                ).save(newFiles);
-                existingItem.archivos = [...existingFiles, ...savedFiles];
-              } else {
-                existingItem.archivos = existingFiles;
-              }
-            }
-
             return existingItem;
           } else {
-            // Create new item with its original ID
+            // Crear nuevo item con su ID original
             const item = new ItemOrden();
-            item.id = newItem.id; // Preserve the ID from the frontend
+            item.id = newItem.id; // Preservar el ID desde el frontend
             item.producto = newItem.producto;
             item.cantidad = newItem.cantidad;
             item.precio = newItem.precio;
@@ -753,32 +697,12 @@ OrdenesRouter.put(
             item.garantia =
               newItem.garantia || newItem.producto.garantia || "Sin garantía";
 
-            // Handle files for new item
-            if (newItem.archivos?.length) {
-              const newFiles = newItem.archivos.map((a) => {
-                const archivo = new Archivo();
-                archivo.nombre = a.nombre;
-                archivo.tipo = a.tipo;
-                archivo.estatus = a.estatus;
-                archivo.url = a.url.startsWith("http")
-                  ? a.url
-                  : `${AWS_ENDPOINT}/${AWS_BUCKET}/${a.url}`;
-                return archivo;
-              });
-
-              // Save files first
-              const savedFiles = await AppDataSource.getRepository(
-                Archivo
-              ).save(newFiles);
-              item.archivos = savedFiles;
-            }
-
             return item;
           }
         })
       );
 
-      // Save all items
+      // Guardar todos los items
       const savedItems = await AppDataSource.getRepository(ItemOrden).save(
         updatedItems,
         { chunk: 100 }
@@ -786,13 +710,13 @@ OrdenesRouter.put(
 
       orden.items = savedItems;
 
-      // Save the complete order
+      // Guardar la orden completa
       const savedOrden = await AppDataSource.getRepository(Orden).save(orden);
 
-      // Handle custom products after saving the order
+      // Manejar productos personalizados después de guardar la orden
       await handleCustomProducts(savedOrden);
 
-      // Fetch the updated order with all relations
+      // Obtener la orden actualizada con todas las relaciones
       const updatedOrden = await AppDataSource.getRepository(Orden).findOne({
         where: { id: savedOrden.id },
         relations: [
@@ -801,7 +725,6 @@ OrdenesRouter.put(
           "cliente",
           "items",
           "items.producto",
-          "items.archivos",
         ],
       });
 
@@ -843,7 +766,6 @@ OrdenesRouter.put(
           "vendedor",
           "cliente",
           "items",
-          "items.archivos",
           "items.almacen",
           "items.producto",
         ],

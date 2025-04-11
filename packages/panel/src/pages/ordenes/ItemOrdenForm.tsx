@@ -14,17 +14,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { FileUploader } from "@/components/FileUploader";
 import { UseFormReturn } from "react-hook-form";
 import {
   IAlmacen,
-  IArchivo,
   IItemOrden,
   IOrden,
   IStockProducto,
 } from "shared/interfaces";
-import { EstatusArchivo } from "shared/enums";
-import { v4 as uuidv4 } from "uuid";
 import { calcularStockDisponible, currencyFormat } from "shared/helpers";
 import {
   AlertDialog,
@@ -39,7 +35,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useCallback, useState, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
-import { Upload, FileIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 
 export interface AlmacenWithStock extends IAlmacen {
@@ -66,7 +61,7 @@ export const ItemOrdenForm = forwardRef<
   HTMLDivElement,
   Omit<ItemOrdenFormProps, "almacenes" | "onLoadAlmacenes">
 >(function ItemOrdenForm(
-  { item, idx, onDelete, idOrden, sucursal, getValues, setValue, register },
+  { item, idx, onDelete, sucursal, getValues, setValue, register },
   ref
 ) {
   const { listarAlmacenesPorSucursal } = useAlmacenesStore();
@@ -133,17 +128,6 @@ export const ItemOrdenForm = forwardRef<
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       const newItems = [...getValues("items")];
       newItems[idx].notas = e.target.value;
-      setValue("items", newItems);
-    },
-    [getValues, setValue, idx]
-  );
-
-  const handleDeleteFile = useCallback(
-    (fileId: string) => {
-      const newItems = [...getValues("items")];
-      newItems[idx].archivos = newItems[idx].archivos.filter(
-        (archivo) => archivo.id !== fileId
-      );
       setValue("items", newItems);
     },
     [getValues, setValue, idx]
@@ -323,94 +307,6 @@ export const ItemOrdenForm = forwardRef<
                   />
                 </div>
               </>
-            </div>
-          </div>
-          <div className="col-span-3">
-            <Label>Archivos adjuntos</Label>
-            <div className="space-y-4">
-              <FileUploader
-                folder={`ordenes/${idOrden}/items`}
-                onSuccess={({ file, fileKey }) => {
-                  const newItems = [...getValues("items")];
-                  if (!Array.isArray(newItems[idx].archivos)) {
-                    newItems[idx].archivos = [];
-                  }
-                  const newFile = {
-                    id: uuidv4(),
-                    nombre: file.name,
-                    tipo: file.type,
-                    estatus: EstatusArchivo.cargado,
-                    url: fileKey,
-                  } as IArchivo;
-
-                  newItems[idx].archivos = [...newItems[idx].archivos, newFile];
-                  setValue("items", newItems);
-                }}
-                onFailure={({ file }) => {
-                  console.error(`Failed to upload ${file.name}`);
-                  toast.error(`Error al cargar ${file.name}`);
-                }}
-              >
-                <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 text-center transition-all duration-200 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50/50 dark:hover:bg-blue-950/50 group cursor-pointer">
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="p-3 rounded-full bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-300 group-hover:bg-blue-100 dark:group-hover:bg-blue-800 transition-colors duration-200">
-                      <Upload className="h-6 w-6" />
-                    </div>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                        Arrastra y suelta archivos aquí
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        o{" "}
-                        <span className="text-blue-600 dark:text-blue-400 font-medium hover:text-blue-700 dark:hover:text-blue-300">
-                          selecciona desde tu dispositivo
-                        </span>
-                      </p>
-                    </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500">
-                      Archivos permitidos: PDF, PNG, JPG, JPEG
-                    </p>
-                  </div>
-                </div>
-              </FileUploader>
-
-              {item.archivos && item.archivos.length > 0 && (
-                <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                    Archivos cargados ({item.archivos.length})
-                  </p>
-                  {item.archivos.map((archivo) => (
-                    <div
-                      key={archivo.id}
-                      className="flex items-center justify-between bg-white dark:bg-gray-800 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-colors duration-200 group"
-                    >
-                      <div className="flex items-center space-x-3">
-                        <div className="p-2 bg-gray-50 dark:bg-gray-700 rounded-md text-gray-500 dark:text-gray-400">
-                          <FileIcon className="h-4 w-4" />
-                        </div>
-                        <a
-                          href={`${import.meta.env.VITE_S3_URL}/${
-                            import.meta.env.VITE_S3_BUCKET
-                          }/${archivo.url}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="truncate text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-                        >
-                          {archivo.nombre}
-                        </a>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="opacity-0 group-hover:opacity-100 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200"
-                        onClick={() => handleDeleteFile(archivo.id)}
-                      >
-                        <XIcon className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         </div>
