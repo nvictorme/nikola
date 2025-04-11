@@ -59,7 +59,7 @@ const OrdenesPage: React.FC = () => {
     listarOrdenes();
     listarProductos();
     listarSucursales();
-    listarPersonas({});
+    listarPersonas();
     return () => {
       setShowForm(false);
     };

@@ -25,7 +25,7 @@ const PersonasPage: React.FC = () => {
   } = usePersonasStore();
 
   useEffect(() => {
-    listarPersonas({});
+    listarPersonas();
   }, [listarPersonas]);
 
   const onOpenSheet = useCallback(() => {

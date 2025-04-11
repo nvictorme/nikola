@@ -20,7 +20,6 @@ export type Usuario = Pick<
   | "activo"
   | "notas"
   | "rol"
-  | "exw"
 >;
 
 export const columnasUsuarios: ColumnDef<Usuario>[] = [

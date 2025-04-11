@@ -265,7 +265,6 @@ UsuariosRouter.put(
         notas: usuarioData.notas,
         avatar: usuarioData.avatar,
         activo: usuarioData.activo,
-        exw: usuarioData.exw,
         balance: usuarioData.balance,
         seudonimo: usuarioData.seudonimo,
         // Handle relationships

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import { useCategoriasStore } from "../../store/categorias.store";
 import { ICategoria, ISubcategoria } from "shared/interfaces";
@@ -25,7 +26,7 @@ export function CategoriasPage() {
   const [editingItem, setEditingItem] = useState<
     ICategoria | ISubcategoria | null
   >(null);
-  const [editForm, setEditForm] = useState({ nombre: "", name: "" });
+  const [editForm, setEditForm] = useState({ nombre: "" });
 
   const {
     categorias,
@@ -53,7 +54,6 @@ export function CategoriasPage() {
     try {
       await crearCategoria({
         nombre: newItemForm.nombre,
-        name: newItemForm.name,
         activo: true,
       } as ICategoria);
       await listarCategorias();
@@ -63,10 +63,10 @@ export function CategoriasPage() {
         title: "Categoría creada",
         description: "La categoría se ha creado exitosamente",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo crear la categoría",
+        description: error?.message || "No se pudo crear la categoría",
         variant: "destructive",
       });
     }
@@ -78,7 +78,6 @@ export function CategoriasPage() {
     try {
       await crearSubcategoria({
         nombre: newItemForm.nombre,
-        name: newItemForm.name,
         activo: true,
         categoria,
       } as ISubcategoria);
@@ -89,10 +88,10 @@ export function CategoriasPage() {
         title: "Subcategoría creada",
         description: "La subcategoría se ha creado exitosamente",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo crear la subcategoría",
+        description: error?.message || "No se pudo crear la subcategoría",
         variant: "destructive",
       });
     }
@@ -106,21 +105,19 @@ export function CategoriasPage() {
         await actualizarCategoria({
           ...editingItem,
           nombre: editForm.nombre,
-          name: editForm.name,
         } as ICategoria);
         await listarCategorias();
       } else {
         await actualizarSubcategoria({
           ...editingItem,
           nombre: editForm.nombre,
-          name: editForm.name,
           categoria: categoria!,
         } as ISubcategoria);
         await listarSubcategorias(categoria!.id);
       }
       setIsEditing(false);
       setEditingItem(null);
-      setEditForm({ nombre: "", name: "" });
+      setEditForm({ nombre: "" });
       toast({
         title: "Actualizado",
         description: "El elemento se ha actualizado exitosamente",
@@ -138,7 +135,6 @@ export function CategoriasPage() {
     setEditingItem(item);
     setEditForm({
       nombre: item.nombre,
-      name: item.name,
     });
     setIsEditing(true);
   };
@@ -210,9 +206,6 @@ export function CategoriasPage() {
                 >
                   <div className="flex-1">
                     <p className="font-medium text-left">{cat.nombre}</p>
-                    <p className="text-sm text-muted-foreground text-left">
-                      {cat.name}
-                    </p>
                   </div>
                   <Button
                     variant="ghost"
@@ -296,9 +289,6 @@ export function CategoriasPage() {
                 >
                   <div className="flex-1">
                     <p className="font-medium text-left">{subcat.nombre}</p>
-                    <p className="text-sm text-muted-foreground text-left">
-                      {subcat.name}
-                    </p>
                   </div>
                   <Button
                     variant="ghost"
@@ -335,16 +325,6 @@ export function CategoriasPage() {
                 value={editForm.nombre}
                 onChange={(e) =>
                   setEditForm((prev) => ({ ...prev, nombre: e.target.value }))
-                }
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name (English)</Label>
-              <Input
-                id="name"
-                value={editForm.name}
-                onChange={(e) =>
-                  setEditForm((prev) => ({ ...prev, name: e.target.value }))
                 }
               />
             </div>
