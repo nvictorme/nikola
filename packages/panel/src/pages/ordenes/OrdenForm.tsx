@@ -136,7 +136,7 @@ export default function OrdenForm({
           tipoDescuento: TipoDescuento.porcentual,
           subtotal: 0,
           total: 0,
-          validez: 10 as number,
+          validez: 1 as number,
           archivos: [] as IArchivo[],
         },
   });
@@ -395,7 +395,7 @@ export default function OrdenForm({
                         value === TipoOrden.cotizacion ||
                         value === TipoOrden.credito
                       ) {
-                        setValue("validez", 10 as number);
+                        setValue("validez", 1 as number);
                       }
                       // Clear cliente when tipo is reposicion
                       if (value === TipoOrden.reposicion) {
