@@ -216,6 +216,8 @@ export interface IOrden extends IBase {
   impuesto: number;
   impuestoIncluido: boolean;
 
+  tasaCambio: number;
+
   subtotal: number;
   total: number;
 

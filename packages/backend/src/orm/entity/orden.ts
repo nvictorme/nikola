@@ -99,6 +99,16 @@ export class Orden extends Base implements ORMOrden {
     precision: 10,
     scale: 2,
     nullable: false,
+    default: 1,
+    transformer: decimalTransformer,
+  })
+  tasaCambio: number;
+
+  @Column({
+    type: "numeric",
+    precision: 10,
+    scale: 2,
+    nullable: false,
     transformer: decimalTransformer,
   })
   subtotal: number;

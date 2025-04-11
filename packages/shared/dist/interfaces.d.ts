@@ -171,6 +171,7 @@ export interface IOrden extends IBase {
     tipoDescuento?: TipoDescuento;
     impuesto: number;
     impuestoIncluido: boolean;
+    tasaCambio: number;
     subtotal: number;
     total: number;
     items: IItemOrden[];
