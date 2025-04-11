@@ -209,6 +209,13 @@ const OrdenesPage: React.FC = () => {
           hideFilter
         />
       )}
+      <div className="fixed bottom-4 left-4 z-50">
+        <iframe
+          src="https://elcamb.io/?embed=true"
+          className="w-[300px] h-[200px] rounded-lg border-0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        />
+      </div>
     </div>
   );
 };
