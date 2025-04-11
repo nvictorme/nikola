@@ -28,6 +28,7 @@ import {
   isSuperAdmin,
   getTrackingUrl,
   canCreateOrders,
+  currencyFormat,
 } from "shared/helpers";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import {
@@ -62,9 +63,10 @@ export type Orden = Pick<
   | "tipo"
   | "sucursal"
   | "cliente"
-  | "notas"
   | "archivos"
   | "envios"
+  | "tasaCambio"
+  | "total"
 >;
 
 // Agregar este objeto que define el orden de los estados (añadir cerca del inicio del archivo)
@@ -249,17 +251,15 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
     },
   },
   {
-    accessorKey: "notas",
-    header: "Notas",
-    cell: ({ row }) => {
-      const orden = row.original as IOrden;
-      return <div className="text-xs">{orden.notas}</div>;
-    },
+    accessorKey: "total",
+    header: "Total (USD)",
+    accessorFn: (row) => currencyFormat({ value: row.total || 0 }),
   },
   {
-    accessorKey: "sucursal",
-    header: "Sucursal",
-    accessorFn: (row) => `${row.sucursal.nombre}`,
+    accessorKey: "tasaCambio",
+    header: "Total (VES)",
+    accessorFn: (row) =>
+      currencyFormat({ value: row.total * row.tasaCambio || 0 }),
   },
   {
     accessorKey: "archivos",

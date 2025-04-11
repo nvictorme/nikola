@@ -134,6 +134,7 @@ export default function OrdenForm({
           descuento: 0,
           impuesto: 0,
           tipoDescuento: TipoDescuento.porcentual,
+          tasaCambio: 1,
           subtotal: 0,
           total: 0,
           validez: 1 as number,
@@ -151,7 +152,7 @@ export default function OrdenForm({
   const descuento = watch("descuento");
   const tipoDescuento = watch("tipoDescuento");
   const impuesto = watch("impuesto");
-
+  const tasaCambio = watch("tasaCambio");
   const subtotal =
     items?.reduce(
       (acc, item) =>
@@ -328,7 +329,6 @@ export default function OrdenForm({
               </div>
             )}
           />
-
           <div className="grid grid-cols-3 gap-4 items-center">
             <div className="flex flex-col items-start gap-1">
               <Label htmlFor="sucursal">Sucursal</Label>
@@ -448,9 +448,7 @@ export default function OrdenForm({
               )}
             </div>
           </div>
-
           <Separator />
-
           <div className="flex flex-col w-full space-y-4">
             <Controller
               name="items"
@@ -615,7 +613,136 @@ export default function OrdenForm({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-8">
+          {sucursal ? (
+            <div className="grid grid-cols-11 w-full items-center gap-1">
+              <div className="flex flex-col items-end gap-1">
+                <Label htmlFor="envio">Subtotal</Label>
+                <span>
+                  {currencyFormat({
+                    value: subtotal || 0,
+                  })}
+                </span>
+              </div>
+              {/* <span>-</span>
+              <div className="col-span-2 gap-1 items-baseline">
+                <div>
+                  <Label htmlFor="descuento">Descuento</Label>
+                  <Input
+                    id="descuento"
+                    type="number"
+                    {...register("descuento", {
+                      required: "Descuento requerido",
+                      valueAsNumber: true,
+                      min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                    })}
+                    className="p-2 border border-gray-300 rounded-lg"
+                    defaultValue={orden?.descuento || 0}
+                  />
+                  {errors.descuento && (
+                    <p className="text-red-500 text-sm mt-1">
+                      {errors.descuento.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="envio">Tipo descuento</Label>
+                  <Controller
+                    control={control}
+                    {...register("tipoDescuento")}
+                    render={({ field }) => (
+                      <Select
+                        defaultValue={field.value || TipoDescuento.porcentual}
+                        onValueChange={field.onChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.values(TipoDescuento).map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                </div>
+              </div> */}
+              <span>+</span>
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="impuestos">Impuesto %</Label>
+                <Input
+                  id="impuesto"
+                  type="number"
+                  {...register("impuesto", {
+                    valueAsNumber: true,
+                    min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  defaultValue={orden?.impuesto || sucursal?.impuesto || 0}
+                />
+                {errors.impuesto && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.impuesto.message}
+                  </p>
+                )}
+              </div>
+              <span>-</span>
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="credito">Crédito</Label>
+                <Input
+                  id="credito"
+                  type="number"
+                  step={0.01}
+                  {...register("credito", {
+                    required: "Crédito requerido",
+                    valueAsNumber: true,
+                    min: { value: 0, message: "Debe ser mayor o igual a 0" },
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  defaultValue={orden?.credito || 0}
+                />
+              </div>
+              <span>=</span>
+              <div className="flex flex-col items-end gap-1">
+                <Label htmlFor="total">Total (USD)</Label>
+                <span>
+                  {currencyFormat({
+                    value: total || 0,
+                  })}
+                </span>
+              </div>
+              <span>*</span>
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="tasaCambio">Tasa</Label>
+                <Input
+                  id="tasaCambio"
+                  type="number"
+                  step={0.01}
+                  {...register("tasaCambio", {
+                    required: "Tasa de cambio requerida",
+                    valueAsNumber: true,
+                    min: { value: 1, message: "Debe ser mayor o igual a 1" },
+                  })}
+                  className="w-full p-2 border border-gray-300 rounded-lg"
+                  defaultValue={orden?.tasaCambio || 1}
+                  onChange={(e) => {
+                    setValue("tasaCambio", parseFloat(e.target.value));
+                  }}
+                />
+              </div>
+              <span>=</span>
+              <div className="flex flex-col items-end gap-1">
+                <Label htmlFor="total">Total (VES)</Label>
+                <span>
+                  {currencyFormat({ value: total * tasaCambio || 0 })}
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="grid grid-cols-2 gap-8 pt-5 border-t">
             {/* Left Column */}
             <div className="space-y-4">
               <div className="flex flex-col gap-2">
@@ -631,19 +758,6 @@ export default function OrdenForm({
                   <p className="text-red-500 text-sm">{errors.notas.message}</p>
                 )}
               </div>
-
-              {sucursal && (
-                <div className="flex items-center gap-2 mt-auto pt-4 border-t">
-                  <Label htmlFor="total" className="text-muted-foreground">
-                    Total de la orden:
-                  </Label>
-                  <span className="font-bold text-xl ml-auto">
-                    {currencyFormat({
-                      value: total || 0,
-                    })}
-                  </span>
-                </div>
-              )}
             </div>
 
             {/* Right Column */}

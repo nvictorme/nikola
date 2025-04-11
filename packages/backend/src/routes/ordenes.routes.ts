@@ -301,6 +301,7 @@ OrdenesRouter.post(
       newOrden.credito = data.credito || 0;
       newOrden.impuesto = data.impuesto || 0;
       newOrden.impuestoIncluido = data.impuestoIncluido || false;
+      newOrden.tasaCambio = data.tasaCambio || 1;
 
       // Calculate total based on subtotal, discount, and tax
       const discountAmount =
@@ -600,6 +601,7 @@ OrdenesRouter.put(
       orden.credito = data.credito || 0;
       orden.impuesto = data.impuesto || 0;
       orden.impuestoIncluido = data.impuestoIncluido || false;
+      orden.tasaCambio = data.tasaCambio || 1;
 
       // Calculate final total
       const discountAmount =
