@@ -32,9 +32,6 @@ export class Usuario extends Persona implements ORMUsuario {
   @Column({ default: false })
   super: boolean;
 
-  @Column({ default: false })
-  exw: boolean;
-
   @Column({
     type: "numeric",
     precision: 10,

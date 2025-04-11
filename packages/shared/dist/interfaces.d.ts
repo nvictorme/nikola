@@ -69,7 +69,6 @@ export interface IPersona extends IBase {
 export interface IUsuario extends IPersona {
     password: string;
     super: boolean;
-    exw: boolean;
     balance: number;
     rol: IRol | null;
     sucursales: ISucursal[];
