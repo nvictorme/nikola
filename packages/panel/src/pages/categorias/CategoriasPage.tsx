@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 
 export function CategoriasPage() {
   const { toast } = useToast();
-  const [newItemForm, setNewItemForm] = useState({ nombre: "", name: "" });
+  const [newItemForm, setNewItemForm] = useState({ nombre: "" });
   const [isAddingCategoria, setIsAddingCategoria] = useState(false);
   const [isAddingSubcategoria, setIsAddingSubcategoria] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -58,7 +58,7 @@ export function CategoriasPage() {
       } as ICategoria);
       await listarCategorias();
       setIsAddingCategoria(false);
-      setNewItemForm({ nombre: "", name: "" });
+      setNewItemForm({ nombre: "" });
       toast({
         title: "Categoría creada",
         description: "La categoría se ha creado exitosamente",
@@ -83,7 +83,7 @@ export function CategoriasPage() {
       } as ISubcategoria);
       await listarSubcategorias(categoria.id);
       setIsAddingSubcategoria(false);
-      setNewItemForm({ nombre: "", name: "" });
+      setNewItemForm({ nombre: "" });
       toast({
         title: "Subcategoría creada",
         description: "La subcategoría se ha creado exitosamente",
@@ -122,10 +122,10 @@ export function CategoriasPage() {
         title: "Actualizado",
         description: "El elemento se ha actualizado exitosamente",
       });
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar el elemento",
+        description: error?.message || "No se pudo actualizar el elemento",
         variant: "destructive",
       });
     }
@@ -147,16 +147,16 @@ export function CategoriasPage() {
           <DialogTrigger asChild>
             <Button>
               <PlusIcon className="mr-2 h-4 w-4" />
-              Nueva Categoría
+              Nueva categoría
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nueva Categoría</DialogTitle>
+              <DialogTitle>Nueva categoría</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <Label htmlFor="nombre">Nombre (Español)</Label>
+                <Label htmlFor="nombre">Nombre</Label>
                 <Input
                   id="nombre"
                   value={newItemForm.nombre}
@@ -164,19 +164,6 @@ export function CategoriasPage() {
                     setNewItemForm((prev) => ({
                       ...prev,
                       nombre: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="name">Name (English)</Label>
-                <Input
-                  id="name"
-                  value={newItemForm.name}
-                  onChange={(e) =>
-                    setNewItemForm((prev) => ({
-                      ...prev,
-                      name: e.target.value,
                     }))
                   }
                 />
@@ -238,16 +225,16 @@ export function CategoriasPage() {
                 <DialogTrigger asChild>
                   <Button size="sm">
                     <PlusIcon className="mr-2 h-4 w-4" />
-                    Nueva Subcategoría
+                    Nueva subcategoría
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Nueva Subcategoría</DialogTitle>
+                    <DialogTitle>Nueva subcategoría</DialogTitle>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="subNombre">Nombre (Español)</Label>
+                      <Label htmlFor="subNombre">Nombre</Label>
                       <Input
                         id="subNombre"
                         value={newItemForm.nombre}
@@ -259,22 +246,9 @@ export function CategoriasPage() {
                         }
                       />
                     </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="subName">Name (English)</Label>
-                      <Input
-                        id="subName"
-                        value={newItemForm.name}
-                        onChange={(e) =>
-                          setNewItemForm((prev) => ({
-                            ...prev,
-                            name: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
                   </div>
                   <Button onClick={handleAddSubcategoria}>
-                    Crear Subcategoría
+                    Crear subcategoría
                   </Button>
                 </DialogContent>
               </Dialog>
@@ -319,7 +293,14 @@ export function CategoriasPage() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="nombre">Nombre (Español)</Label>
+              <Label htmlFor="nombre">
+                Nombre de la{" "}
+                {editingItem
+                  ? "categoria" in editingItem
+                    ? "subcategoría"
+                    : "categoría"
+                  : ""}
+              </Label>
               <Input
                 id="nombre"
                 value={editForm.nombre}
