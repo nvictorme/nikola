@@ -60,6 +60,9 @@ export interface IPersona extends IBase {
     apellido: string;
     seudonimo?: string;
     empresa?: string;
+    creditoHabilitado: boolean;
+    creditoLimite: number;
+    balance: number;
     nif: string;
     telefono?: string;
     avatar?: string;

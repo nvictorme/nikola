@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { IPersona } from "shared/interfaces";
 import { usePersonasStore } from "@/store/personas.store";
 
@@ -14,9 +15,17 @@ export default function PersonaForm() {
     register,
     handleSubmit,
     formState: { errors },
+    setValue,
+    watch,
   } = useForm<IPersona>({
-    defaultValues: persona || {},
+    defaultValues: persona || {
+      creditoHabilitado: false,
+      creditoLimite: 0,
+    },
   });
+
+  const creditoHabilitado = watch("creditoHabilitado");
+  const hasExistingCredit = persona?.creditoHabilitado;
 
   const onSubmit = (data: IPersona) => {
     if (persona) {
@@ -98,6 +107,40 @@ export default function PersonaForm() {
       <div>
         <Label htmlFor="notas">Notas</Label>
         <Textarea id="notas" {...register("notas")} />
+      </div>
+
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="creditoHabilitado"
+            defaultChecked={hasExistingCredit}
+            {...register("creditoHabilitado")}
+            onCheckedChange={(checked) => {
+              setValue("creditoHabilitado", checked as boolean);
+            }}
+          />
+          <Label htmlFor="creditoHabilitado">Habilitar Crédito</Label>
+        </div>
+
+        {(creditoHabilitado || hasExistingCredit) && (
+          <div>
+            <Label htmlFor="creditoLimite">Límite de Crédito</Label>
+            <Input
+              id="creditoLimite"
+              type="number"
+              step="0.01"
+              {...register("creditoLimite", {
+                required: "Límite de crédito es requerido",
+                min: { value: 0, message: "El límite debe ser mayor a 0" },
+              })}
+            />
+            {errors.creditoLimite && (
+              <span className="text-red-500 text-sm mt-1 block">
+                {errors.creditoLimite.message}
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <Button type="submit" className="w-full">

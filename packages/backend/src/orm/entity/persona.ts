@@ -2,6 +2,7 @@ import { Entity, Column, OneToMany } from "typeorm";
 import { Base } from "./base";
 import { Direccion } from "./direccion";
 import { IPersona } from "shared/interfaces";
+import { decimalTransformer } from "shared/constants";
 
 export interface ORMPersona extends IPersona {
   direcciones: Direccion[];
@@ -27,6 +28,30 @@ export class Persona extends Base implements ORMPersona {
     length: 100,
   })
   empresa: string;
+
+  @Column({
+    type: "boolean",
+    default: false,
+  })
+  creditoHabilitado: boolean;
+
+  @Column({
+    type: "numeric",
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: decimalTransformer,
+  })
+  creditoLimite: number;
+
+  @Column({
+    type: "numeric",
+    precision: 10,
+    scale: 2,
+    default: 0,
+    transformer: decimalTransformer,
+  })
+  balance: number;
 
   @Column({
     nullable: true,
