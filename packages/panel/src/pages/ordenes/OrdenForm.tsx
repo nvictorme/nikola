@@ -580,8 +580,9 @@ export default function OrdenForm({
 
                   <div>
                     {field.value?.length > 0 && (
-                      <div className="grid grid-cols-6 gap-4">
+                      <div className="grid grid-cols-7 gap-4">
                         <div className="font-semibold col-span-2">Producto</div>
+                        <div className="font-semibold">Serial</div>
                         <div className="font-semibold">Cantidad</div>
                         <div className="font-semibold">Precio</div>
                         <div className="font-semibold">Subtotal</div>

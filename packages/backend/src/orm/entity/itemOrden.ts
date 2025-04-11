@@ -14,6 +14,9 @@ export interface ORMItemOrden extends IItemOrden {
 
 @Entity("ordenes_items")
 export class ItemOrden extends Base implements ORMItemOrden {
+  @Column({ type: "varchar", length: 100, nullable: true })
+  serial: string | null;
+
   @Column({ type: "int", nullable: false, default: 1 })
   cantidad: number;
 
@@ -34,9 +37,6 @@ export class ItemOrden extends Base implements ORMItemOrden {
     transformer: decimalTransformer,
   })
   total: number;
-
-  @Column({ type: "varchar", length: 50, nullable: true })
-  serial: string;
 
   @Column({ type: "text", nullable: true })
   notas: string;

@@ -154,7 +154,7 @@ export const ItemOrdenForm = forwardRef<
       value={`${item.id}-${idx}`}
       className="item-accordion"
     >
-      <AccordionTrigger className="grid grid-cols-6 gap-4 text-xs justify-stretch hover:no-underline">
+      <AccordionTrigger className="grid grid-cols-7 gap-4 text-xs justify-stretch hover:no-underline">
         <div className="col-span-2">
           {item.producto.sku}{" "}
           {item.producto.sku === "ZZ" ? (
@@ -171,18 +171,18 @@ export const ItemOrdenForm = forwardRef<
           ) : (
             item.producto.nombre
           )}
-          <br />
-          <small>
-            Precio:{" "}
-            {currencyFormat({
-              value: item.precio,
+        </div>
+        <div>
+          <Input
+            type="text"
+            defaultValue={item.serial || ""}
+            {...register(`items.${idx}.serial` as const, {
+              maxLength: { value: 100, message: "Máximo 100 caracteres" },
             })}
-          </small>
-          <br />
-          <small>
-            Garantía:{" "}
-            {item.garantia || item.producto.garantia || "Sin garantía"}
-          </small>
+            placeholder="Ingrese el serial"
+            maxLength={100}
+            className="w-full p-2 border border-gray-300 rounded-lg"
+          />
         </div>
         <div>
           <Input
