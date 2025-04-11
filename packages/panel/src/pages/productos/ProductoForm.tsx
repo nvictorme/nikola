@@ -371,7 +371,7 @@ export default function ProductoForm() {
                         <Label htmlFor="unidadPeso">Unidad de Peso</Label>
                         <Select
                           defaultValue={
-                            producto?.dimensiones?.unidadPeso ?? "kg"
+                            producto?.dimensiones?.unidadPeso ?? "g"
                           }
                           onValueChange={(val) => {
                             field.onChange({

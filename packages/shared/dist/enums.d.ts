@@ -68,16 +68,13 @@ export declare enum TipoDescuento {
     absoluto = "Absoluto"
 }
 export declare enum UnidadesLongitud {
+    mm = "mm",
     cm = "cm",
-    m = "m",
-    in = "in",
-    ft = "ft"
+    m = "m"
 }
 export declare enum UnidadesPeso {
     g = "g",
-    kg = "kg",
-    oz = "oz",
-    lb = "lb"
+    kg = "kg"
 }
 export declare enum SocketEventos {
     connect = "connect",

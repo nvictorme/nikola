@@ -45,6 +45,6 @@ export class Dimension extends Base implements IDimensiones {
   @Column({ type: "varchar", length: "5", default: UnidadesLongitud.cm })
   unidadLongitud: UnidadesLongitud;
 
-  @Column({ type: "varchar", length: "5", default: UnidadesPeso.kg })
+  @Column({ type: "varchar", length: "5", default: UnidadesPeso.g })
   unidadPeso: UnidadesPeso;
 }

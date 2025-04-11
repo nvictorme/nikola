@@ -76,17 +76,14 @@ export enum TipoDescuento {
 }
 
 export enum UnidadesLongitud {
+  mm = "mm",
   cm = "cm",
   m = "m",
-  in = "in",
-  ft = "ft",
 }
 
 export enum UnidadesPeso {
   g = "g",
   kg = "kg",
-  oz = "oz",
-  lb = "lb",
 }
 
 export enum SocketEventos {

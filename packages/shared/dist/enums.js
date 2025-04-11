@@ -80,17 +80,14 @@ var TipoDescuento;
 })(TipoDescuento || (exports.TipoDescuento = TipoDescuento = {}));
 var UnidadesLongitud;
 (function (UnidadesLongitud) {
+    UnidadesLongitud["mm"] = "mm";
     UnidadesLongitud["cm"] = "cm";
     UnidadesLongitud["m"] = "m";
-    UnidadesLongitud["in"] = "in";
-    UnidadesLongitud["ft"] = "ft";
 })(UnidadesLongitud || (exports.UnidadesLongitud = UnidadesLongitud = {}));
 var UnidadesPeso;
 (function (UnidadesPeso) {
     UnidadesPeso["g"] = "g";
     UnidadesPeso["kg"] = "kg";
-    UnidadesPeso["oz"] = "oz";
-    UnidadesPeso["lb"] = "lb";
 })(UnidadesPeso || (exports.UnidadesPeso = UnidadesPeso = {}));
 var SocketEventos;
 (function (SocketEventos) {
