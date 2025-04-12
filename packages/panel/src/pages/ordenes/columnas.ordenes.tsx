@@ -30,7 +30,7 @@ import {
   canCreateOrders,
   currencyFormat,
 } from "shared/helpers";
-import { EstatusOrden, TipoOrden } from "shared/enums";
+import { EstatusOrden, TipoOrden, TipoCambio } from "shared/enums";
 import {
   Select,
   SelectContent,
@@ -65,6 +65,7 @@ export type Orden = Pick<
   | "cliente"
   | "archivos"
   | "envios"
+  | "tipoCambio"
   | "tasaCambio"
   | "total"
 >;
@@ -258,12 +259,16 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   {
     accessorKey: "tasaCambio",
     header: "Total (VES)",
-    accessorFn: (row) =>
-      currencyFormat({
-        value: row.total * row.tasaCambio || 0,
+    accessorFn: (row) => {
+      if (row.tipoCambio === TipoCambio.usd) {
+        return "-";
+      }
+      return currencyFormat({
+        value: row.total * row.tasaCambio,
         locale: "es-VE",
         currency: "VES",
-      }),
+      });
+    },
   },
   {
     accessorKey: "archivos",

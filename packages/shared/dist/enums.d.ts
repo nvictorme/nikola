@@ -67,6 +67,15 @@ export declare enum TipoDescuento {
     porcentual = "Porcentual",
     absoluto = "Absoluto"
 }
+export declare enum TipoCliente {
+    instalador = "Instalador",
+    mayorista = "Mayorista",
+    general = "General"
+}
+export declare enum TipoCambio {
+    usd = "USD",
+    bcv = "BCV"
+}
 export declare enum UnidadesLongitud {
     mm = "mm",
     cm = "cm",

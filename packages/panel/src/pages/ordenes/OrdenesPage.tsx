@@ -56,6 +56,33 @@ const OrdenesPage: React.FC = () => {
   const { listarSucursales } = useSucursalesStore();
 
   useEffect(() => {
+    const fetchRates = async () => {
+      try {
+        const res = await fetch("https://api.elcamb.io/monitors", {
+          headers: {
+            origin: "https://elcamb.io",
+            "x-api-key": "b84392be-3eaf-4b17-8be7-4d29c29e108e",
+            Accept: "application/json",
+          },
+        });
+        const data = await res.json();
+        console.log("Full API response:", data);
+        if (data?.monitors) {
+          const { bcv, enparalelovzla } = data.monitors;
+          console.log("BCV rate:", bcv.price);
+          console.log("En paralelo rate:", enparalelovzla.price);
+          const ratio =
+            Math.round((enparalelovzla.price / bcv.price) * 100) / 100;
+          console.log("Ratio:", ratio);
+        }
+      } catch (error) {
+        console.error("Error fetching rates:", error);
+      }
+    };
+    fetchRates();
+  }, []);
+
+  useEffect(() => {
     listarOrdenes();
     listarProductos();
     listarSucursales();

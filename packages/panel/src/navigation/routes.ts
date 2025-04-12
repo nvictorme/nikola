@@ -3,6 +3,7 @@ import LoginPage from "@/pages/auth/LoginPage";
 import ResetPage from "@/pages/auth/ResetPage";
 import BalancePage from "@/pages/balance/BalancePage";
 import { CategoriasPage } from "@/pages/categorias/CategoriasPage";
+import ConfiguracionPage from "@/pages/configuracion/ConfiguracionPage";
 import DashboardPage from "@/pages/dashboard/DashboardPage";
 import OrdenesPage from "@/pages/ordenes/OrdenesPage";
 import PersonasPage from "@/pages/personas/PersonasPage";
@@ -24,6 +25,7 @@ import {
   FileChartColumn,
   IdCard,
   KeyRoundIcon,
+  Settings,
 } from "lucide-react";
 
 export const routes = {
@@ -110,5 +112,11 @@ export const routes = {
     title: "Categorías",
     icon: Package,
     element: CategoriasPage,
+  },
+  configuracion: {
+    path: "/configuracion",
+    title: "Configuración",
+    icon: Settings,
+    element: ConfiguracionPage,
   },
 };

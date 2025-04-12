@@ -75,6 +75,17 @@ export enum TipoDescuento {
   absoluto = "Absoluto",
 }
 
+export enum TipoCliente {
+  instalador = "Instalador",
+  mayorista = "Mayorista",
+  general = "General",
+}
+
+export enum TipoCambio {
+  usd = "USD",
+  bcv = "BCV",
+}
+
 export enum UnidadesLongitud {
   mm = "mm",
   cm = "cm",

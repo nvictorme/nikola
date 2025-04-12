@@ -38,7 +38,7 @@ import {
 } from "shared/helpers";
 import { Accordion } from "@/components/ui/accordion";
 import { v4 as uuidv4 } from "uuid";
-import { TipoDescuento, TipoOrden } from "shared/enums";
+import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
 import { Separator } from "@/components/ui/separator";
 import { useSucursalesStore } from "@/store/sucursales.store";
 import { useState, useEffect, useCallback } from "react";
@@ -135,6 +135,7 @@ export default function OrdenForm({
           impuesto: 0,
           tipoDescuento: TipoDescuento.porcentual,
           tasaCambio: 1,
+          tipoCambio: TipoCambio.usd,
           subtotal: 0,
           total: 0,
           validez: 1 as number,
@@ -191,9 +192,20 @@ export default function OrdenForm({
     setIsSubmitting(true);
     try {
       if (orden) {
-        await actualizarOrden({ ...orden, ...data, subtotal, total });
+        await actualizarOrden({
+          ...orden,
+          ...data,
+          subtotal,
+          total,
+          tipoCambio: data.tipoCambio || TipoCambio.usd,
+        });
       } else {
-        await crearOrden({ ...data, subtotal, total });
+        await crearOrden({
+          ...data,
+          subtotal,
+          total,
+          tipoCambio: data.tipoCambio || TipoCambio.usd,
+        });
       }
       onCloseForm();
       localStorage.removeItem("orden_draft");
@@ -749,6 +761,29 @@ export default function OrdenForm({
           <div className="grid grid-cols-2 gap-8 pt-5 border-t">
             {/* Left Column */}
             <div className="space-y-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="tipoCambio">Tipo de Cambio</Label>
+                <Controller
+                  control={control}
+                  name="tipoCambio"
+                  defaultValue={orden?.tipoCambio || TipoCambio.usd}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar tipo de cambio" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={TipoCambio.usd}>
+                          {TipoCambio.usd}
+                        </SelectItem>
+                        <SelectItem value={TipoCambio.bcv}>
+                          {TipoCambio.bcv}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
               <div className="flex flex-col gap-2">
                 <Label htmlFor="notas">Notas generales de la orden</Label>
                 <Textarea
