@@ -85,6 +85,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: routes.configuracion.path,
+        element: (
+          <ProtectedRoute routeRuleCheck={RouteRuleCheck.isAdmin}>
+            <routes.configuracion.element />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

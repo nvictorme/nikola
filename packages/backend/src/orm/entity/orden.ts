@@ -11,7 +11,12 @@ import { Sucursal } from "./sucursal";
 import { Usuario } from "./usuario";
 import { Persona } from "./persona";
 import { Base } from "./base";
-import { EstatusOrden, TipoDescuento, TipoOrden } from "shared/enums";
+import {
+  EstatusOrden,
+  TipoCambio,
+  TipoDescuento,
+  TipoOrden,
+} from "shared/enums";
 import { IOrden } from "shared/interfaces";
 import { ItemOrden } from "./itemOrden";
 import { decimalTransformer } from "shared/constants";
@@ -93,6 +98,13 @@ export class Orden extends Base implements ORMOrden {
     transformer: decimalTransformer,
   })
   impuesto: number;
+
+  @Column({
+    type: "enum",
+    enum: TipoCambio,
+    default: TipoCambio.usd,
+  })
+  tipoCambio: TipoCambio;
 
   @Column({
     type: "numeric",

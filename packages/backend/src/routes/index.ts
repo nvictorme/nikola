@@ -12,3 +12,4 @@ export * from "./api/public.routes";
 export * from "./categorias.routes";
 export * from "./reportes.routes";
 export * from "./dashboard.routes";
+export * from "./configuracion.routes";

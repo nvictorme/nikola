@@ -3,6 +3,7 @@ import { Base } from "./base";
 import { Direccion } from "./direccion";
 import { IPersona } from "shared/interfaces";
 import { decimalTransformer } from "shared/constants";
+import { TipoCliente } from "shared/enums";
 
 export interface ORMPersona extends IPersona {
   direcciones: Direccion[];
@@ -71,6 +72,13 @@ export class Persona extends Base implements ORMPersona {
     unique: true,
   })
   nif: string;
+
+  @Column({
+    type: "enum",
+    enum: TipoCliente,
+    default: TipoCliente.general,
+  })
+  tipoCliente: TipoCliente;
 
   @Column({
     nullable: true,

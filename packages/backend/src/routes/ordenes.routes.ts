@@ -11,6 +11,7 @@ import {
   TipoTransaccion,
   UnidadesLongitud,
   UnidadesPeso,
+  TipoCambio,
 } from "shared/enums";
 import { Usuario } from "../orm/entity/usuario";
 import { Archivo } from "../orm/entity/archivo";
@@ -302,6 +303,7 @@ OrdenesRouter.post(
       newOrden.impuesto = data.impuesto || 0;
       newOrden.impuestoIncluido = data.impuestoIncluido || false;
       newOrden.tasaCambio = data.tasaCambio || 1;
+      newOrden.tipoCambio = data.tipoCambio || TipoCambio.usd;
 
       // Calculate total based on subtotal, discount, and tax
       const discountAmount =
@@ -602,6 +604,7 @@ OrdenesRouter.put(
       orden.impuesto = data.impuesto || 0;
       orden.impuestoIncluido = data.impuestoIncluido || false;
       orden.tasaCambio = data.tasaCambio || 1;
+      orden.tipoCambio = data.tipoCambio || TipoCambio.usd;
 
       // Calculate final total
       const discountAmount =

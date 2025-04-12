@@ -1,4 +1,11 @@
-import { RolesBase, TipoDescuento, EstatusInvitacion, UnidadesLongitud, Acciones, UnidadesPeso, EstatusOrden, EstatusArchivo, TipoTransaccion, EstatusPago, MetodoPago, Transportistas, TipoOrden, TipoReporte, SocketTipoMensaje } from "./enums";
+import { RolesBase, TipoDescuento, EstatusInvitacion, UnidadesLongitud, Acciones, UnidadesPeso, EstatusOrden, EstatusArchivo, TipoTransaccion, EstatusPago, MetodoPago, Transportistas, TipoOrden, TipoReporte, SocketTipoMensaje, TipoCliente, TipoCambio } from "./enums";
+export interface IFactores {
+    [TipoCliente.instalador]: number;
+    [TipoCliente.mayorista]: number;
+    [TipoCliente.general]: number;
+    [TipoCambio.usd]: number;
+    [TipoCambio.bcv]: number;
+}
 export interface IBase {
     id: string;
     activo: boolean;
@@ -60,6 +67,7 @@ export interface IPersona extends IBase {
     apellido: string;
     seudonimo?: string;
     empresa?: string;
+    tipoCliente: TipoCliente;
     creditoHabilitado: boolean;
     creditoLimite: number;
     balance: number;
@@ -171,6 +179,7 @@ export interface IOrden extends IBase {
     tipoDescuento?: TipoDescuento;
     impuesto: number;
     impuestoIncluido: boolean;
+    tipoCambio: TipoCambio;
     tasaCambio: number;
     subtotal: number;
     total: number;

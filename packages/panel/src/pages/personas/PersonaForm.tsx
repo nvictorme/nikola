@@ -4,7 +4,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { IPersona } from "shared/interfaces";
+import { TipoCliente } from "shared/enums";
 import { usePersonasStore } from "@/store/personas.store";
 
 export default function PersonaForm() {
@@ -21,6 +29,7 @@ export default function PersonaForm() {
     defaultValues: persona || {
       creditoHabilitado: false,
       creditoLimite: 0,
+      tipoCliente: TipoCliente.general,
     },
   });
 
@@ -84,6 +93,25 @@ export default function PersonaForm() {
       <div>
         <Label htmlFor="empresa">Empresa</Label>
         <Input id="empresa" {...register("empresa")} />
+      </div>
+
+      <div>
+        <Label htmlFor="tipoCliente">Tipo de Cliente</Label>
+        <Select
+          defaultValue={persona?.tipoCliente || TipoCliente.general}
+          onValueChange={(value) =>
+            setValue("tipoCliente", value as TipoCliente)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Seleccione un tipo de cliente" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={TipoCliente.instalador}>Instalador</SelectItem>
+            <SelectItem value={TipoCliente.mayorista}>Mayorista</SelectItem>
+            <SelectItem value={TipoCliente.general}>General</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div>

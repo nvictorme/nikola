@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TipoReporte = exports.TipoOrden = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
+exports.TipoReporte = exports.TipoOrden = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoCambio = exports.TipoCliente = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
 var RouteRuleCheck;
 (function (RouteRuleCheck) {
     RouteRuleCheck["isAdmin"] = "isAdmin";
@@ -78,6 +78,17 @@ var TipoDescuento;
     TipoDescuento["porcentual"] = "Porcentual";
     TipoDescuento["absoluto"] = "Absoluto";
 })(TipoDescuento || (exports.TipoDescuento = TipoDescuento = {}));
+var TipoCliente;
+(function (TipoCliente) {
+    TipoCliente["instalador"] = "Instalador";
+    TipoCliente["mayorista"] = "Mayorista";
+    TipoCliente["general"] = "General";
+})(TipoCliente || (exports.TipoCliente = TipoCliente = {}));
+var TipoCambio;
+(function (TipoCambio) {
+    TipoCambio["usd"] = "USD";
+    TipoCambio["bcv"] = "BCV";
+})(TipoCambio || (exports.TipoCambio = TipoCambio = {}));
 var UnidadesLongitud;
 (function (UnidadesLongitud) {
     UnidadesLongitud["mm"] = "mm";
