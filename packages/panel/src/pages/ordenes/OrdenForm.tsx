@@ -736,7 +736,11 @@ export default function OrdenForm({
               <div className="flex flex-col items-end gap-1">
                 <Label htmlFor="total">Total (VES)</Label>
                 <span>
-                  {currencyFormat({ value: total * tasaCambio || 0 })}
+                  {currencyFormat({
+                    value: total * tasaCambio || 0,
+                    locale: "es-VE",
+                    currency: "VES",
+                  })}
                 </span>
               </div>
             </div>

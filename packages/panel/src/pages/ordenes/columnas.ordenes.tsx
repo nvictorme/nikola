@@ -259,7 +259,11 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
     accessorKey: "tasaCambio",
     header: "Total (VES)",
     accessorFn: (row) =>
-      currencyFormat({ value: row.total * row.tasaCambio || 0 }),
+      currencyFormat({
+        value: row.total * row.tasaCambio || 0,
+        locale: "es-VE",
+        currency: "VES",
+      }),
   },
   {
     accessorKey: "archivos",
