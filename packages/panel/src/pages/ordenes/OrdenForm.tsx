@@ -38,7 +38,12 @@ import {
 } from "shared/helpers";
 import { Accordion } from "@/components/ui/accordion";
 import { v4 as uuidv4 } from "uuid";
-import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
+import {
+  TipoDescuento,
+  TipoOrden,
+  TipoCambio,
+  TipoCliente,
+} from "shared/enums";
 import { Separator } from "@/components/ui/separator";
 import { useSucursalesStore } from "@/store/sucursales.store";
 import { useState, useEffect, useCallback } from "react";
@@ -50,7 +55,7 @@ import { Upload, FileIcon, XIcon } from "lucide-react";
 import { EstatusArchivo } from "shared/enums";
 import { IArchivo } from "shared/interfaces";
 import Joyride, { CallBackProps, Step } from "react-joyride";
-
+import { useConfiguracionStore } from "@/store/configuracion.store";
 const orderSteps: Step[] = [
   {
     target: "body",
@@ -115,6 +120,8 @@ export default function OrdenForm({
   const [productosDialogOpen, setProductosDialogOpen] = useState(false);
   const [idOrden] = useState<string | null>(orden?.id || uuidv4());
 
+  const { factores } = useConfiguracionStore();
+
   const {
     register,
     handleSubmit,
@@ -154,6 +161,8 @@ export default function OrdenForm({
   const tipoDescuento = watch("tipoDescuento");
   const impuesto = watch("impuesto");
   const tasaCambio = watch("tasaCambio");
+  const tipoCambio = watch("tipoCambio");
+
   const subtotal =
     items?.reduce(
       (acc, item) =>
@@ -517,6 +526,27 @@ export default function OrdenForm({
                                     // si no hay precio de oferta, usar el precio normal
                                     item.precio = p.precio || 0;
                                   }
+
+                                  // aplicar el factor por tipo de cambio
+                                  if (tipoCambio === TipoCambio.usd) {
+                                    item.precio =
+                                      item.precio * factores[TipoCambio.usd];
+                                  } else if (tipoCambio === TipoCambio.bcv) {
+                                    item.precio =
+                                      item.precio * factores[TipoCambio.bcv];
+                                  }
+
+                                  // aplicar el factor por tipo de cliente
+                                  item.precio =
+                                    item.precio *
+                                    factores[
+                                      cliente?.tipoCliente ||
+                                        TipoCliente.general
+                                    ];
+
+                                  // redondear el precio a 2 decimales
+                                  item.precio =
+                                    Math.round(item.precio * 100) / 100;
 
                                   item.total =
                                     (item.cantidad || 1) * item.precio;
