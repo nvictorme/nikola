@@ -36,7 +36,6 @@ import {
   currencyFormat,
   isSuperAdmin,
 } from "shared/helpers";
-import { Accordion } from "@/components/ui/accordion";
 import { v4 as uuidv4 } from "uuid";
 import {
   TipoDescuento,
@@ -56,6 +55,7 @@ import { EstatusArchivo } from "shared/enums";
 import { IArchivo } from "shared/interfaces";
 import Joyride, { CallBackProps, Step } from "react-joyride";
 import { useConfiguracionStore } from "@/store/configuracion.store";
+
 const orderSteps: Step[] = [
   {
     target: "body",
@@ -619,36 +619,24 @@ export default function OrdenForm({
                   )}
 
                   <div>
-                    {field.value?.length > 0 && (
-                      <div className="grid grid-cols-7 gap-4">
-                        <div className="font-semibold col-span-2">Producto</div>
-                        <div className="font-semibold">Serial</div>
-                        <div className="font-semibold">Cantidad</div>
-                        <div className="font-semibold">Precio</div>
-                        <div className="font-semibold">Subtotal</div>
-                        <div className="font-semibold">Acciones</div>
-                      </div>
-                    )}
-                    <Accordion type="single" collapsible>
-                      {field.value?.map((item, idx) => (
-                        <ItemOrdenForm
-                          key={`${item.producto.id}-${idx}`}
-                          item={item}
-                          idx={idx}
-                          getValues={getValues}
-                          setValue={setValue}
-                          register={register}
-                          onDelete={() => {
-                            const newItems = field.value?.filter(
-                              (i) => i.id !== item.id
-                            );
-                            field.onChange(newItems);
-                          }}
-                          idOrden={idOrden || null}
-                          sucursal={sucursal}
-                        />
-                      ))}
-                    </Accordion>
+                    {field.value?.map((item, idx) => (
+                      <ItemOrdenForm
+                        key={`${item.producto.id}-${idx}`}
+                        item={item}
+                        idx={idx}
+                        getValues={getValues}
+                        setValue={setValue}
+                        register={register}
+                        onDelete={() => {
+                          const newItems = field.value?.filter(
+                            (i) => i.id !== item.id
+                          );
+                          field.onChange(newItems);
+                        }}
+                        idOrden={idOrden || null}
+                        sucursal={sucursal}
+                      />
+                    ))}
                   </div>
                 </>
               )}

@@ -1,11 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+// import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -36,6 +31,7 @@ import {
 import { useEffect, useCallback, useState, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { toast } from "sonner";
+import { Trash2Icon } from "lucide-react";
 
 export interface AlmacenWithStock extends IAlmacen {
   stock: {
@@ -124,14 +120,14 @@ export const ItemOrdenForm = forwardRef<
     updateItemTotal(item.cantidad, precio);
   };
 
-  const handleNotasChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newItems = [...getValues("items")];
-      newItems[idx].notas = e.target.value;
-      setValue("items", newItems);
-    },
-    [getValues, setValue, idx]
-  );
+  // const handleNotasChange = useCallback(
+  //   (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  //     const newItems = [...getValues("items")];
+  //     newItems[idx].notas = e.target.value;
+  //     setValue("items", newItems);
+  //   },
+  //   [getValues, setValue, idx]
+  // );
 
   const handleAlmacenChange = useCallback(
     (value: string) => {
@@ -148,31 +144,18 @@ export const ItemOrdenForm = forwardRef<
   );
 
   return (
-    <AccordionItem
+    <div
       ref={ref}
       key={`${item.id}-${idx}`}
-      value={`${item.id}-${idx}`}
-      className="item-accordion"
+      className="grid grid-cols-10 gap-4 p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors"
     >
-      <AccordionTrigger className="grid grid-cols-7 gap-4 text-xs justify-stretch hover:no-underline">
-        <div className="col-span-2">
-          {item.producto.sku}{" "}
-          {item.producto.sku === "ZZ" ? (
-            <Input
-              type="text"
-              defaultValue={item.producto.nombre}
-              className="w-full p-1 border border-gray-300 rounded-lg mt-1"
-              onChange={(e) => {
-                const newItems = [...getValues("items")];
-                newItems[idx].producto.nombre = e.target.value;
-                setValue("items", newItems);
-              }}
-            />
-          ) : (
-            item.producto.nombre
-          )}
+      {/* Product Info */}
+      <div className="col-span-3 space-y-2">
+        <div className="text-sm font-medium">
+          {item.producto.sku} {item.producto.nombre}
         </div>
-        <div>
+        <div className="text-sm">
+          <Label>Serial</Label>
           <Input
             type="text"
             defaultValue={item.serial || ""}
@@ -184,7 +167,69 @@ export const ItemOrdenForm = forwardRef<
             className="w-full p-2 border border-gray-300 rounded-lg"
           />
         </div>
+      </div>
+
+      {/* Warehouse and Warranty */}
+      <div className="col-span-3 space-y-2">
         <div>
+          <Label>Almacén</Label>
+          <Select
+            value={item.almacen?.id || "none"}
+            onValueChange={handleAlmacenChange}
+            disabled={isLoadingAlmacenes}
+          >
+            <SelectTrigger>
+              <SelectValue
+                placeholder={
+                  isLoadingAlmacenes
+                    ? "Cargando almacenes..."
+                    : errorAlmacenes
+                    ? "Error al cargar almacenes"
+                    : item.almacen?.nombre || "Seleccionar almacén"
+                }
+              />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Sin almacén asignado</SelectItem>
+              {almacenes?.map((almacen) => (
+                <SelectItem key={almacen.id} value={almacen.id}>
+                  {almacen.nombre}:{" "}
+                  {calcularStockDisponible(almacen.stock as IStockProducto)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Garantía</Label>
+          <Input
+            type="text"
+            value={item.garantia || item.producto.garantia || ""}
+            onChange={(e) => {
+              const newItems = [...getValues("items")];
+              newItems[idx].garantia = e.target.value;
+              setValue("items", newItems);
+            }}
+            placeholder="Asignar garantía"
+          />
+        </div>
+      </div>
+
+      {/* Notes */}
+      {/* <div className="col-span-2">
+        <Label>Notas</Label>
+        <Textarea
+          value={item.notas || ""}
+          onChange={handleNotasChange}
+          placeholder={`Notas para ${item.producto.sku} ${item.producto.nombre}`}
+          className="w-full p-2 border border-gray-300 rounded-lg item-notas"
+        />
+      </div> */}
+
+      {/* Quantity and Price */}
+      <div className="col-span-2 space-y-2">
+        <div>
+          <Label>Cantidad</Label>
           <Input
             type="number"
             {...register(`items.${idx}.cantidad` as const, {
@@ -198,6 +243,7 @@ export const ItemOrdenForm = forwardRef<
           />
         </div>
         <div>
+          <Label>Precio</Label>
           <Input
             type="number"
             {...register(`items.${idx}.precio` as const, {
@@ -210,107 +256,50 @@ export const ItemOrdenForm = forwardRef<
             onChange={handlePrecioChange}
           />
         </div>
-        <div>
-          {sucursal &&
-            currencyFormat({
+      </div>
+
+      {/* Total */}
+      <div className="col-span-1 flex items-center justify-center">
+        {sucursal && (
+          <div className="font-medium">
+            {currencyFormat({
               value: item.total,
             })}
-        </div>
-        <div className="flex gap-2">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-red-500 hover:bg-red-100 hover:text-red-600 item-delete"
+          </div>
+        )}
+      </div>
+
+      {/* Delete Button */}
+      <div className="col-span-1 flex items-center justify-end">
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-red-500 hover:bg-red-100 hover:text-red-600 item-delete"
+            >
+              <Trash2Icon className="w-4 h-4 mr-2" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-red-500 text-white hover:bg-red-600"
+                onClick={onDelete}
               >
                 Eliminar
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>¿Está seguro?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Esta acción no se puede deshacer
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-red-500 text-white hover:bg-red-600"
-                  onClick={onDelete}
-                >
-                  Eliminar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </AccordionTrigger>
-
-      <AccordionContent className="w-full">
-        <div className="grid grid-cols-7 gap-4 p-4">
-          <div className="col-span-2">
-            <Textarea
-              value={item.notas || ""}
-              onChange={handleNotasChange}
-              placeholder={`Notas para ${item.producto.sku} ${item.producto.nombre}`}
-              className="w-full p-2 border border-gray-300 rounded-lg item-notas"
-            />
-          </div>
-          <div className="col-span-2">
-            <div className="space-y-4">
-              <div className="item-almacen">
-                <Label htmlFor={`almacen-${idx}`}>Almacén</Label>
-                <Select
-                  value={item.almacen?.id || "none"}
-                  onValueChange={handleAlmacenChange}
-                  disabled={isLoadingAlmacenes}
-                >
-                  <SelectTrigger>
-                    <SelectValue
-                      placeholder={
-                        isLoadingAlmacenes
-                          ? "Cargando almacenes..."
-                          : errorAlmacenes
-                          ? "Error al cargar almacenes"
-                          : item.almacen?.nombre || "Seleccionar almacén"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin almacén asignado</SelectItem>
-                    {almacenes?.map((almacen) => (
-                      <SelectItem key={almacen.id} value={almacen.id}>
-                        {almacen.nombre}:{" "}
-                        {calcularStockDisponible(
-                          almacen.stock as IStockProducto
-                        )}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <>
-                <div>
-                  <Label>Garantía</Label>
-                  <Input
-                    type="text"
-                    value={item.garantia || item.producto.garantia || ""}
-                    onChange={(e) => {
-                      const newItems = [...getValues("items")];
-                      newItems[idx].garantia = e.target.value;
-                      setValue("items", newItems);
-                    }}
-                    placeholder="Asignar garantía"
-                  />
-                </div>
-              </>
-            </div>
-          </div>
-        </div>
-      </AccordionContent>
-    </AccordionItem>
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </div>
   );
 });
