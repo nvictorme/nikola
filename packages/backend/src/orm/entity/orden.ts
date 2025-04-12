@@ -102,7 +102,7 @@ export class Orden extends Base implements ORMOrden {
   @Column({
     type: "enum",
     enum: TipoCambio,
-    default: TipoCambio.usd,
+    default: TipoCambio.bcv,
   })
   tipoCambio: TipoCambio;
 

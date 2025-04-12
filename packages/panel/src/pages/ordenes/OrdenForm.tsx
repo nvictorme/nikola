@@ -142,7 +142,7 @@ export default function OrdenForm({
           impuesto: 0,
           tipoDescuento: TipoDescuento.porcentual,
           tasaCambio: 1,
-          tipoCambio: TipoCambio.usd,
+          tipoCambio: TipoCambio.bcv,
           subtotal: 0,
           total: 0,
           validez: 1 as number,
@@ -796,7 +796,7 @@ export default function OrdenForm({
                 <Controller
                   control={control}
                   name="tipoCambio"
-                  defaultValue={orden?.tipoCambio || TipoCambio.usd}
+                  defaultValue={orden?.tipoCambio || TipoCambio.bcv}
                   render={({ field }) => (
                     <Select value={field.value} onValueChange={field.onChange}>
                       <SelectTrigger>
