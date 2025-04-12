@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { IOrden } from "shared/interfaces";
 import { currencyFormat, calcularTotalOrden } from "shared/helpers";
-import { TipoOrden } from "shared/enums";
+import { TipoDescuento, TipoOrden } from "shared/enums";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -31,7 +31,7 @@ export const OrdenPreview = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[850px] max-h-[90vh] p-0">
+      <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
         <DialogTitle className="sr-only">Orden #{orden.serial}</DialogTitle>
         <DialogDescription className="sr-only">
           Fecha: {new Date(orden.fechaCreado).toLocaleDateString()}
@@ -53,48 +53,53 @@ export const OrdenPreview = ({
               <div className="text-right">
                 <p className="font-semibold">Fecha de Orden:</p>
                 <p>{new Date(orden.fechaCreado).toLocaleDateString()}</p>
+                {orden.tipoCambio === "BCV" && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    Tasa BCV: {orden.tasaCambio}
+                  </p>
+                )}
               </div>
             </div>
           </div>
 
           {/* Company and Client Info Section */}
           <div className="grid grid-cols-2 gap-8 mb-8">
-            <div>
-              <h3 className="font-semibold text-gray-700 mb-3">Vendedor:</h3>
-              <div className="space-y-1">
-                <p className="font-medium">
-                  {orden.vendedor.empresa
-                    ? orden.vendedor.empresa
-                    : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`}
-                </p>
-                {orden.vendedor.empresa ? (
-                  <p>
-                    {orden.vendedor.nombre} {orden.vendedor.apellido}
-                  </p>
-                ) : null}
-                <p>{orden.vendedor.email}</p>
-                <p>{orden.vendedor.telefono}</p>
-              </div>
-            </div>
             {orden.tipo !== TipoOrden.reposicion ? (
-              <div>
+              <div className="text-left">
                 <h3 className="font-semibold text-gray-700 mb-3">Cliente:</h3>
                 <div className="space-y-1">
-                  <p className="font-medium">
+                  <p className="text-sm font-medium">
                     {orden.cliente?.empresa
                       ? orden.cliente?.empresa
                       : `${orden.cliente?.nombre} ${orden.cliente?.apellido}`}
                   </p>
                   {orden.cliente?.empresa ? (
-                    <p>
+                    <p className="text-sm">
                       {orden.cliente?.nombre} {orden.cliente?.apellido}
                     </p>
                   ) : null}
-                  <p>{orden.cliente?.email}</p>
-                  <p>{orden.cliente?.telefono}</p>
+                  <p className="text-sm">{orden.cliente?.email}</p>
+                  <p className="text-sm">{orden.cliente?.telefono}</p>
                 </div>
               </div>
             ) : null}
+            <div className="text-right">
+              <h3 className="font-semibold text-gray-700 mb-3">Vendedor:</h3>
+              <div className="space-y-1">
+                <p className="text-sm font-medium">
+                  {orden.vendedor.empresa
+                    ? orden.vendedor.empresa
+                    : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`}
+                </p>
+                {orden.vendedor.empresa ? (
+                  <p className="text-sm">
+                    {orden.vendedor.nombre} {orden.vendedor.apellido}
+                  </p>
+                ) : null}
+                <p className="text-sm">{orden.vendedor.email}</p>
+                <p className="text-sm">{orden.vendedor.telefono}</p>
+              </div>
+            </div>
           </div>
 
           {/* Items Table */}
@@ -102,7 +107,6 @@ export const OrdenPreview = ({
             <table className="w-full">
               <thead>
                 <tr className="border-y border-gray-200">
-                  <th className="py-3 text-left">SKU</th>
                   <th className="py-3 text-left">Item</th>
                   <th className="py-3 text-right">Cantidad</th>
                   <th className="py-3 text-right">Precio Unit.</th>
@@ -112,13 +116,20 @@ export const OrdenPreview = ({
               <tbody className="divide-y divide-gray-100">
                 {orden.items.map((item) => (
                   <tr key={item.id}>
-                    <td className="py-4 text-gray-600">{item.producto.sku}</td>
                     <td className="py-4">
                       <div>
-                        <p className="font-medium">{item.producto.nombre}</p>
+                        <p className="text-sm">{item.producto.nombre}</p>
+                        <p className="text-xs font-medium text-gray-600">
+                          {item.producto.sku}
+                        </p>
+                        {item.serial && (
+                          <p className="text-xs font-medium text-blue-600">
+                            Serial: {item.serial}
+                          </p>
+                        )}
                         {item.garantia && (
-                          <p className="text-sm text-gray-500 mt-1">
-                            Garantía: {item.garantia}
+                          <p className="text-xs italic text-gray-500 mt-1">
+                            {item.garantia}
                           </p>
                         )}
                         {item.notas && (
@@ -149,7 +160,7 @@ export const OrdenPreview = ({
           <div className="border-t pt-4">
             <div className="w-72 ml-auto space-y-3">
               {/* DO NOT REMOVE THIS COMMENTED CODE */}
-              {/* <div className="flex justify-between">
+              <div className="flex justify-between">
                 <span>Subtotal:</span>
                 <span className="font-medium">
                   {currencyFormat({ value: orden.subtotal })}
@@ -194,13 +205,27 @@ export const OrdenPreview = ({
                   <span>Crédito aplicado:</span>
                   <span>-{currencyFormat({ value: orden.credito })}</span>
                 </div>
-              )} */}
+              )}
               <div className="flex justify-between pt-3">
                 <span className="font-bold">Total:</span>
                 <span className="font-bold">
                   {currencyFormat({ value: totalConCredito })}
                 </span>
               </div>
+              {orden.tipoCambio === "BCV" && (
+                <div className="flex justify-between pt-1">
+                  <span className="text-sm text-gray-500">Total en VES:</span>
+                  <span className="text-sm text-gray-500">
+                    {currencyFormat({
+                      value:
+                        Math.round(totalConCredito * orden.tasaCambio * 100) /
+                        100,
+                      currency: "VES",
+                      locale: "es-VE",
+                    })}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
