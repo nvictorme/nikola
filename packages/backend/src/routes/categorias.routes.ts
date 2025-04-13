@@ -11,8 +11,8 @@ CategoriasRouter.get("/", async (req: Request, res: Response) => {
     const categorias = await AppDataSource.getRepository(Categoria).find({
       relations: ["subcategorias"],
       order: {
-        orden: "ASC",
-        subcategorias: { orden: "ASC" },
+        nombre: "ASC",
+        subcategorias: { nombre: "ASC" },
       },
       cache: {
         id: "categorias",
@@ -31,8 +31,8 @@ CategoriasRouter.get("/:id", async (req: Request, res: Response) => {
       where: { id: req.params.id },
       relations: ["subcategorias"],
       order: {
-        orden: "ASC",
-        subcategorias: { orden: "ASC" },
+        nombre: "ASC",
+        subcategorias: { nombre: "ASC" },
       },
       cache: {
         id: `categoria-${req.params.id}`,
@@ -91,7 +91,7 @@ CategoriasRouter.get(
       ).find({
         where: { categoria: { id: req.params.id } },
         order: {
-          orden: "ASC",
+          nombre: "ASC",
         },
         cache: {
           id: `subcategorias-${req.params.id}`,

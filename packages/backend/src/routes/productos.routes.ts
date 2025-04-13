@@ -57,15 +57,15 @@ ProductosRouter.get(
 
       // Add enOferta condition
       if (enOferta === "true") {
-        queryBuilder.andWhere("precios.enOferta = :enOferta", {
+        queryBuilder.andWhere("producto.enOferta = :enOferta", {
           enOferta: true,
         });
-        queryBuilder.andWhere("precios.inicioOferta <= :fechaActual", {
+        queryBuilder.andWhere("producto.inicioOferta <= :fechaActual", {
           fechaActual: new Date(),
         });
         // si finOferta es null, se considera que el precio está en oferta permanente
         queryBuilder.andWhere(
-          "(precios.finOferta >= :fechaActual OR precios.finOferta IS NULL)",
+          "(producto.finOferta >= :fechaActual OR producto.finOferta IS NULL)",
           {
             fechaActual: new Date(),
           }
