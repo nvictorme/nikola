@@ -82,7 +82,25 @@ export const OrdenPreview = ({
                   <p className="text-sm">{orden.cliente?.telefono}</p>
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="text-left">
+                <h3 className="font-semibold text-gray-700 mb-3">Proveedor:</h3>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">
+                    {orden.proveedor?.nombre}
+                  </p>
+                  <p className="text-sm">{orden.proveedor?.marca}</p>
+                  <p className="text-sm">{orden.proveedor?.direccion}</p>
+                  <p className="text-sm">{orden.proveedor?.telefono}</p>
+                  <p className="text-sm">{orden.proveedor?.email}</p>
+                  {orden.proveedor?.notas && (
+                    <p className="text-sm text-gray-500">
+                      {orden.proveedor.notas}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
             <div className="text-right">
               <h3 className="font-semibold text-gray-700 mb-3">Vendedor:</h3>
               <div className="space-y-1">
