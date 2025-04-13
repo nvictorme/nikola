@@ -10,7 +10,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Controller, useForm } from "react-hook-form";
-import { IProducto } from "shared/interfaces";
+import {
+  IProducto,
+  IDimensiones,
+  ICategoria,
+  ISubcategoria,
+} from "shared/interfaces";
 import { UnidadesLongitud, UnidadesPeso } from "shared/enums";
 import { Textarea } from "@/components/ui/textarea";
 import { useProductosStore } from "@/store/productos.store";
@@ -20,6 +25,29 @@ import { Spinner } from "@/components/Spinner";
 import { ApiClient } from "@/api/api.client";
 import { useParams, useNavigate } from "react-router-dom";
 import { routes } from "@/navigation/routes";
+import { Checkbox } from "@/components/ui/checkbox";
+
+// Form type that only includes the fields we need
+interface ProductoFormData {
+  nombre: string;
+  descripcion: string;
+  modelo: string;
+  sku: string;
+  upc?: string;
+  ean?: string;
+  isbn?: string;
+  categoria: { id: string };
+  subcategoria?: { id: string };
+  garantia: string;
+  costo: number;
+  precio: number;
+  enOferta: boolean;
+  precioOferta?: number;
+  inicioOferta?: string | null;
+  finOferta?: string | null;
+  dimensiones: IDimensiones;
+  embalaje: IDimensiones;
+}
 
 export default function ProductoForm() {
   const { productoId } = useParams();
@@ -55,17 +83,68 @@ export default function ProductoForm() {
     watch,
     control,
     reset,
+    setValue,
     formState: { errors },
-  } = useForm<IProducto>({
-    defaultValues: producto || {},
+  } = useForm<ProductoFormData>({
+    defaultValues: {
+      nombre: producto?.nombre || "",
+      descripcion: producto?.descripcion || "",
+      modelo: producto?.modelo || "",
+      sku: producto?.sku || "",
+      upc: producto?.upc,
+      ean: producto?.ean,
+      isbn: producto?.isbn,
+      categoria: producto?.categoria || { id: "" },
+      subcategoria: producto?.subcategoria,
+      garantia: producto?.garantia || "",
+      costo: producto?.costo || 0,
+      precio: producto?.precio || 0,
+      enOferta: producto?.enOferta || false,
+      precioOferta: producto?.precioOferta,
+      inicioOferta: producto?.inicioOferta,
+      finOferta: producto?.finOferta,
+      dimensiones: {
+        largo: producto?.dimensiones?.largo || 0,
+        ancho: producto?.dimensiones?.ancho || 0,
+        alto: producto?.dimensiones?.alto || 0,
+        peso: producto?.dimensiones?.peso || 0,
+        unidadLongitud:
+          producto?.dimensiones?.unidadLongitud || UnidadesLongitud.cm,
+        unidadPeso: producto?.dimensiones?.unidadPeso || UnidadesPeso.g,
+      },
+      embalaje: {
+        largo: producto?.embalaje?.largo || 0,
+        ancho: producto?.embalaje?.ancho || 0,
+        alto: producto?.embalaje?.alto || 0,
+        peso: producto?.embalaje?.peso || 0,
+        unidadLongitud:
+          producto?.embalaje?.unidadLongitud || UnidadesLongitud.cm,
+        unidadPeso: producto?.embalaje?.unidadPeso || UnidadesPeso.g,
+      },
+    },
   });
 
   // onSubmit handler
-  const onSubmit = handleSubmit((data) => {
+  const onSubmit = handleSubmit((formData) => {
+    const productoData: Partial<IProducto> = {
+      ...formData,
+      categoria:
+        producto?.categoria || ({ id: formData.categoria.id } as ICategoria),
+      subcategoria: formData.subcategoria
+        ? ({ id: formData.subcategoria.id } as ISubcategoria)
+        : undefined,
+      stock: producto?.stock || [],
+      portada: producto?.portada,
+      galeria: producto?.galeria || [],
+    };
+
     if (producto) {
-      actualizarProducto({ ...producto, ...data });
+      actualizarProducto({
+        ...producto,
+        ...productoData,
+      } as IProducto);
     } else {
-      crearProducto(data);
+      crearProducto(productoData as IProducto);
     }
     navigate(routes.productos.path);
   });
@@ -113,21 +192,21 @@ export default function ProductoForm() {
             )}
           </div>
 
-          <div className="flex flex-col items-start gap-1">
-            <Label htmlFor="modelo">Modelo</Label>
-            <Input
-              id="modelo"
-              type="text"
-              {...register("modelo", { required: "Este campo es requerido" })}
-            />
-            {errors.modelo && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.modelo.message}
-              </p>
-            )}
-          </div>
-
           <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="modelo">Modelo</Label>
+              <Input
+                id="modelo"
+                type="text"
+                {...register("modelo", { required: "Este campo es requerido" })}
+              />
+              {errors.modelo && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.modelo.message}
+                </p>
+              )}
+            </div>
+
             <div className="flex flex-col items-start gap-1">
               <Label htmlFor="sku">SKU</Label>
               <Input
@@ -141,7 +220,9 @@ export default function ProductoForm() {
                 </p>
               )}
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col items-start gap-1">
               <Label htmlFor="costo">Costo</Label>
               <Input
@@ -151,6 +232,10 @@ export default function ProductoForm() {
                 {...register("costo", {
                   required: "Este campo es requerido",
                   valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "El costo debe ser mayor o igual a 0",
+                  },
                 })}
               />
               {errors.costo && (
@@ -159,7 +244,133 @@ export default function ProductoForm() {
                 </p>
               )}
             </div>
+
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="precio">Precio</Label>
+              <Input
+                id="precio"
+                type="number"
+                step="0.01"
+                defaultValue={producto?.precio}
+                {...register("precio", {
+                  required: "Este campo es requerido",
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "El precio debe ser mayor o igual a 0",
+                  },
+                })}
+              />
+              {errors.precio && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.precio.message}
+                </p>
+              )}
+            </div>
           </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="enOferta">En Oferta</Label>
+              <Controller
+                name="enOferta"
+                control={control}
+                render={({ field }) => (
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                )}
+              />
+            </div>
+          </div>
+
+          {watch("enOferta") && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="precioOferta">Precio Oferta</Label>
+                <Input
+                  id="precioOferta"
+                  type="number"
+                  step="0.01"
+                  defaultValue={producto?.precioOferta}
+                  {...register("precioOferta", {
+                    required:
+                      "Este campo es requerido cuando el producto está en oferta",
+                    valueAsNumber: true,
+                  })}
+                />
+                {errors.precioOferta && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.precioOferta.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="inicioOferta">Inicio Oferta</Label>
+                <Input
+                  id="inicioOferta"
+                  type="date"
+                  value={
+                    watch("inicioOferta")
+                      ? new Date(watch("inicioOferta") as string)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    setValue(
+                      "inicioOferta",
+                      e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : null
+                    );
+                  }}
+                />
+                {errors.inicioOferta && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.inicioOferta.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="finOferta">Fin Oferta</Label>
+                <Input
+                  id="finOferta"
+                  type="date"
+                  value={
+                    watch("finOferta")
+                      ? new Date(watch("finOferta") as string)
+                          .toISOString()
+                          .split("T")[0]
+                      : ""
+                  }
+                  onChange={(e) => {
+                    setValue(
+                      "finOferta",
+                      e.target.value
+                        ? new Date(e.target.value).toISOString()
+                        : null
+                    );
+                  }}
+                  min={
+                    watch("inicioOferta")
+                      ? new Date(watch("inicioOferta") as string)
+                          .toISOString()
+                          .split("T")[0]
+                      : undefined
+                  }
+                />
+                {errors.finOferta && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.finOferta.message}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col items-start">
@@ -258,8 +469,8 @@ export default function ProductoForm() {
                         <Input
                           id="largo"
                           type="number"
+                          value={field.value?.largo || 0}
                           {...register("dimensiones.largo", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -279,8 +490,8 @@ export default function ProductoForm() {
                         <Input
                           id="ancho"
                           type="number"
+                          value={field.value?.ancho || 0}
                           {...register("dimensiones.ancho", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -300,8 +511,8 @@ export default function ProductoForm() {
                         <Input
                           id="alto"
                           type="number"
+                          value={field.value?.alto || 0}
                           {...register("dimensiones.alto", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -352,8 +563,8 @@ export default function ProductoForm() {
                         <Input
                           id="peso"
                           type="number"
+                          value={field.value?.peso || 0}
                           {...register("dimensiones.peso", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -415,8 +626,8 @@ export default function ProductoForm() {
                         <Input
                           id="largo"
                           type="number"
+                          value={field.value?.largo || 0}
                           {...register("embalaje.largo", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -436,8 +647,8 @@ export default function ProductoForm() {
                         <Input
                           id="ancho"
                           type="number"
+                          value={field.value?.ancho || 0}
                           {...register("embalaje.ancho", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -457,8 +668,8 @@ export default function ProductoForm() {
                         <Input
                           id="alto"
                           type="number"
+                          value={field.value?.alto || 0}
                           {...register("embalaje.alto", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -509,8 +720,8 @@ export default function ProductoForm() {
                         <Input
                           id="peso"
                           type="number"
+                          value={field.value?.peso || 0}
                           {...register("embalaje.peso", {
-                            required: "Este campo es requerido",
                             valueAsNumber: true,
                             min: {
                               value: 0,
@@ -561,9 +772,7 @@ export default function ProductoForm() {
             <Textarea
               id="descripcion"
               rows={4}
-              {...register("descripcion", {
-                required: "Este campo es requerido",
-              })}
+              {...register("descripcion")}
               className="w-full p-2 border border-gray-300 rounded-lg"
             />
             {errors.descripcion && (

@@ -10,6 +10,7 @@ import { Stock } from "../orm/entity/stock";
 import { Dimension } from "../orm/entity/dimension";
 import { IArchivo } from "shared/interfaces";
 import { isSuperAdmin } from "shared/helpers";
+import { UnidadesLongitud, UnidadesPeso } from "shared/enums";
 
 const ProductosRouter: Router = Router();
 
@@ -147,6 +148,11 @@ ProductosRouter.get(
           "producto.activo",
           "producto.descripcion",
           "producto.garantia",
+          "producto.precio",
+          "producto.enOferta",
+          "producto.precioOferta",
+          "producto.inicioOferta",
+          "producto.finOferta",
           ...(isAdmin ? ["producto.costo"] : []),
         ])
         .leftJoinAndSelect("producto.dimensiones", "dimensiones")
@@ -212,6 +218,11 @@ ProductosRouter.post(
       _producto.subcategoria = data.subcategoria;
       _producto.costo = data.costo;
       _producto.garantia = data.garantia;
+      _producto.precio = data.precio;
+      _producto.enOferta = data.enOferta;
+      _producto.precioOferta = data.precioOferta;
+      _producto.inicioOferta = data.inicioOferta;
+      _producto.finOferta = data.finOferta;
 
       _producto.slug = slugify(`${data.nombre} ${data.modelo} ${data.sku}`, {
         lower: true,
@@ -224,6 +235,39 @@ ProductosRouter.post(
       const savedProducto = await AppDataSource.getRepository(Producto).save(
         _producto
       );
+
+      // Handle dimensiones if provided
+      if (data.dimensiones) {
+        const dimensiones = new Dimension();
+        dimensiones.largo = data.dimensiones.largo ?? 0;
+        dimensiones.ancho = data.dimensiones.ancho ?? 0;
+        dimensiones.alto = data.dimensiones.alto ?? 0;
+        dimensiones.peso = data.dimensiones.peso ?? 0;
+        dimensiones.unidadLongitud =
+          data.dimensiones.unidadLongitud ?? UnidadesLongitud.cm;
+        dimensiones.unidadPeso = data.dimensiones.unidadPeso ?? UnidadesPeso.g;
+        dimensiones.producto = savedProducto;
+        await AppDataSource.getRepository(Dimension).save(dimensiones);
+        savedProducto.dimensiones = dimensiones;
+      }
+
+      // Handle embalaje if provided
+      if (data.embalaje) {
+        const embalaje = new Dimension();
+        embalaje.largo = data.embalaje.largo ?? 0;
+        embalaje.ancho = data.embalaje.ancho ?? 0;
+        embalaje.alto = data.embalaje.alto ?? 0;
+        embalaje.peso = data.embalaje.peso ?? 0;
+        embalaje.unidadLongitud =
+          data.embalaje.unidadLongitud ?? UnidadesLongitud.cm;
+        embalaje.unidadPeso = data.embalaje.unidadPeso ?? UnidadesPeso.g;
+        embalaje.producto = savedProducto;
+        await AppDataSource.getRepository(Dimension).save(embalaje);
+        savedProducto.embalaje = embalaje;
+      }
+
+      // Save the product again with the relations
+      await AppDataSource.getRepository(Producto).save(savedProducto);
 
       res.status(200).json(savedProducto);
     } catch (e: any) {
@@ -257,6 +301,8 @@ ProductosRouter.put(
         portada,
         galeria,
         stock,
+        dimensiones,
+        embalaje,
         ...updateData
       } = data;
 
@@ -285,39 +331,69 @@ ProductosRouter.put(
       if (!target) throw new Error("Producto no existe");
 
       // Update one-to-one relations if they exist
-      if (data.dimensiones) {
+      if (dimensiones) {
         if (target.dimensiones) {
           // Update existing dimensiones
           await AppDataSource.getRepository(Dimension).update(
             target.dimensiones.id,
             {
-              ...data.dimensiones,
+              ...dimensiones,
               id: target.dimensiones.id,
+              largo: dimensiones.largo ?? 0,
+              ancho: dimensiones.ancho ?? 0,
+              alto: dimensiones.alto ?? 0,
+              peso: dimensiones.peso ?? 0,
+              unidadLongitud: dimensiones.unidadLongitud ?? UnidadesLongitud.cm,
+              unidadPeso: dimensiones.unidadPeso ?? UnidadesPeso.g,
             }
           );
         } else {
           // Create new dimensiones
           const newDimensiones = await AppDataSource.getRepository(
             Dimension
-          ).save(data.dimensiones);
+          ).save({
+            ...dimensiones,
+            producto: { id: productoId },
+            largo: dimensiones.largo ?? 0,
+            ancho: dimensiones.ancho ?? 0,
+            alto: dimensiones.alto ?? 0,
+            peso: dimensiones.peso ?? 0,
+            unidadLongitud: dimensiones.unidadLongitud ?? UnidadesLongitud.cm,
+            unidadPeso: dimensiones.unidadPeso ?? UnidadesPeso.g,
+          });
           target.dimensiones = newDimensiones;
         }
       }
 
-      if (data.embalaje) {
+      if (embalaje) {
         if (target.embalaje) {
           // Update existing embalaje
           await AppDataSource.getRepository(Dimension).update(
             target.embalaje.id,
             {
-              ...data.embalaje,
+              ...embalaje,
               id: target.embalaje.id,
+              largo: embalaje.largo ?? 0,
+              ancho: embalaje.ancho ?? 0,
+              alto: embalaje.alto ?? 0,
+              peso: embalaje.peso ?? 0,
+              unidadLongitud: embalaje.unidadLongitud ?? UnidadesLongitud.cm,
+              unidadPeso: embalaje.unidadPeso ?? UnidadesPeso.g,
             }
           );
         } else {
           // Create new embalaje
           const newEmbalaje = await AppDataSource.getRepository(Dimension).save(
-            data.embalaje
+            {
+              ...embalaje,
+              producto: { id: productoId },
+              largo: embalaje.largo ?? 0,
+              ancho: embalaje.ancho ?? 0,
+              alto: embalaje.alto ?? 0,
+              peso: embalaje.peso ?? 0,
+              unidadLongitud: embalaje.unidadLongitud ?? UnidadesLongitud.cm,
+              unidadPeso: embalaje.unidadPeso ?? UnidadesPeso.g,
+            }
           );
           target.embalaje = newEmbalaje;
         }
