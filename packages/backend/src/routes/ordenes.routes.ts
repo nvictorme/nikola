@@ -27,7 +27,6 @@ import { Stock } from "../orm/entity/stock";
 import { Envio } from "../orm/entity/envio";
 import { HistorialOrden } from "../orm/entity/historial";
 import { emitSocketEvent } from "../providers/sockets";
-
 const OrdenesRouter: Router = Router();
 
 // Get - Todas las ordenes
@@ -52,6 +51,7 @@ OrdenesRouter.get(
         .leftJoinAndSelect("orden.sucursal", "sucursal")
         .leftJoinAndSelect("orden.vendedor", "vendedor")
         .leftJoinAndSelect("orden.cliente", "cliente")
+        .leftJoinAndSelect("orden.proveedor", "proveedor")
         .leftJoinAndSelect("orden.archivos", "ordenArchivos")
         .leftJoinAndSelect("orden.items", "items")
         .leftJoinAndSelect("items.producto", "producto")
@@ -125,6 +125,7 @@ OrdenesRouter.get(
           "sucursal",
           "vendedor",
           "cliente",
+          "proveedor",
           "archivos",
           "items",
           "items.producto",
@@ -305,6 +306,13 @@ OrdenesRouter.post(
       newOrden.tasaCambio = data.tasaCambio || 1;
       newOrden.tipoCambio = data.tipoCambio || TipoCambio.usd;
 
+      // Validate provider for reposicion orders
+      if (data.tipo === TipoOrden.reposicion && !data.proveedor) {
+        return res
+          .status(400)
+          .json({ error: "Las órdenes de reposición requieren un proveedor" });
+      }
+
       // Calculate total based on subtotal, discount, and tax
       const discountAmount =
         newOrden.tipoDescuento === "Porcentual"
@@ -328,6 +336,7 @@ OrdenesRouter.post(
       newOrden.cliente = data.cliente;
       newOrden.vendedor = user;
       newOrden.sucursal = data.sucursal;
+      newOrden.proveedor = data.proveedor;
 
       const archivos = [] as Archivo[];
       const { AWS_ENDPOINT, AWS_BUCKET } = process.env;
@@ -625,9 +634,17 @@ OrdenesRouter.put(
       orden.estatus = data.estatus;
       orden.notas = data.notas;
 
+      // Validate provider for reposicion orders
+      if (data.tipo === TipoOrden.reposicion && !data.proveedor) {
+        return res
+          .status(400)
+          .json({ error: "Las órdenes de reposición requieren un proveedor" });
+      }
+
       // Update relationships
       orden.cliente = data.cliente;
       orden.sucursal = data.sucursal;
+      orden.proveedor = data.proveedor;
 
       const archivos = [] as Archivo[];
       const archivosToRemove = [] as Archivo[];

@@ -21,7 +21,7 @@ ProveedoresRouter.get(
 
       const queryBuilder = AppDataSource.getRepository(Proveedor)
         .createQueryBuilder("proveedor")
-        .orderBy("proveedor.fechaCreado", "DESC")
+        .orderBy("proveedor.marca", "ASC")
         .take(parseInt(limit as string))
         .skip((parseInt(page as string) - 1) * parseInt(limit as string));
 
@@ -41,6 +41,29 @@ ProveedoresRouter.get(
         page: parseInt(page as string),
         pageCount: Math.ceil(total / parseInt(limit as string) || 1),
       });
+    } catch (e: any) {
+      console.error(e);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+);
+
+// Get - Todos los proveedores
+ProveedoresRouter.get(
+  "/todos",
+  verificarPrivilegio({
+    entidad: Proveedor.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const proveedores = await AppDataSource.getRepository(Proveedor).find({
+        order: {
+          marca: "ASC",
+        },
+      });
+      return res.status(200).json({ proveedores });
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });

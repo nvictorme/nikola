@@ -23,10 +23,12 @@ import { decimalTransformer } from "shared/constants";
 import { Archivo } from "./archivo";
 import { Envio } from "./envio";
 import { HistorialOrden } from "./historial";
+import { Proveedor } from "./proveedor";
 export interface ORMOrden extends IOrden {
   sucursal: Sucursal;
   vendedor: Usuario;
   cliente: Persona | null;
+  proveedor: Proveedor | null;
   items: ItemOrden[];
   archivos: Archivo[];
   envios: Envio[];
@@ -157,6 +159,10 @@ export class Orden extends Base implements ORMOrden {
   @ManyToOne(() => Persona, { nullable: true })
   @JoinColumn()
   cliente: Persona | null;
+
+  @ManyToOne(() => Proveedor, { nullable: true })
+  @JoinColumn()
+  proveedor: Proveedor | null;
 
   @OneToMany(() => ItemOrden, (item) => item.orden)
   items: ItemOrden[];

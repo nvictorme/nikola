@@ -55,7 +55,7 @@ import { EstatusArchivo } from "shared/enums";
 import { IArchivo } from "shared/interfaces";
 import Joyride, { CallBackProps, Step } from "react-joyride";
 import { useConfiguracionStore } from "@/store/configuracion.store";
-
+import { useProveedoresStore } from "@/store/proveedores.store";
 const orderSteps: Step[] = [
   {
     target: "body",
@@ -121,6 +121,12 @@ export default function OrdenForm({
   const [idOrden] = useState<string | null>(orden?.id || uuidv4());
 
   const { factores } = useConfiguracionStore();
+
+  const { proveedores, listarTodosLosProveedores } = useProveedoresStore();
+
+  useEffect(() => {
+    listarTodosLosProveedores();
+  }, [listarTodosLosProveedores]);
 
   const {
     register,
@@ -249,9 +255,17 @@ export default function OrdenForm({
       (item) => item.cantidad > 0 && item.precio > 0 && item.producto
     );
     const hasValidTotal = total > 0;
+    const hasRequiredProvider =
+      tipo === TipoOrden.reposicion ? !!getValues("proveedor") : true;
 
-    return hasRequiredFields && hasItems && hasValidItems && hasValidTotal;
-  }, [cliente, sucursal, items, total, tipo]);
+    return (
+      hasRequiredFields &&
+      hasItems &&
+      hasValidItems &&
+      hasValidTotal &&
+      hasRequiredProvider
+    );
+  }, [cliente, sucursal, items, total, tipo, getValues]);
 
   return (
     <Card className="bg-background max-w m-auto">
@@ -421,6 +435,7 @@ export default function OrdenForm({
                       // Clear cliente when tipo is reposicion
                       if (value === TipoOrden.reposicion) {
                         setValue("cliente", null);
+                        setValue("proveedor", null);
                       }
                     }}
                     disabled={!!orden}
@@ -447,27 +462,69 @@ export default function OrdenForm({
               />
             </div>
 
-            <div className="flex flex-col items-start gap-1">
-              <Label htmlFor="validez">Validez (en días)</Label>
-              <Input
-                type="number"
-                {...register("validez", {
-                  required: "Validez requerida",
-                  valueAsNumber: true,
-                  min: { value: 1, message: "Debe ser mayor a 0" },
-                })}
-                placeholder="Validez (en días)"
-                defaultValue={validez}
-                disabled={
-                  tipo !== TipoOrden.cotizacion && tipo !== TipoOrden.credito
-                }
-              />
-              {errors.validez && (
-                <p className="text-red-500 text-sm mt-1">
-                  {errors.validez.message}
-                </p>
-              )}
-            </div>
+            {tipo === TipoOrden.reposicion && (
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="proveedor">Proveedor</Label>
+                <Controller
+                  control={control}
+                  name="proveedor"
+                  rules={{ required: "Seleccione un proveedor" }}
+                  render={({ field }) => (
+                    <>
+                      {errors.proveedor && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.proveedor.message}
+                        </p>
+                      )}
+                      <Select
+                        value={field.value?.id}
+                        defaultValue={orden?.proveedor?.id || ""}
+                        onValueChange={(value) => {
+                          field.onChange(
+                            proveedores?.find((p) => p.id === value)
+                          );
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Seleccionar proveedor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {proveedores?.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.marca} - {p.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </>
+                  )}
+                />
+              </div>
+            )}
+
+            {tipo !== TipoOrden.reposicion && (
+              <div className="flex flex-col items-start gap-1">
+                <Label htmlFor="validez">Validez (en días)</Label>
+                <Input
+                  type="number"
+                  {...register("validez", {
+                    required: "Validez requerida",
+                    valueAsNumber: true,
+                    min: { value: 1, message: "Debe ser mayor a 0" },
+                  })}
+                  placeholder="Validez (en días)"
+                  defaultValue={validez}
+                  disabled={
+                    tipo !== TipoOrden.cotizacion && tipo !== TipoOrden.credito
+                  }
+                />
+                {errors.validez && (
+                  <p className="text-red-500 text-sm mt-1">
+                    {errors.validez.message}
+                  </p>
+                )}
+              </div>
+            )}
           </div>
           <Separator />
           <div className="flex flex-col w-full space-y-4">

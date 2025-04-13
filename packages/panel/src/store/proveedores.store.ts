@@ -8,6 +8,7 @@ export type ProveedoresStore = {
   proveedor: IProveedor | null;
   crearProveedor: (proveedor: IProveedor) => Promise<void>;
   listarProveedores: () => Promise<void>;
+  listarTodosLosProveedores: () => Promise<void>;
   actualizarProveedor: (proveedor: IProveedor) => Promise<void>;
   eliminarProveedor: (id: string) => Promise<void>;
   setProveedor: (proveedor: IProveedor | null) => void;
@@ -65,6 +66,14 @@ export const useProveedoresStore = create<ProveedoresStore>()(
             term: get().term,
           });
           set({ ...data });
+        } catch (error) {
+          console.error(error);
+        }
+      },
+      listarTodosLosProveedores: async () => {
+        try {
+          const { data } = await new ApiClient().get(`/proveedores/todos`, {});
+          set({ proveedores: data.proveedores });
         } catch (error) {
           console.error(error);
         }

@@ -63,6 +63,7 @@ export type Orden = Pick<
   | "tipo"
   | "sucursal"
   | "cliente"
+  | "proveedor"
   | "archivos"
   | "envios"
   | "tipoCambio"
@@ -250,6 +251,11 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       }
       return clienteStr;
     },
+  },
+  {
+    accessorKey: "proveedor",
+    header: "Proveedor",
+    accessorFn: (row) => row.proveedor?.marca,
   },
   {
     accessorKey: "total",

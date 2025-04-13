@@ -3,11 +3,9 @@ import { Usuario } from "../orm/entity/usuario";
 import { isSuperAdmin } from "shared/helpers";
 import { AppDataSource } from "../orm/data-source";
 import { Orden } from "../orm/entity/orden";
-import { Producto } from "../orm/entity/producto";
-import { Between } from "typeorm";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { eachDayOfInterval } from "date-fns/eachDayOfInterval";
-
+import { TipoOrden } from "shared/enums";
 const DashboardRouter = Router();
 
 DashboardRouter.get("/", async (req: Request, res: Response) => {
@@ -25,6 +23,9 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
     .leftJoin("orden.vendedor", "vendedor")
     .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
+    })
+    .andWhere("orden.tipo IN (:...tipos)", {
+      tipos: [TipoOrden.venta, TipoOrden.credito],
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
@@ -65,6 +66,9 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
     })
+    .andWhere("orden.tipo IN (:...tipos)", {
+      tipos: [TipoOrden.venta, TipoOrden.credito],
+    })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,
@@ -84,6 +88,9 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .addSelect("SUM(item.precio * item.cantidad)", "total")
     .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
+    })
+    .andWhere("orden.tipo IN (:...tipos)", {
+      tipos: [TipoOrden.venta, TipoOrden.credito],
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
@@ -115,6 +122,9 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .leftJoin("orden.sucursal", "sucursal")
     .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
       userId: user.id,
+    })
+    .andWhere("orden.tipo IN (:...tipos)", {
+      tipos: [TipoOrden.venta, TipoOrden.credito],
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,

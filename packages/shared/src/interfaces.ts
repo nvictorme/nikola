@@ -219,6 +219,7 @@ export interface IOrden extends IBase {
   sucursal: ISucursal;
   vendedor: IUsuario;
   cliente: IPersona | null;
+  proveedor: IProveedor | null;
 
   credito: number;
   descuento: number;
