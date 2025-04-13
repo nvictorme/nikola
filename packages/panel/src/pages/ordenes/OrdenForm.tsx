@@ -146,7 +146,7 @@ export default function OrdenForm({
           credito: 0,
           descuento: 0,
           impuesto: 0,
-          tipoDescuento: TipoDescuento.porcentual,
+          tipoDescuento: TipoDescuento.absoluto,
           tasaCambio: 1,
           tipoCambio: TipoCambio.bcv,
           subtotal: 0,
@@ -701,7 +701,7 @@ export default function OrdenForm({
           </div>
 
           {sucursal ? (
-            <div className="grid grid-cols-11 w-full items-center gap-1">
+            <div className="grid grid-cols-12 w-full items-center gap-1">
               <div className="flex flex-col items-end gap-1">
                 <Label htmlFor="envio">Subtotal</Label>
                 <span>
@@ -710,7 +710,7 @@ export default function OrdenForm({
                   })}
                 </span>
               </div>
-              {/* <span>-</span>
+              <span>-</span>
               <div className="col-span-2 gap-1 items-baseline">
                 <div>
                   <Label htmlFor="descuento">Descuento</Label>
@@ -738,7 +738,7 @@ export default function OrdenForm({
                     {...register("tipoDescuento")}
                     render={({ field }) => (
                       <Select
-                        defaultValue={field.value || TipoDescuento.porcentual}
+                        defaultValue={field.value || TipoDescuento.absoluto}
                         onValueChange={field.onChange}
                       >
                         <SelectTrigger>
@@ -755,7 +755,7 @@ export default function OrdenForm({
                     )}
                   />
                 </div>
-              </div> */}
+              </div>
               <span>+</span>
               <div className="flex flex-col items-start gap-1">
                 <Label htmlFor="impuestos">Impuesto %</Label>
@@ -774,22 +774,6 @@ export default function OrdenForm({
                     {errors.impuesto.message}
                   </p>
                 )}
-              </div>
-              <span>-</span>
-              <div className="flex flex-col items-start gap-1">
-                <Label htmlFor="credito">Crédito</Label>
-                <Input
-                  id="credito"
-                  type="number"
-                  step={0.01}
-                  {...register("credito", {
-                    required: "Crédito requerido",
-                    valueAsNumber: true,
-                    min: { value: 0, message: "Debe ser mayor o igual a 0" },
-                  })}
-                  className="w-full p-2 border border-gray-300 rounded-lg"
-                  defaultValue={orden?.credito || 0}
-                />
               </div>
               <span>=</span>
               <div className="flex flex-col items-end gap-1">

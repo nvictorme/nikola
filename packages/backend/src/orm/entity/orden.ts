@@ -83,7 +83,7 @@ export class Orden extends Base implements ORMOrden {
   @Column({
     type: "enum",
     enum: TipoDescuento,
-    default: TipoDescuento.porcentual,
+    default: TipoDescuento.absoluto,
     nullable: true,
   })
   tipoDescuento: TipoDescuento;
