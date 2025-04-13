@@ -69,6 +69,8 @@ OrdenesRouter.get(
           "cliente.empresa ILIKE :term",
           "cliente.nombre ILIKE :term",
           "cliente.apellido ILIKE :term",
+          "proveedor.nombre ILIKE :term",
+          "proveedor.marca ILIKE :term",
           'EXISTS (SELECT 1 FROM ordenes_items oi INNER JOIN productos p ON p.id = oi."productoId" WHERE oi."ordenId" = orden.id AND (p.nombre ILIKE :term OR p.sku ILIKE :term))',
         ];
         // Combine conditions with OR
