@@ -1,6 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { ColumnDef } from "@tanstack/react-table";
+import { ColumnDef, CellContext } from "@tanstack/react-table";
 import { IProducto, IStockProducto } from "shared/interfaces";
 import {
   calcularStockDisponible,
@@ -20,7 +19,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export type Producto = Pick<
   IProducto,
-  "sku" | "nombre" | "modelo" | "portada" | "costo" | "precio"
+  | "sku"
+  | "nombre"
+  | "modelo"
+  | "portada"
+  | "costo"
+  | "precio"
+  | "precioOferta"
+  | "enOferta"
+  | "inicioOferta"
+  | "finOferta"
 >;
 
 export const columnasProductos: ColumnDef<Producto>[] = [
@@ -29,24 +37,15 @@ export const columnasProductos: ColumnDef<Producto>[] = [
     header: "SKU",
     cell: ({ row }) => (
       <div className="flex flex-col items-start">
-        <span className="text-sm font-medium">{row.original.sku}</span>
+        <span className="text-xs font-medium">{row.original.sku}</span>
       </div>
-    ),
-  },
-  {
-    accessorKey: "portada",
-    header: "",
-    cell: ({ row }) => (
-      <Avatar>
-        <AvatarImage src={row.original.portada?.url || ""} />
-      </Avatar>
     ),
   },
   {
     id: "nombre",
     header: "Producto",
     cell: ({ row }) => (
-      <div className="flex flex-col items-start">
+      <div className="flex flex-col items-start min-w-[300px]">
         <span className="text-sm font-medium">{row.original.nombre}</span>
         <span className="text-xs text-muted-foreground">
           {row.original.modelo}
@@ -115,11 +114,45 @@ export const columnasProductos: ColumnDef<Producto>[] = [
     id: "costo",
     header: "Costo",
     accessorFn: (row) => currencyFormat({ value: row.costo }),
+    cell: ({ getValue }: CellContext<Producto, unknown>) => (
+      <div className="text-right">
+        <span className="text-sm">{getValue() as string}</span>
+      </div>
+    ),
   },
   {
     id: "precio",
     header: "Precio",
-    accessorFn: (row) => currencyFormat({ value: row.precio }),
+    cell: ({ row }) => {
+      const { precio, precioOferta, enOferta, inicioOferta, finOferta } =
+        row.original;
+      const now = new Date();
+      const isOfferActive =
+        enOferta &&
+        precioOferta &&
+        inicioOferta &&
+        (!finOferta ||
+          (now >= new Date(inicioOferta) && now <= new Date(finOferta)));
+
+      if (isOfferActive) {
+        return (
+          <div className="flex flex-col items-end">
+            <span className="text-sm line-through text-muted-foreground">
+              {currencyFormat({ value: precio })}
+            </span>
+            <span className="text-sm font-semibold text-primary">
+              {currencyFormat({ value: precioOferta })}
+            </span>
+          </div>
+        );
+      }
+
+      return (
+        <div className="text-right">
+          <span className="text-sm">{currencyFormat({ value: precio })}</span>
+        </div>
+      );
+    },
   },
   {
     id: "acciones",

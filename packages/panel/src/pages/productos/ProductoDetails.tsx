@@ -4,12 +4,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { currencyFormat } from "shared/helpers";
+import { currencyFormat, isSuperAdmin } from "shared/helpers";
 import { useProductosStore } from "@/store/productos.store";
 import { useEffect, useState } from "react";
 import { IProducto } from "shared/interfaces";
 import { ApiClient } from "@/api/api.client";
 import { Spinner } from "@/components/Spinner";
+import { useAuthStore } from "@/store/auth.store";
 
 interface ProductoDetailsProps {
   open: boolean;
@@ -62,9 +63,16 @@ export default function ProductoDetails({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <img
-              src={producto.portada?.url || ""}
+              src={
+                producto.portada?.url ||
+                "https://api.dicebear.com/7.x/shapes/svg?size=400"
+              }
               alt={producto.nombre}
               className="w-full rounded-lg object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src =
+                  "https://api.dicebear.com/7.x/shapes/svg?size=400";
+              }}
             />
           </div>
           <div className="space-y-4">
@@ -124,6 +132,17 @@ export default function ProductoDetails({
             <div className="space-y-2">
               <h3 className="font-semibold">Precios</h3>
               <div className="space-y-1">
+                {isSuperAdmin(useAuthStore.getState().user) &&
+                producto.costo ? (
+                  <p className="text-sm text-muted-foreground">
+                    Costo:{" "}
+                    {currencyFormat({
+                      value: producto.costo,
+                      fractionDigits: 2,
+                    })}
+                  </p>
+                ) : null}
+
                 {precio ? (
                   <p className="text-sm">
                     Precio:{" "}
