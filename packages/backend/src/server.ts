@@ -27,6 +27,7 @@ import {
   ReportesRouter,
   DashboardRouter,
   ConfiguracionRouter,
+  ProveedoresRouter,
 } from "./routes";
 import { socketsSetup } from "./providers/sockets";
 import { AppDataSource } from "./orm/data-source";
@@ -98,6 +99,7 @@ AppDataSource.initialize()
     app.use("/categorias", CategoriasRouter);
     app.use("/reportes", ReportesRouter);
     app.use("/configuracion", ConfiguracionRouter);
+    app.use("/proveedores", ProveedoresRouter);
     // 404 - catch-all
     app.use((req, res) => res.status(404).json({ message: "Not found" }));
 

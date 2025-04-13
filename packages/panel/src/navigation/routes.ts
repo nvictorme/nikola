@@ -9,6 +9,7 @@ import OrdenesPage from "@/pages/ordenes/OrdenesPage";
 import PersonasPage from "@/pages/personas/PersonasPage";
 import ProductoForm from "@/pages/productos/ProductoForm";
 import ProductosPage from "@/pages/productos/ProductosPage";
+import ProveedoresPage from "@/pages/proveedores/ProveedoresPage";
 import ReportesPage from "@/pages/reportes/ReportesPage";
 import RolesPage from "@/pages/roles/RolesPage";
 import SucursalesPage from "@/pages/sucursales/SucursalesPage";
@@ -118,5 +119,11 @@ export const routes = {
     title: "Configuración",
     icon: Settings,
     element: ConfiguracionPage,
+  },
+  proveedores: {
+    path: "/proveedores",
+    title: "Proveedores",
+    icon: Users2,
+    element: ProveedoresPage,
   },
 };
