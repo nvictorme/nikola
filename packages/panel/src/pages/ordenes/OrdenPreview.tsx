@@ -140,18 +140,13 @@ export const OrdenPreview = ({
                         <p className="text-xs font-medium text-gray-600">
                           {item.producto.sku}
                         </p>
-                        {item.serial && (
-                          <p className="text-xs font-medium text-blue-600">
-                            Serial: {item.serial}
-                          </p>
-                        )}
                         {item.garantia && (
                           <p className="text-xs italic text-gray-500 mt-1">
                             {item.garantia}
                           </p>
                         )}
                         {item.notas && (
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p className="text-sm text-gray-500 mt-1 whitespace-pre-line">
                             {item.notas}
                           </p>
                         )}

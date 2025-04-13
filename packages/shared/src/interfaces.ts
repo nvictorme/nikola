@@ -202,7 +202,6 @@ export interface IProducto extends IBase {
 
 export interface IItemOrden extends IBase {
   producto: IProducto;
-  serial: string | null;
   cantidad: number;
   precio: number;
   total: number;

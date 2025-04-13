@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-// import { Textarea } from "@/components/ui/textarea";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -120,14 +120,14 @@ export const ItemOrdenForm = forwardRef<
     updateItemTotal(item.cantidad, precio);
   };
 
-  // const handleNotasChange = useCallback(
-  //   (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-  //     const newItems = [...getValues("items")];
-  //     newItems[idx].notas = e.target.value;
-  //     setValue("items", newItems);
-  //   },
-  //   [getValues, setValue, idx]
-  // );
+  const handleNotasChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newItems = [...getValues("items")];
+      newItems[idx].notas = e.target.value;
+      setValue("items", newItems);
+    },
+    [getValues, setValue, idx]
+  );
 
   const handleAlmacenChange = useCallback(
     (value: string) => {
@@ -154,17 +154,14 @@ export const ItemOrdenForm = forwardRef<
         <div className="text-sm font-medium">
           {item.producto.sku} {item.producto.nombre}
         </div>
-        <div className="text-sm">
-          <Label>Serial</Label>
-          <Input
-            type="text"
-            defaultValue={item.serial || ""}
-            {...register(`items.${idx}.serial` as const, {
-              maxLength: { value: 100, message: "Máximo 100 caracteres" },
-            })}
-            placeholder="Ingrese el serial"
-            maxLength={100}
-            className="w-full p-2 border border-gray-300 rounded-lg"
+        {/* Notes */}
+        <div className="col-span-2">
+          <Label>Notas</Label>
+          <Textarea
+            value={item.notas || ""}
+            onChange={handleNotasChange}
+            placeholder={`Notas para ${item.producto.sku} ${item.producto.nombre}`}
+            className="w-full p-2 border border-gray-300 rounded-lg item-notas"
           />
         </div>
       </div>
@@ -214,17 +211,6 @@ export const ItemOrdenForm = forwardRef<
           />
         </div>
       </div>
-
-      {/* Notes */}
-      {/* <div className="col-span-2">
-        <Label>Notas</Label>
-        <Textarea
-          value={item.notas || ""}
-          onChange={handleNotasChange}
-          placeholder={`Notas para ${item.producto.sku} ${item.producto.nombre}`}
-          className="w-full p-2 border border-gray-300 rounded-lg item-notas"
-        />
-      </div> */}
 
       {/* Quantity and Price */}
       <div className="col-span-2 space-y-2">

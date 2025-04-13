@@ -367,7 +367,6 @@ OrdenesRouter.post(
         data.items.map((item) => ({
           ...item,
           garantia: item.garantia || item.producto.garantia || "Sin garantía",
-          serial: item.serial || null,
         })),
         { chunk: 100 }
       );
@@ -707,7 +706,6 @@ OrdenesRouter.put(
             existingItem.almacen = newItem.almacen;
             existingItem.garantia =
               newItem.garantia || newItem.producto.garantia || "Sin garantía";
-            existingItem.serial = newItem.serial || null;
 
             return existingItem;
           } else {
@@ -722,7 +720,6 @@ OrdenesRouter.put(
             item.almacen = newItem.almacen;
             item.garantia =
               newItem.garantia || newItem.producto.garantia || "Sin garantía";
-            item.serial = newItem.serial || null;
 
             return item;
           }
