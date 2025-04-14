@@ -591,6 +591,47 @@ ProductosRouter.get(
   }
 );
 
+// GET - Historial de Precios
+ProductosRouter.get(
+  "/:productoId/historial-precios",
+  verificarPrivilegio({
+    entidad: Producto.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { productoId } = req.params;
+      if (!productoId) throw new Error("Parametros inválidos");
+
+      const oneYearAgo = new Date();
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+
+      const historialPrecio = await AppDataSource.getRepository(HistorialPrecio)
+        .createQueryBuilder("historial")
+        .select("DATE(historial.fechaCreado)", "fechaCreado")
+        .addSelect("historial.precio", "precio")
+        .addSelect("historial.costo", "costo")
+        .where("historial.producto = :productoId", { productoId })
+        .andWhere("historial.fechaCreado >= :oneYearAgo", { oneYearAgo })
+        .groupBy("DATE(historial.fechaCreado)")
+        .addGroupBy("historial.precio")
+        .addGroupBy("historial.costo")
+        .orderBy("DATE(historial.fechaCreado)", "ASC")
+        .cache({
+          id: `historial-precio-${productoId}`,
+          milliseconds: 24 * 60 * 60 * 1000, // 1 day
+        })
+        .getRawMany();
+
+      return res.status(200).json({ historialPrecio });
+    } catch (e: any) {
+      console.error(e);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+);
+
 // PUT - Actualizar Portada
 ProductosRouter.put(
   "/:productoId/portada",

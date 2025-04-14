@@ -8,7 +8,7 @@ import {
 } from "shared/helpers";
 import { useAuthStore } from "@/store/auth.store";
 import { Button } from "@/components/ui/button";
-import { FilePen, Package, Image, Eye } from "lucide-react";
+import { FilePen, Package, Image, Eye, ChartLine } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { routes } from "@/navigation/routes";
 import { useProductosStore } from "@/store/productos.store";
@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { AlmacenWithStock } from "@/pages/ordenes/ItemOrdenForm";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ProductoHistorialPrecioDialog } from "./ProductoHistorialPrecioDialog";
 
 export type Producto = Pick<
   IProducto,
@@ -164,6 +165,7 @@ export const columnasProductos: ColumnDef<Producto>[] = [
       const navigate = useNavigate();
       const { setShowDetails, setShowGallery, setShowStockModal, setProducto } =
         useProductosStore();
+      const [showHistorialPrecio, setShowHistorialPrecio] = useState(false);
 
       const onDetallesCallback = useCallback(() => {
         setProducto(producto);
@@ -182,51 +184,68 @@ export const columnasProductos: ColumnDef<Producto>[] = [
 
       if (isAdmin) {
         return (
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onDetallesCallback}
-              className="hover:bg-secondary"
-            >
-              <Eye className="h-4 w-4" />
-              <span className="sr-only">Detalles</span>
-            </Button>
+          <>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onDetallesCallback}
+                className="hover:bg-secondary"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="sr-only">Detalles</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                navigate(
-                  routes.producto.path.replace(":productoId", producto.id)
-                );
-              }}
-              className="hover:bg-secondary"
-            >
-              <FilePen className="h-4 w-4" />
-              <span className="sr-only">Editar</span>
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  navigate(
+                    routes.producto.path.replace(":productoId", producto.id)
+                  );
+                }}
+                className="hover:bg-secondary"
+              >
+                <FilePen className="h-4 w-4" />
+                <span className="sr-only">Editar</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onStockCallback}
-              className="hover:bg-secondary"
-            >
-              <Package className="h-4 w-4" />
-              <span className="sr-only">Stock</span>
-            </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onStockCallback}
+                className="hover:bg-secondary"
+              >
+                <Package className="h-4 w-4" />
+                <span className="sr-only">Stock</span>
+              </Button>
 
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onGaleriaCallback}
-              className="hover:bg-secondary"
-            >
-              <Image className="h-4 w-4" />
-              <span className="sr-only">Galeria</span>
-            </Button>
-          </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onGaleriaCallback}
+                className="hover:bg-secondary"
+              >
+                <Image className="h-4 w-4" />
+                <span className="sr-only">Galeria</span>
+              </Button>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHistorialPrecio(true)}
+                className="hover:bg-secondary"
+              >
+                <ChartLine className="h-4 w-4" />
+                <span className="sr-only">Historial de Precios</span>
+              </Button>
+            </div>
+            <ProductoHistorialPrecioDialog
+              open={showHistorialPrecio}
+              onClose={() => setShowHistorialPrecio(false)}
+              productoId={producto.id}
+            />
+          </>
         );
       }
 

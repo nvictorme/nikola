@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { ApiClient } from "../api/api.client";
-import { IArchivo, IProducto, IStockProducto } from "shared/interfaces";
+import {
+  IArchivo,
+  IHistorialPrecio,
+  IProducto,
+  IStockProducto,
+} from "shared/interfaces";
 import { EstatusArchivo } from "shared/enums";
 import { toast } from "sonner";
 
@@ -48,6 +53,8 @@ export type ProductosStore = {
   showStockModal: boolean;
   setShowStockModal: (showStockModal: boolean) => void;
   resetFilters: () => void;
+  fetchHistorialPrecio: (productoId: string) => Promise<void>;
+  historialPrecio: IHistorialPrecio[];
 };
 
 const initialState: Pick<
@@ -66,6 +73,7 @@ const initialState: Pick<
   | "showDetails"
   | "showGallery"
   | "showStockModal"
+  | "historialPrecio"
 > = {
   productos: [],
   producto: null,
@@ -81,6 +89,7 @@ const initialState: Pick<
   showDetails: false,
   showGallery: false,
   showStockModal: false,
+  historialPrecio: [],
 };
 
 export const useProductosStore = create<ProductosStore>()(
@@ -240,6 +249,17 @@ export const useProductosStore = create<ProductosStore>()(
           page: 1,
         });
         get().listarProductos();
+      },
+      fetchHistorialPrecio: async (productoId) => {
+        try {
+          const { data } = await new ApiClient().get(
+            `/productos/${productoId}/historial-precios`,
+            {}
+          );
+          set({ historialPrecio: data.historialPrecio });
+        } catch (error) {
+          console.error(error);
+        }
       },
     }),
     {
