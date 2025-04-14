@@ -28,16 +28,16 @@ import {
   TipoTransaccion,
 } from "shared/enums";
 import { isSuperAdmin } from "shared/helpers";
-import { IArchivo, ITransaccion, IUsuario } from "shared/interfaces";
+import { IArchivo, ITransaccion, IPersona } from "shared/interfaces";
 import { Upload, FileIcon, XIcon } from "lucide-react";
 import { toast } from "sonner";
 import Joyride, { CallBackProps } from "react-joyride";
 import { transaccionFormTourSteps } from "./transaccion-form.tour";
 
 export default function TransaccionForm({
-  usuario,
+  persona,
 }: {
-  usuario: IUsuario | null;
+  persona: IPersona | null;
 }) {
   const { user } = useAuthStore();
   const isAdmin = isSuperAdmin(user);
@@ -107,13 +107,13 @@ export default function TransaccionForm({
 
   const onSubmit = useCallback(
     (data: ITransaccion) => {
-      crearTransaccion({ ...data, usuario: usuario! });
+      crearTransaccion({ ...data, persona: persona! });
       reset();
     },
-    [usuario, crearTransaccion, reset]
+    [persona, crearTransaccion, reset]
   );
 
-  if (!usuario) return null;
+  if (!persona) return null;
 
   return (
     <Accordion
@@ -322,7 +322,7 @@ export default function TransaccionForm({
                   <div className="archivos-uploader">
                     <FileUploader
                       folder={`transacciones/${
-                        usuario?.id ?? user?.id ?? "some_id"
+                        persona?.id ?? user?.id ?? "some_id"
                       }`}
                       onSuccess={({ file, fileKey }) => {
                         const newArchivos = Array.isArray(field.value)

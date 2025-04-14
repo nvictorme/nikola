@@ -37,9 +37,9 @@ TransaccionesRouter.get(
       const [transacciones, total] = await repo
         .createQueryBuilder("transaccion")
         .leftJoinAndSelect("transaccion.archivos", "archivos")
-        .leftJoin("transaccion.usuario", "usuario")
-        .addSelect("usuario.id") // Select only the 'id' from the 'usuario' relation
-        .where("usuario.id = :usuarioId", { usuarioId })
+        .leftJoin("transaccion.persona", "persona")
+        .addSelect("persona.id") // Select only the 'id' from the 'usuario' relation
+        .where("persona.id = :usuarioId", { usuarioId })
         .take(parseInt(limit as string))
         .skip((parseInt(page as string) - 1) * parseInt(limit as string))
         .orderBy("transaccion.fechaActualizado", "DESC")
@@ -47,8 +47,8 @@ TransaccionesRouter.get(
 
       const pagosPendientes = await repo
         .createQueryBuilder("transaccion")
-        .leftJoin("transaccion.usuario", "usuario")
-        .where("usuario.id = :usuarioId", { usuarioId })
+        .leftJoin("transaccion.persona", "persona")
+        .where("persona.id = :usuarioId", { usuarioId })
         .andWhere("transaccion.estatusPago = :estatusPago", {
           estatusPago: EstatusPago.pendiente,
         })
@@ -59,8 +59,8 @@ TransaccionesRouter.get(
 
       const reembolsosPendientes = await repo
         .createQueryBuilder("transaccion")
-        .leftJoin("transaccion.usuario", "usuario")
-        .where("usuario.id = :usuarioId", { usuarioId })
+        .leftJoin("transaccion.persona", "persona")
+        .where("persona.id = :usuarioId", { usuarioId })
         .andWhere("transaccion.estatusPago = :estatusPago", {
           estatusPago: EstatusPago.pendiente,
         })
@@ -75,10 +75,10 @@ TransaccionesRouter.get(
         0
       );
 
-      const { balance } = (await AppDataSource.getRepository(Usuario)
-        .createQueryBuilder("usuario")
-        .select("usuario.balance")
-        .where("usuario.id = :usuarioId", { usuarioId })
+      const { balance } = (await AppDataSource.getRepository(Persona)
+        .createQueryBuilder("persona")
+        .select("persona.balance")
+        .where("persona.id = :usuarioId", { usuarioId })
         .getOne()) || { balance: 0 };
 
       res.status(200).json({

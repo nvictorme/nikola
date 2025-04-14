@@ -18,7 +18,7 @@ import { IArchivo, ITransaccion } from "shared/interfaces";
 export type Transaccion = Pick<
   ITransaccion,
   | "id"
-  | "usuario"
+  | "persona"
   | "fechaCreado"
   | "referencia"
   | "descripcion"
@@ -80,7 +80,7 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
                 size="icon"
                 onClick={() => {
                   actualizarEstatus({
-                    usuarioId: row.original.usuario.id,
+                    usuarioId: row.original.persona.id,
                     transaccionId: row.original.id,
                     estatusPago: EstatusPago.confirmado,
                   });
@@ -93,7 +93,7 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
                 size="icon"
                 onClick={() => {
                   actualizarEstatus({
-                    usuarioId: row.original.usuario.id,
+                    usuarioId: row.original.persona.id,
                     transaccionId: row.original.id,
                     estatusPago: EstatusPago.rechazado,
                   });

@@ -1,37 +1,32 @@
-import { ITransaccion, IUsuario } from "shared/interfaces";
+import { IPersona, ITransaccion } from "shared/interfaces";
 import { useAuthStore } from "@/store/auth.store";
 import { isSuperAdmin } from "shared/helpers";
 import TransaccionForm from "./TransaccionForm";
 import { useTransaccionesStore } from "@/store/transacciones.store";
 import { DataTable } from "@/components/DataTable";
 import { columnasTransacciones, Transaccion } from "./columnas.transacciones";
-import { useUsuariosStore } from "@/store/usuarios.store";
 import { useEffect, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import Joyride, { CallBackProps } from "react-joyride";
 import { balanceTourSteps } from "./balance.tour";
 import { useSocket } from "@/providers/socket.provider";
+import PersonaSelector from "../personas/PersonaSelector";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export default function TransactionPage() {
   const { user } = useAuthStore();
   const isAdmin = isSuperAdmin(user);
 
-  const [usuario, setUsuario] = useState<IUsuario | null>(user);
-
-  const { vendedores, listarVendedores } = useUsuariosStore();
-
-  useEffect(() => {
-    if (isAdmin) {
-      listarVendedores();
-    }
-  }, [listarVendedores, isAdmin]);
+  const [persona, setPersona] = useState<IPersona | null>(null);
+  const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
 
   const {
     transacciones,
@@ -51,9 +46,9 @@ export default function TransactionPage() {
   } = useTransaccionesStore();
 
   useEffect(() => {
-    if (!usuario) return;
-    listarTransacciones(usuario.id);
-  }, [listarTransacciones, usuario, limit, page]);
+    if (!persona) return;
+    listarTransacciones(persona.id);
+  }, [listarTransacciones, persona, limit, page]);
 
   const [runTour, setRunTour] = useState(false);
 
@@ -72,7 +67,7 @@ export default function TransactionPage() {
       "nuevaTransaccion",
       (data: { balance: number; transaccion: ITransaccion }) => {
         setBalance(data.balance);
-        listarTransacciones(data.transaccion.usuario.id);
+        listarTransacciones(data.transaccion.persona.id);
       }
     );
     return () => {
@@ -125,54 +120,37 @@ export default function TransactionPage() {
         </h1>
         {user && isAdmin && (
           <div className="flex items-center gap-3 distribuidor-selector">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Seleccionar Distribuidor:
+            <label className="text-lg font-medium text-gray-700 dark:text-gray-300">
+              {persona ? "Cliente:" : "Seleccionar Cliente:"}
             </label>
-            <Select
-              defaultValue={usuario?.id}
-              onValueChange={(value) => {
-                let selected = vendedores.find((v) => v.id === value);
-                if (!selected) {
-                  selected = user;
-                }
-                setUsuario(selected || null);
-              }}
+            <Dialog
+              open={clienteDialogOpen}
+              onOpenChange={setClienteDialogOpen}
             >
-              <SelectTrigger className="w-[400px]">
-                <SelectValue placeholder="Seleccionar distribuidor..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={user.id}>
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold">Tú:</span>
-                    <span>
-                      {user.nombre} {user.apellido}:
-                    </span>
-                    <span className="text-gray-500">
-                      {new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                      }).format(user.balance)}
-                    </span>
-                  </div>
-                </SelectItem>
-                {vendedores.map((v) => (
-                  <SelectItem key={v.id} value={v.id}>
-                    <div className="flex items-center gap-2">
-                      <span>
-                        {v.nombre} {v.apellido}:
-                      </span>
-                      <span className="text-gray-500">
-                        {new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(v.balance)}
-                      </span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <DialogTrigger asChild>
+                <Button variant="secondary" type="button">
+                  {persona
+                    ? `${persona.nif} - ${
+                        persona.empresa ||
+                        `${persona.nombre} ${persona.apellido}`
+                      }`
+                    : "Seleccionar Cliente"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Seleccione el cliente</DialogTitle>
+                  <DialogDescription>
+                    <PersonaSelector
+                      onSelect={(persona) => {
+                        setPersona(persona);
+                        setClienteDialogOpen(false);
+                      }}
+                    />
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
           </div>
         )}
       </div>
@@ -246,7 +224,7 @@ export default function TransactionPage() {
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm p-6">
-        <TransaccionForm usuario={usuario} />
+        <TransaccionForm persona={persona} />
       </div>
 
       <div className="rounded-lg border bg-card text-card-foreground shadow-sm historial-transacciones">

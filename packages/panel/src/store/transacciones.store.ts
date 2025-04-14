@@ -85,7 +85,7 @@ export const useTransaccionesStore = create<TransaccionesStore>()(
         await new ApiClient().post("/transacciones", {
           transaccion,
         });
-        await get().listarTransacciones(transaccion.usuario.id);
+        await get().listarTransacciones(transaccion.persona.id);
       },
       actualizarEstatus: async ({ usuarioId, transaccionId, estatusPago }) => {
         try {
