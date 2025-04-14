@@ -8,6 +8,7 @@ import {
   JoinColumn,
   ManyToOne,
   BeforeUpdate,
+  AfterUpdate,
 } from "typeorm";
 import { Base } from "./base";
 import { IProducto } from "shared/interfaces";

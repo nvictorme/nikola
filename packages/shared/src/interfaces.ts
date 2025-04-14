@@ -250,6 +250,12 @@ export interface IOrdenHistorial extends IBase {
   notas: string;
 }
 
+export interface IHistorialPrecio extends IBase {
+  costo: number;
+  precio: number;
+  producto: IProducto;
+}
+
 export interface ITransaccion extends IBase {
   persona: IPersona;
   referencia: number;

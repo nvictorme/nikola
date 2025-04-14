@@ -11,6 +11,7 @@ import { Dimension } from "../orm/entity/dimension";
 import { IArchivo } from "shared/interfaces";
 import { isSuperAdmin } from "shared/helpers";
 import { UnidadesLongitud, UnidadesPeso } from "shared/enums";
+import { HistorialPrecio } from "../orm/entity/historialPrecio";
 
 const ProductosRouter: Router = Router();
 
@@ -246,7 +247,6 @@ ProductosRouter.post(
         dimensiones.unidadLongitud =
           data.dimensiones.unidadLongitud ?? UnidadesLongitud.cm;
         dimensiones.unidadPeso = data.dimensiones.unidadPeso ?? UnidadesPeso.g;
-        dimensiones.producto = savedProducto;
         await AppDataSource.getRepository(Dimension).save(dimensiones);
         savedProducto.dimensiones = dimensiones;
       }
@@ -261,7 +261,6 @@ ProductosRouter.post(
         embalaje.unidadLongitud =
           data.embalaje.unidadLongitud ?? UnidadesLongitud.cm;
         embalaje.unidadPeso = data.embalaje.unidadPeso ?? UnidadesPeso.g;
-        embalaje.producto = savedProducto;
         await AppDataSource.getRepository(Dimension).save(embalaje);
         savedProducto.embalaje = embalaje;
       }
@@ -270,6 +269,13 @@ ProductosRouter.post(
       await AppDataSource.getRepository(Producto).save(savedProducto);
 
       res.status(200).json(savedProducto);
+
+      // Update the historial precio
+      const historialPrecio = new HistorialPrecio();
+      historialPrecio.producto = savedProducto;
+      historialPrecio.precio = savedProducto.precio;
+      historialPrecio.costo = savedProducto.costo;
+      await AppDataSource.getRepository(HistorialPrecio).save(historialPrecio);
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
@@ -403,6 +409,13 @@ ProductosRouter.put(
       await AppDataSource.getRepository(Producto).save(target);
 
       res.status(200).json({ message: "Producto actualizado exitosamente" });
+
+      // Update the historial precio
+      const historialPrecio = new HistorialPrecio();
+      historialPrecio.producto = target;
+      historialPrecio.precio = target.precio;
+      historialPrecio.costo = target.costo;
+      await AppDataSource.getRepository(HistorialPrecio).save(historialPrecio);
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
