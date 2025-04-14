@@ -48,6 +48,9 @@ export default function TransactionPage() {
   useEffect(() => {
     if (!persona) return;
     listarTransacciones(persona.id);
+    return () => {
+      setPersona(null);
+    };
   }, [listarTransacciones, persona, limit, page]);
 
   const [runTour, setRunTour] = useState(false);

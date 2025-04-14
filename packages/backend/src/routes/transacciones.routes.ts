@@ -260,7 +260,7 @@ TransaccionesRouter.put(
           .getRepository(Transaccion)
           .findOneOrFail({
             where: { id: transaccionId },
-            relations: ["usuario"],
+            relations: ["persona"],
           });
 
         // obtener balance actual del cliente
