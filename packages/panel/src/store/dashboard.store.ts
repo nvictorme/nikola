@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import { ApiClient } from "../api/api.client";
-import type { IDashboardCharts } from "shared/interfaces";
+import type { IDashboardCharts, IPersona } from "shared/interfaces";
 
 export type DashboardStore = {
   isLoading: boolean;
@@ -9,14 +9,16 @@ export type DashboardStore = {
   ventasMensuales: number;
   totalVentasMes: number;
   promedioVenta: number;
+  deudores: IPersona[];
   charts: IDashboardCharts;
   fetchDashboardData: () => Promise<void>;
   fetchChartsData: () => Promise<void>;
+  fetchDeudores: () => Promise<void>;
 };
 
 const initialState: Omit<
   DashboardStore,
-  "fetchDashboardData" | "fetchChartsData"
+  "fetchDashboardData" | "fetchChartsData" | "fetchDeudores"
 > = {
   ventasMensuales: 0,
   totalVentasMes: 0,
@@ -28,6 +30,7 @@ const initialState: Omit<
     salesByCategory: [],
     salesByBranch: [],
   },
+  deudores: [],
 };
 
 export const useDashboardStore = create<DashboardStore>()(
@@ -54,6 +57,14 @@ export const useDashboardStore = create<DashboardStore>()(
           console.error(error);
         } finally {
           set({ isLoadingCharts: false });
+        }
+      },
+      fetchDeudores: async () => {
+        try {
+          const { data } = await new ApiClient().get("/dashboard/deudores", {});
+          set({ deudores: data.deudores });
+        } catch (error) {
+          console.error(error);
         }
       },
     }),

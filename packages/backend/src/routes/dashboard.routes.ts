@@ -6,6 +6,8 @@ import { Orden } from "../orm/entity/orden";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { eachDayOfInterval } from "date-fns/eachDayOfInterval";
 import { TipoOrden } from "shared/enums";
+import { Persona } from "../orm/entity/persona";
+import { MoreThan } from "typeorm";
 const DashboardRouter = Router();
 
 DashboardRouter.get("/", async (req: Request, res: Response) => {
@@ -145,6 +147,22 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
       total: Number(branch.total),
       quantity: Number(branch.quantity),
     })),
+  });
+});
+
+DashboardRouter.get("/deudores", async (req: Request, res: Response) => {
+  const deudores = await AppDataSource.getRepository(Persona).find({
+    select: ["id", "nombre", "apellido", "empresa", "balance", "creditoLimite"],
+    where: {
+      balance: MoreThan(0),
+    },
+    order: {
+      balance: "DESC",
+    },
+  });
+
+  return res.status(200).json({
+    deudores,
   });
 });
 

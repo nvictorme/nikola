@@ -1,12 +1,26 @@
 import React, { useEffect } from "react";
 import { useDashboardStore } from "../../store/dashboard.store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarDays, BanknoteIcon, BarChart2 } from "lucide-react";
+import {
+  CalendarDays,
+  BanknoteIcon,
+  BarChart2,
+  AlertCircle,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { currencyFormat, isSuperAdmin } from "shared/helpers";
 import { LineChart, BarChart, PieChart } from "@/components/ui/charts";
 import { useTheme } from "next-themes";
 import { useAuthStore } from "@/store/auth.store";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { IPersona } from "shared/interfaces";
 
 const CHART_COLORS = {
   light: {
@@ -59,6 +73,45 @@ const MetricCard = ({
   </Card>
 );
 
+const DebtorsList = ({ deudores }: { deudores: IPersona[] }) => {
+  if (!deudores.length) {
+    return (
+      <div className="flex items-center justify-center h-[350px] text-muted-foreground">
+        No hay deudores registrados
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-auto max-h-[350px]">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-left">Cliente</TableHead>
+            <TableHead className="text-right">Límite de Crédito</TableHead>
+            <TableHead className="text-right">Balance</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {deudores.map((deudor) => (
+            <TableRow key={deudor.id}>
+              <TableCell className="text-left">
+                {deudor.empresa || `${deudor.nombre} ${deudor.apellido}`}
+              </TableCell>
+              <TableCell className="text-right">
+                {currencyFormat({ value: deudor.creditoLimite })}
+              </TableCell>
+              <TableCell className="text-right text-red-500">
+                {currencyFormat({ value: deudor.balance })}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+};
+
 const DashboardPage: React.FC = () => {
   const {
     isLoading,
@@ -67,8 +120,10 @@ const DashboardPage: React.FC = () => {
     totalVentasMes,
     promedioVenta,
     charts,
+    deudores,
     fetchDashboardData,
     fetchChartsData,
+    fetchDeudores,
   } = useDashboardStore();
 
   const { theme } = useTheme();
@@ -79,7 +134,8 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     fetchDashboardData();
     fetchChartsData();
-  }, [fetchDashboardData, fetchChartsData]);
+    fetchDeudores();
+  }, [fetchDashboardData, fetchChartsData, fetchDeudores]);
 
   if (isLoading) {
     return (
@@ -204,37 +260,54 @@ const DashboardPage: React.FC = () => {
       </div>
 
       {isAdmin && (
-        <Card className="overflow-hidden">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl">Ventas por Sucursal</CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Distribución de ventas por sucursal durante el mes actual
-            </p>
-          </CardHeader>
-          <CardContent>
-            {isLoadingCharts ? (
-              <div className="flex justify-center items-center h-[350px]">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
-              </div>
-            ) : (
-              <PieChart
-                data={charts.salesByBranch}
-                categories={["total"]}
-                index="branch"
-                colors={[
-                  colors.primary,
-                  colors.secondary,
-                  colors.accent,
-                  colors.success,
-                  colors.warning,
-                  colors.error,
-                ]}
-                valueFormatter={(value: number) => currencyFormat({ value })}
-                className={`h-[${CHART_HEIGHT}px]`}
-              />
-            )}
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 md:grid-cols-2">
+          <Card className="overflow-hidden">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl">Ventas por Sucursal</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Distribución de ventas por sucursal durante el mes actual
+              </p>
+            </CardHeader>
+            <CardContent>
+              {isLoadingCharts ? (
+                <div className="flex justify-center items-center h-[350px]">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900" />
+                </div>
+              ) : (
+                <PieChart
+                  data={charts.salesByBranch}
+                  categories={["total"]}
+                  index="branch"
+                  colors={[
+                    colors.primary,
+                    colors.secondary,
+                    colors.accent,
+                    colors.success,
+                    colors.warning,
+                    colors.error,
+                  ]}
+                  valueFormatter={(value: number) => currencyFormat({ value })}
+                  className={`h-[${CHART_HEIGHT}px]`}
+                />
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <CardHeader className="space-y-1">
+              <CardTitle className="text-2xl flex items-center gap-2">
+                <AlertCircle className="text-red-500" />
+                Lista de Deudores
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Clientes con saldos pendientes de pago
+              </p>
+            </CardHeader>
+            <CardContent>
+              <DebtorsList deudores={deudores} />
+            </CardContent>
+          </Card>
+        </div>
       )}
     </div>
   );
