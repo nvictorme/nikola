@@ -257,13 +257,23 @@ export default function OrdenForm({
     const hasValidTotal = total > 0;
     const hasRequiredProvider =
       tipo === TipoOrden.reposicion ? !!getValues("proveedor") : true;
+    const hasAvailableCredit =
+      tipo !== TipoOrden.credito ||
+      (cliente?.creditoHabilitado &&
+        cliente.creditoLimite - cliente.balance > 0);
+    const creditExceedsAvailable =
+      tipo === TipoOrden.credito &&
+      cliente?.creditoHabilitado &&
+      total > cliente.creditoLimite - cliente.balance;
 
     return (
       hasRequiredFields &&
       hasItems &&
       hasValidItems &&
       hasValidTotal &&
-      hasRequiredProvider
+      hasRequiredProvider &&
+      hasAvailableCredit &&
+      !creditExceedsAvailable
     );
   }, [cliente, sucursal, items, total, tipo, getValues]);
 
@@ -421,43 +431,76 @@ export default function OrdenForm({
                 control={control}
                 defaultValue={TipoOrden.venta}
                 render={({ field }) => (
-                  <Select
-                    defaultValue={field.value}
-                    onValueChange={(value) => {
-                      field.onChange(value as TipoOrden);
-                      // Update related fields based on type
-                      if (
-                        value === TipoOrden.cotizacion ||
-                        value === TipoOrden.credito
-                      ) {
-                        setValue("validez", 1 as number);
-                      }
-                      // Clear cliente when tipo is reposicion
-                      if (value === TipoOrden.reposicion) {
-                        setValue("cliente", null);
-                        setValue("proveedor", null);
-                      }
-                    }}
-                    disabled={!!orden}
-                  >
-                    <SelectTrigger className="tipo-orden-selector">
-                      <SelectValue placeholder="Seleccionar tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value={TipoOrden.cotizacion}>
-                        {TipoOrden.cotizacion}
-                      </SelectItem>
-                      <SelectItem value={TipoOrden.venta}>
-                        {TipoOrden.venta}
-                      </SelectItem>
-                      <SelectItem value={TipoOrden.credito}>
-                        {TipoOrden.credito}
-                      </SelectItem>
-                      <SelectItem value={TipoOrden.reposicion}>
-                        {TipoOrden.reposicion}
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-2">
+                    <Select
+                      defaultValue={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value as TipoOrden);
+                        // Update related fields based on type
+                        if (
+                          value === TipoOrden.cotizacion ||
+                          value === TipoOrden.credito
+                        ) {
+                          setValue("validez", 1 as number);
+                        }
+                        // Clear cliente when tipo is reposicion
+                        if (value === TipoOrden.reposicion) {
+                          setValue("cliente", null);
+                          setValue("proveedor", null);
+                        }
+                      }}
+                      disabled={!!orden}
+                    >
+                      <SelectTrigger className="tipo-orden-selector">
+                        <SelectValue placeholder="Seleccionar tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={TipoOrden.cotizacion}>
+                          {TipoOrden.cotizacion}
+                        </SelectItem>
+                        <SelectItem value={TipoOrden.venta}>
+                          {TipoOrden.venta}
+                        </SelectItem>
+                        <SelectItem
+                          value={TipoOrden.credito}
+                          disabled={!cliente?.creditoHabilitado}
+                        >
+                          {TipoOrden.credito}
+                        </SelectItem>
+                        <SelectItem value={TipoOrden.reposicion}>
+                          {TipoOrden.reposicion}
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {tipo === TipoOrden.credito &&
+                      cliente?.creditoHabilitado && (
+                        <div className="flex flex-col gap-1 text-sm">
+                          <div
+                            className={`px-2 py-1 rounded-md ${
+                              cliente.creditoLimite - cliente.balance > 0
+                                ? "bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200"
+                                : "bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200"
+                            }`}
+                          >
+                            Crédito disponible:{" "}
+                            {currencyFormat({
+                              value:
+                                cliente.creditoLimite - cliente.balance || 0,
+                            })}
+                          </div>
+                          <div className="flex items-center gap-4 text-gray-500 dark:text-gray-400">
+                            <div>
+                              Límite:{" "}
+                              {currencyFormat({ value: cliente.creditoLimite })}
+                            </div>
+                            <div>
+                              Balance:{" "}
+                              {currencyFormat({ value: cliente.balance })}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                  </div>
                 )}
               />
             </div>

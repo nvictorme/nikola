@@ -8,13 +8,13 @@ import {
 } from "typeorm";
 import { Base } from "./base";
 import { ITransaccion } from "shared/interfaces";
-import { Usuario } from "./usuario";
 import { Archivo } from "./archivo";
 import { EstatusPago, MetodoPago, TipoTransaccion } from "shared/enums";
 import { decimalTransformer } from "shared/constants";
+import { Persona } from "./persona";
 
 export interface ORMTransaccion extends ITransaccion {
-  usuario: Usuario;
+  persona: Persona;
   archivos: Archivo[];
 }
 
@@ -74,10 +74,10 @@ export class Transaccion extends Base implements ORMTransaccion {
   @Column({ type: "varchar", nullable: true })
   qbInvoiceDocNumber: string;
 
-  // relacion con usuario
-  @ManyToOne(() => Usuario)
-  @JoinColumn({ name: "usuarioId", referencedColumnName: "id" })
-  usuario: Usuario;
+  // relacion con persona
+  @ManyToOne(() => Persona)
+  @JoinColumn({ name: "personaId", referencedColumnName: "id" })
+  persona: Persona;
 
   // relacion con archivos
   @ManyToMany(() => Archivo)

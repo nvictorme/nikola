@@ -251,7 +251,7 @@ export interface IOrdenHistorial extends IBase {
 }
 
 export interface ITransaccion extends IBase {
-  usuario: IUsuario;
+  persona: IPersona;
   referencia: number;
   descripcion: string;
   monto: number;

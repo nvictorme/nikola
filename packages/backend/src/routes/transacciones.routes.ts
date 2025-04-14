@@ -14,6 +14,7 @@ import { sendEmail } from "../providers/email";
 import { currencyFormat } from "shared";
 import { emitSocketEvent } from "../providers/sockets";
 import { transcode } from "buffer";
+import { Persona } from "../orm/entity/persona";
 
 const TransaccionesRouter: Router = Router();
 
@@ -107,19 +108,19 @@ export async function processTransaction(
   data: Transaccion
 ): Promise<{ balance: number; transaccion: Transaccion }> {
   // Query simple para obtener el balance del usuario
-  const usuario = await manager
-    .getRepository(Usuario)
-    .createQueryBuilder("usuario")
-    .select("usuario.balance")
-    .where("usuario.id = :id", { id: data.usuario.id })
+  const persona = await manager
+    .getRepository(Persona)
+    .createQueryBuilder("persona")
+    .select("persona.balance")
+    .where("persona.id = :id", { id: data.persona.id })
     .getOne();
 
-  if (!usuario) {
-    throw new Error("Usuario no encontrado");
+  if (!persona) {
+    throw new Error("Persona no encontrada");
   }
 
   // calcular el nuevo balance basado en el tipo de transacción
-  let nuevoBalance = usuario.balance;
+  let nuevoBalance = persona.balance;
   if (
     (data.tipo === TipoTransaccion.pago ||
       data.tipo === TipoTransaccion.reembolso) &&
@@ -139,8 +140,8 @@ export async function processTransaction(
   // Actualizar el balance del usuario
   data.balance = nuevoBalance;
   await manager
-    .getRepository(Usuario)
-    .update(data.usuario.id, { balance: nuevoBalance });
+    .getRepository(Persona)
+    .update(data.persona.id, { balance: nuevoBalance });
 
   // Procesar archivos si existen
   const archivos = [] as Archivo[];
@@ -180,6 +181,7 @@ TransaccionesRouter.post(
   }),
   async (req: Request, res: Response) => {
     try {
+      const user = req.user as Usuario;
       const data = req.body.transaccion as Transaccion;
 
       await AppDataSource.manager.transaction(async (manager) => {
@@ -188,7 +190,7 @@ TransaccionesRouter.post(
           data
         );
         // emit socket event to the vendor
-        emitSocketEvent(data.usuario.id, "nuevaTransaccion", {
+        emitSocketEvent(user.id, "nuevaTransaccion", {
           balance,
           transaccion,
           timestamp: new Date().toISOString(),
@@ -214,13 +216,13 @@ TransaccionesRouter.post(
           sendEmail(
             process.env.NO_REPLY_EMAIL_ADDRESS as string,
             gerente.email,
-            `Nuevo ${data.tipo} de ${data.usuario.nombre} ${data.usuario.apellido}`,
+            `Nuevo ${data.tipo} de ${data.persona.nombre} ${data.persona.apellido}`,
             `
               <p>Se ha creado un nuevo ${data.tipo}</p>
               <p>Monto: ${currencyFormat({
                 value: data.monto,
               })}</p>
-              <p>Usuario: ${data.usuario.nombre} ${data.usuario.apellido}</p>
+              <p>Persona: ${data.persona.nombre} ${data.persona.apellido}</p>
               <p>Fecha: ${new Date()
                 .toISOString()
                 .slice(0, 16)
@@ -261,9 +263,9 @@ TransaccionesRouter.put(
             relations: ["usuario"],
           });
 
-        // obtener balance actual del usuario
-        const { balance } = await manager.getRepository(Usuario).findOneOrFail({
-          where: { id: transaccion.usuario.id },
+        // obtener balance actual del cliente
+        const { balance } = await manager.getRepository(Persona).findOneOrFail({
+          where: { id: transaccion.persona.id },
           select: ["balance"],
         });
         // calcular el nuevo balance si el estatus de pago es confirmado
@@ -276,10 +278,10 @@ TransaccionesRouter.put(
           nuevoBalance -= transaccion.monto;
         }
 
-        // Actualizar el balance del usuario
+        // Actualizar el balance del cliente
         await manager
-          .getRepository(Usuario)
-          .update(transaccion.usuario.id, { balance: nuevoBalance });
+          .getRepository(Persona)
+          .update(transaccion.persona.id, { balance: nuevoBalance });
 
         // Actualizar el estatus de pago de la transacción y el balance
         await manager

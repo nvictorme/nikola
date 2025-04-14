@@ -27,6 +27,7 @@ import { Stock } from "../orm/entity/stock";
 import { Envio } from "../orm/entity/envio";
 import { HistorialOrden } from "../orm/entity/historial";
 import { emitSocketEvent } from "../providers/sockets";
+import { Persona } from "../orm/entity/persona";
 const OrdenesRouter: Router = Router();
 
 // Get - Todas las ordenes
@@ -802,7 +803,7 @@ OrdenesRouter.put(
       ) {
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
-        transaccion.usuario = updatedOrden.vendedor;
+        transaccion.persona = updatedOrden.cliente as Persona;
         transaccion.monto = updatedOrden.total;
         transaccion.tipo = TipoTransaccion.factura;
         transaccion.descripcion = `Factura de venta #${updatedOrden.serial}`;
