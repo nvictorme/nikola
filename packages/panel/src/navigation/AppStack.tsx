@@ -101,6 +101,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: routes.auditoria.path,
+        element: (
+          <ProtectedRoute routeRuleCheck={RouteRuleCheck.isAdmin}>
+            <routes.auditoria.element />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);

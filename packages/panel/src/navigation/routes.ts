@@ -1,6 +1,7 @@
 import AlmacenesPage from "@/pages/almacenes/AlmacenesPage";
 import LoginPage from "@/pages/auth/LoginPage";
 import ResetPage from "@/pages/auth/ResetPage";
+import AuditoriaPage from "@/pages/auditoria/AuditoriaPage";
 import BalancePage from "@/pages/balance/BalancePage";
 import { CategoriasPage } from "@/pages/categorias/CategoriasPage";
 import ConfiguracionPage from "@/pages/configuracion/ConfiguracionPage";
@@ -27,6 +28,7 @@ import {
   IdCard,
   KeyRoundIcon,
   Settings,
+  History,
 } from "lucide-react";
 
 export const routes = {
@@ -125,5 +127,11 @@ export const routes = {
     title: "Proveedores",
     icon: Users2,
     element: ProveedoresPage,
+  },
+  auditoria: {
+    path: "/auditoria",
+    title: "Auditoría",
+    icon: History,
+    element: AuditoriaPage,
   },
 };

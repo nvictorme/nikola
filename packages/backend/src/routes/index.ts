@@ -14,3 +14,4 @@ export * from "./reportes.routes";
 export * from "./dashboard.routes";
 export * from "./configuracion.routes";
 export * from "./proveedores.routes";
+export * from "./auditoria.routes";
