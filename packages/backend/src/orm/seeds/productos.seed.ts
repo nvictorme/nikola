@@ -50,14 +50,8 @@ async function run(): Promise<void> {
   const _embalajes = [] as Dimension[];
   const _stocks = [] as Stock[];
 
-  // Obtener el almacen principal
-  const almacenPrincipal = await AppDataSource.getRepository(
-    Almacen
-  ).findOneOrFail({
-    where: {
-      nombre: "Principal",
-    },
-  });
+  // Obtener todos los almacenes
+  const _almacenes = await AppDataSource.getRepository(Almacen).find();
 
   // iterar sobre los productos legacy
   _legacy.forEach((p: any) => {
@@ -106,15 +100,17 @@ async function run(): Promise<void> {
     _embalajes.push(embalaje);
 
     // Stock
-    const _stock = new Stock();
-    _stock.id = crypto.randomUUID();
-    _stock.producto = producto;
-    _stock.almacen = almacenPrincipal;
-    _stock.actual = 0;
-    _stock.reservado = 0;
-    _stock.transito = 0;
-    _stock.rma = 0;
-    _stocks.push(_stock);
+    _almacenes.forEach((almacen) => {
+      const _stock = new Stock();
+      _stock.id = crypto.randomUUID();
+      _stock.producto = producto;
+      _stock.almacen = almacen;
+      _stock.actual = 0;
+      _stock.reservado = 0;
+      _stock.transito = 0;
+      _stock.rma = 0;
+      _stocks.push(_stock);
+    });
   });
 
   await AppDataSource.getRepository(Producto).save(_productos, { chunk: 500 });

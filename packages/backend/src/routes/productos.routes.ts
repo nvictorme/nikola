@@ -224,6 +224,7 @@ ProductosRouter.post(
       _producto.precioOferta = data.precioOferta;
       _producto.inicioOferta = data.inicioOferta;
       _producto.finOferta = data.finOferta;
+      _producto.stockMinimo = data.stockMinimo || 0;
 
       _producto.slug = slugify(`${data.nombre} ${data.modelo} ${data.sku}`, {
         lower: true,
@@ -321,6 +322,7 @@ ProductosRouter.put(
           replacement: "-",
           trim: true,
         }),
+        stockMinimo: data.stockMinimo || 0,
         // Only include category/subcategory if they exist and have an id
         ...(data.categoria?.id && { categoria: { id: data.categoria.id } }),
         ...(data.subcategoria?.id && {

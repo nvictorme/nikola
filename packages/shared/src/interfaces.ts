@@ -191,6 +191,7 @@ export interface IProducto extends IBase {
   inicioOferta: string | null;
   finOferta: string | null;
 
+  stockMinimo: number;
   stock: IStockProducto[];
 
   dimensiones: IDimensiones;

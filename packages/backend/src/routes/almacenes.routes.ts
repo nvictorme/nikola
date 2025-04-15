@@ -279,8 +279,9 @@ AlmacenesRouter.get(
           "stock.transito",
           "stock.rma",
         ])
-        .where("almacen.id IN (:...almacenesIds)", { almacenesIds })
-        .andWhere("(stock.actual + stock.transito - stock.reservado) > 0");
+        .where("almacen.id IN (:...almacenesIds)", { almacenesIds });
+      // mantener comentada la siguiente linea para mostrar todos los almacenes
+      // .andWhere("(stock.actual + stock.transito - stock.reservado) > 0");
 
       const almacenes = await queryBuilder.getMany();
       const rawResults = await queryBuilder

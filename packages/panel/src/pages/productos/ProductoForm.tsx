@@ -47,6 +47,7 @@ interface ProductoFormData {
   finOferta?: string | null;
   dimensiones: IDimensiones;
   embalaje: IDimensiones;
+  stockMinimo: number;
 }
 
 export default function ProductoForm() {
@@ -103,6 +104,7 @@ export default function ProductoForm() {
       precioOferta: producto?.precioOferta,
       inicioOferta: producto?.inicioOferta,
       finOferta: producto?.finOferta,
+      stockMinimo: producto?.stockMinimo || 0,
       dimensiones: {
         largo: producto?.dimensiones?.largo || 0,
         ancho: producto?.dimensiones?.ancho || 0,
@@ -373,6 +375,41 @@ export default function ProductoForm() {
           )}
 
           <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="garantia">Garantía</Label>
+              <Input
+                id="garantia"
+                defaultValue={producto?.garantia || "Sin Garantía"}
+                type="text"
+                {...register("garantia")}
+              />
+            </div>
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="stockMinimo">Stock Mínimo</Label>
+              <Input
+                id="stockMinimo"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={producto?.stockMinimo || 0}
+                {...register("stockMinimo", {
+                  required: "Este campo es requerido",
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "El stock mínimo debe ser mayor o igual a 0",
+                  },
+                })}
+              />
+              {errors.stockMinimo && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.stockMinimo.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col items-start">
               <div className="flex flex-col gap-2 w-full mt-4">
                 <Label>Categoría</Label>
@@ -434,20 +471,6 @@ export default function ProductoForm() {
                       </SelectContent>
                     </Select>
                   )}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 items-center">
-            <div className="flex flex-col">
-              <div className="flex flex-col gap-2 w-full mt-4">
-                <Label>Garantía</Label>
-                <Input
-                  id="garantia"
-                  defaultValue={producto?.garantia || "Sin Garantía"}
-                  type="text"
-                  {...register("garantia")}
                 />
               </div>
             </div>

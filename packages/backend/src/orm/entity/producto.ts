@@ -79,6 +79,9 @@ export class Producto extends Base implements ORMProducto {
   @Column({ nullable: true })
   finOferta: string;
 
+  @Column({ type: "int", default: 0, nullable: false })
+  stockMinimo: number;
+
   @Column({ length: 30, nullable: false, unique: true })
   sku: string;
 
