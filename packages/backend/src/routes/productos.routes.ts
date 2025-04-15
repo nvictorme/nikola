@@ -12,6 +12,7 @@ import { IArchivo } from "shared/interfaces";
 import { isSuperAdmin } from "shared/helpers";
 import { UnidadesLongitud, UnidadesPeso } from "shared/enums";
 import { HistorialPrecio } from "../orm/entity/historialPrecio";
+import { Almacen } from "../orm/entity/almacen";
 
 const ProductosRouter: Router = Router();
 
@@ -266,12 +267,27 @@ ProductosRouter.post(
         savedProducto.embalaje = embalaje;
       }
 
-      // Save the product again with the relations
+      // Guardar el producto con sus relaciones
       await AppDataSource.getRepository(Producto).save(savedProducto);
 
       res.status(200).json(savedProducto);
 
-      // Update the historial precio
+      // Crear stock del nuevo producto para cada almacen existente
+      const almacenes = await AppDataSource.getRepository(Almacen).find();
+      const stocks = [] as Stock[];
+      almacenes.forEach(async (almacen) => {
+        const stock = new Stock();
+        stock.producto = savedProducto;
+        stock.almacen = almacen;
+        stock.actual = 0;
+        stock.reservado = 0;
+        stock.transito = 0;
+        stock.rma = 0;
+        stocks.push(stock);
+      });
+      await AppDataSource.getRepository(Stock).save(stocks, { chunk: 500 });
+
+      // Inicializar el historial de precios
       const historialPrecio = new HistorialPrecio();
       historialPrecio.producto = savedProducto;
       historialPrecio.precio = savedProducto.precio;

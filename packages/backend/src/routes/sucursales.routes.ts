@@ -72,6 +72,7 @@ SucursalesRouter.get(
     }
   }
 );
+
 // crear una nueva sucursal
 SucursalesRouter.post(
   "/",

@@ -7,6 +7,8 @@ import { Usuario } from "../orm/entity/usuario";
 import { calcularStockDisponible, isSuperAdmin, IStockProducto } from "shared";
 import { Sucursal } from "../orm/entity/sucursal";
 import { redis } from "../providers/redis";
+import { Stock } from "../orm/entity/stock";
+import { Producto } from "../orm/entity/producto";
 
 const AlmacenesRouter: Router = Router();
 
@@ -77,6 +79,21 @@ AlmacenesRouter.post(
 
           // responder con el almacen creado
           res.status(201).json(almacen);
+
+          // crear stock del nuevo almacen para cada producto existente
+          const productos = await transactionalEntityManager.find(Producto);
+          const stocks = [] as Stock[];
+          productos.forEach(async (producto) => {
+            const stock = new Stock();
+            stock.producto = producto;
+            stock.almacen = almacen;
+            stock.actual = 0;
+            stock.reservado = 0;
+            stock.transito = 0;
+            stock.rma = 0;
+            stocks.push(stock);
+          });
+          await transactionalEntityManager.save(Stock, stocks, { chunk: 500 });
         }
       );
     } catch (e: any) {

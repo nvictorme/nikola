@@ -38,7 +38,7 @@ const dataSourceOptions: DataSourceOptions = {
   }),
   entities: [__dirname + "/entity/*.{ts,js}"],
   migrations: [__dirname + "/migration/*.{ts,js}"],
-  // subscribers: [__dirname + "/audit/AuditSubscriber.{ts,js}"],
+  subscribers: [__dirname + "/audit/AuditSubscriber.{ts,js}"],
 };
 
 export const AppDataSource: DataSource = new DataSource(dataSourceOptions);
