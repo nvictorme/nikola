@@ -11,6 +11,7 @@ export class Envio extends Base implements IEnvio {
   @Column({
     type: "enum",
     enum: Transportistas,
+    default: Transportistas.OTRO,
     nullable: false,
   })
   transportista: Transportistas;

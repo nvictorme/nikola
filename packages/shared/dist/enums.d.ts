@@ -158,12 +158,16 @@ export declare enum TipoTransaccion {
     reembolso = "Reembolso"
 }
 export declare enum Transportistas {
+    MRW = "MRW",
+    TEALCA = "Tealca",
+    ZOOM = "Zoom",
+    ASIAVEN = "Asiaven",
+    KEXPORT = "KExport",
+    MELOTRAECP = "MeLoTraeCP",
     DHL = "DHL",
     UPS = "UPS",
     FEDEX = "FedEx",
     TNT = "TNT",
-    MARITIMO = "Mar\u00EDtimo",
-    TERRESTRE = "Terrestre",
     OTRO = "Otro"
 }
 export declare enum QRCodeOutput {

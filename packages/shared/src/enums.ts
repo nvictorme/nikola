@@ -179,12 +179,16 @@ export enum TipoTransaccion {
 }
 
 export enum Transportistas {
+  MRW = "MRW",
+  TEALCA = "Tealca",
+  ZOOM = "Zoom",
+  ASIAVEN = "Asiaven",
+  KEXPORT = "KExport",
+  MELOTRAECP = "MeLoTraeCP",
   DHL = "DHL",
   UPS = "UPS",
   FEDEX = "FedEx",
   TNT = "TNT",
-  MARITIMO = "Marítimo",
-  TERRESTRE = "Terrestre",
   OTRO = "Otro",
 }
 

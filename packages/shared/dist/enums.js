@@ -183,12 +183,16 @@ var TipoTransaccion;
 })(TipoTransaccion || (exports.TipoTransaccion = TipoTransaccion = {}));
 var Transportistas;
 (function (Transportistas) {
+    Transportistas["MRW"] = "MRW";
+    Transportistas["TEALCA"] = "Tealca";
+    Transportistas["ZOOM"] = "Zoom";
+    Transportistas["ASIAVEN"] = "Asiaven";
+    Transportistas["KEXPORT"] = "KExport";
+    Transportistas["MELOTRAECP"] = "MeLoTraeCP";
     Transportistas["DHL"] = "DHL";
     Transportistas["UPS"] = "UPS";
     Transportistas["FEDEX"] = "FedEx";
     Transportistas["TNT"] = "TNT";
-    Transportistas["MARITIMO"] = "Mar\u00EDtimo";
-    Transportistas["TERRESTRE"] = "Terrestre";
     Transportistas["OTRO"] = "Otro";
 })(Transportistas || (exports.Transportistas = Transportistas = {}));
 var QRCodeOutput;
