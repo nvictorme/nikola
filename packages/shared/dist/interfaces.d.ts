@@ -145,7 +145,9 @@ export interface IProducto extends IBase {
     subcategoria?: ISubcategoria;
     garantia: string;
     costo: number;
-    precio: number;
+    precioGeneral: number;
+    precioInstalador: number;
+    precioMayorista: number;
     enOferta: boolean;
     precioOferta: number;
     inicioOferta: string | null;

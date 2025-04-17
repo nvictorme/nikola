@@ -608,6 +608,30 @@ export default function OrdenForm({
                                     cantidad: 1,
                                   };
 
+                                  // DO NOT REMOVE THIS CODE
+                                  // // aplicar el factor por tipo de cliente
+                                  // item.precio =
+                                  //   item.precio *
+                                  //   factores[
+                                  //     cliente?.tipoCliente ||
+                                  //       TipoCliente.general
+                                  //   ];
+
+                                  // aplicar precio por tipo de cliente
+                                  if (
+                                    cliente?.tipoCliente ===
+                                    TipoCliente.mayorista
+                                  ) {
+                                    item.precio = p.precioMayorista || 0;
+                                  } else if (
+                                    cliente?.tipoCliente ===
+                                    TipoCliente.instalador
+                                  ) {
+                                    item.precio = p.precioInstalador || 0;
+                                  } else {
+                                    item.precio = p.precioGeneral || 0;
+                                  }
+
                                   // si el producto esta en oferta, y la fecha actual
                                   // esta entre la fecha de inicio y fin de la oferta, usar el precio de oferta
                                   // si la fecha de fin de oferta es null, se considera que la oferta es permanente
@@ -622,9 +646,6 @@ export default function OrdenForm({
                                         new Date() <= new Date(p.finOferta))
                                   ) {
                                     item.precio = p.precioOferta;
-                                  } else {
-                                    // si no hay precio de oferta, usar el precio normal
-                                    item.precio = p.precio || 0;
                                   }
 
                                   // aplicar el factor por tipo de cambio
@@ -635,14 +656,6 @@ export default function OrdenForm({
                                     item.precio =
                                       item.precio * factores[TipoCambio.bcv];
                                   }
-
-                                  // aplicar el factor por tipo de cliente
-                                  item.precio =
-                                    item.precio *
-                                    factores[
-                                      cliente?.tipoCliente ||
-                                        TipoCliente.general
-                                    ];
 
                                   // redondear el precio a 2 decimales
                                   item.precio =

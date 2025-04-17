@@ -42,7 +42,9 @@ ProductosRouter.get(
           "producto.activo",
           "producto.descripcion",
           "producto.garantia",
-          "producto.precio",
+          "producto.precioGeneral",
+          "producto.precioInstalador",
+          "producto.precioMayorista",
           "producto.enOferta",
           "producto.precioOferta",
           "producto.inicioOferta",
@@ -150,7 +152,9 @@ ProductosRouter.get(
           "producto.activo",
           "producto.descripcion",
           "producto.garantia",
-          "producto.precio",
+          "producto.precioGeneral",
+          "producto.precioInstalador",
+          "producto.precioMayorista",
           "producto.enOferta",
           "producto.precioOferta",
           "producto.inicioOferta",
@@ -220,7 +224,9 @@ ProductosRouter.post(
       _producto.subcategoria = data.subcategoria;
       _producto.costo = data.costo;
       _producto.garantia = data.garantia;
-      _producto.precio = data.precio;
+      _producto.precioGeneral = data.precioGeneral;
+      _producto.precioInstalador = data.precioInstalador;
+      _producto.precioMayorista = data.precioMayorista;
       _producto.enOferta = data.enOferta;
       _producto.precioOferta = data.precioOferta;
       _producto.inicioOferta = data.inicioOferta;
@@ -290,7 +296,7 @@ ProductosRouter.post(
       // Inicializar el historial de precios
       const historialPrecio = new HistorialPrecio();
       historialPrecio.producto = savedProducto;
-      historialPrecio.precio = savedProducto.precio;
+      historialPrecio.precio = savedProducto.precioGeneral;
       historialPrecio.costo = savedProducto.costo;
       await AppDataSource.getRepository(HistorialPrecio).save(historialPrecio);
     } catch (e: any) {
@@ -431,7 +437,7 @@ ProductosRouter.put(
       // Update the historial precio
       const historialPrecio = new HistorialPrecio();
       historialPrecio.producto = target;
-      historialPrecio.precio = target.precio;
+      historialPrecio.precio = target.precioGeneral;
       historialPrecio.costo = target.costo;
       await AppDataSource.getRepository(HistorialPrecio).save(historialPrecio);
     } catch (e: any) {

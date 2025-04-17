@@ -71,7 +71,9 @@ async function run(): Promise<void> {
       (s) => s.nombre === p.subcategoria
     )!;
     producto.costo = p.costo || 0;
-    producto.precio = p.precio || 0;
+    producto.precioGeneral = p.precioGeneral || 0;
+    producto.precioInstalador = p.precioInstalador || 0;
+    producto.precioMayorista = p.precioMayorista || 0;
     producto.garantia = p.garantia || "Sin Garantía";
 
     // Agregar a la lista de productos

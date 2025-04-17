@@ -42,7 +42,13 @@ export default function ProductoDetails({
     return null;
   }
 
-  const { precio, enOferta, precioOferta } = producto;
+  const {
+    precioGeneral,
+    precioInstalador,
+    precioMayorista,
+    enOferta,
+    precioOferta,
+  } = producto;
 
   if (loading) {
     return (
@@ -143,11 +149,11 @@ export default function ProductoDetails({
                   </p>
                 ) : null}
 
-                {precio ? (
+                {precioGeneral ? (
                   <p className="text-sm">
                     Precio:{" "}
                     {currencyFormat({
-                      value: precio,
+                      value: precioGeneral,
                       fractionDigits: 2,
                     })}
                   </p>
@@ -160,6 +166,20 @@ export default function ProductoDetails({
                       value: precioOferta,
                       fractionDigits: 2,
                     })}
+                  </p>
+                ) : null}
+
+                {precioInstalador ? (
+                  <p className="text-sm">
+                    Precio Instalador:{" "}
+                    {currencyFormat({ value: precioInstalador })}
+                  </p>
+                ) : null}
+
+                {precioMayorista ? (
+                  <p className="text-sm">
+                    Precio Mayorista:{" "}
+                    {currencyFormat({ value: precioMayorista })}
                   </p>
                 ) : null}
               </div>

@@ -25,7 +25,9 @@ export type Producto = Pick<
   | "modelo"
   | "portada"
   | "costo"
-  | "precio"
+  | "precioGeneral"
+  | "precioInstalador"
+  | "precioMayorista"
   | "precioOferta"
   | "enOferta"
   | "inicioOferta"
@@ -125,7 +127,7 @@ export const columnasProductos: ColumnDef<Producto>[] = [
     id: "precio",
     header: "Precio",
     cell: ({ row }) => {
-      const { precio, precioOferta, enOferta, inicioOferta, finOferta } =
+      const { precioGeneral, precioOferta, enOferta, inicioOferta, finOferta } =
         row.original;
       const now = new Date();
       const isOfferActive =
@@ -139,7 +141,7 @@ export const columnasProductos: ColumnDef<Producto>[] = [
         return (
           <div className="flex flex-col items-end">
             <span className="text-sm line-through text-muted-foreground">
-              {currencyFormat({ value: precio })}
+              {currencyFormat({ value: precioGeneral })}
             </span>
             <span className="text-sm font-semibold text-primary">
               {currencyFormat({ value: precioOferta })}
@@ -150,7 +152,9 @@ export const columnasProductos: ColumnDef<Producto>[] = [
 
       return (
         <div className="text-right">
-          <span className="text-sm">{currencyFormat({ value: precio })}</span>
+          <span className="text-sm">
+            {currencyFormat({ value: precioGeneral })}
+          </span>
         </div>
       );
     },

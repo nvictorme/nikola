@@ -58,13 +58,31 @@ export class Producto extends Base implements ORMProducto {
     nullable: true,
     transformer: decimalTransformer,
   })
-  precio: number;
+  precioGeneral: number;
 
   @Column({
     type: "numeric",
     default: 0,
     precision: 10,
     scale: 2,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  precioInstalador: number;
+
+  @Column({
+    type: "numeric",
+    default: 0,
+    precision: 10,
+    scale: 2,
+    nullable: true,
+    transformer: decimalTransformer,
+  })
+  precioMayorista: number;
+
+  @Column({
+    type: "numeric",
+    default: 0,
     nullable: true,
     transformer: decimalTransformer,
   })

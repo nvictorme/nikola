@@ -40,7 +40,9 @@ interface ProductoFormData {
   subcategoria?: { id: string };
   garantia: string;
   costo: number;
-  precio: number;
+  precioGeneral: number;
+  precioInstalador: number;
+  precioMayorista: number;
   enOferta: boolean;
   precioOferta?: number;
   inicioOferta?: string | null;
@@ -99,7 +101,9 @@ export default function ProductoForm() {
       subcategoria: producto?.subcategoria,
       garantia: producto?.garantia || "",
       costo: producto?.costo || 0,
-      precio: producto?.precio || 0,
+      precioGeneral: producto?.precioGeneral || 0,
+      precioInstalador: producto?.precioInstalador || 0,
+      precioMayorista: producto?.precioMayorista || 0,
       enOferta: producto?.enOferta || false,
       precioOferta: producto?.precioOferta,
       inicioOferta: producto?.inicioOferta,
@@ -248,13 +252,13 @@ export default function ProductoForm() {
             </div>
 
             <div className="flex flex-col items-start gap-1">
-              <Label htmlFor="precio">Precio</Label>
+              <Label htmlFor="precioGeneral">Precio General</Label>
               <Input
-                id="precio"
+                id="precioGeneral"
                 type="number"
                 step="0.01"
-                defaultValue={producto?.precio}
-                {...register("precio", {
+                defaultValue={producto?.precioGeneral}
+                {...register("precioGeneral", {
                   required: "Este campo es requerido",
                   valueAsNumber: true,
                   min: {
@@ -263,9 +267,57 @@ export default function ProductoForm() {
                   },
                 })}
               />
-              {errors.precio && (
+              {errors.precioGeneral && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors.precio.message}
+                  {errors.precioGeneral.message}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="precioInstalador">Precio Instalador</Label>
+              <Input
+                id="precioInstalador"
+                type="number"
+                step="0.01"
+                defaultValue={producto?.precioInstalador}
+                {...register("precioInstalador", {
+                  required: "Este campo es requerido",
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "El precio debe ser mayor o igual a 0",
+                  },
+                })}
+              />
+              {errors.precioInstalador && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.precioInstalador.message}
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col items-start gap-1">
+              <Label htmlFor="precioMayorista">Precio Mayorista</Label>
+              <Input
+                id="precioMayorista"
+                type="number"
+                step="0.01"
+                defaultValue={producto?.precioMayorista}
+                {...register("precioMayorista", {
+                  required: "Este campo es requerido",
+                  valueAsNumber: true,
+                  min: {
+                    value: 0,
+                    message: "El precio debe ser mayor o igual a 0",
+                  },
+                })}
+              />
+              {errors.precioMayorista && (
+                <p className="text-red-500 text-sm mt-1">
+                  {errors.precioMayorista.message}
                 </p>
               )}
             </div>

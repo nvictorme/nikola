@@ -30,7 +30,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useCallback, useState, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
-import { toast } from "sonner";
 import { Trash2Icon } from "lucide-react";
 
 export interface AlmacenWithStock extends IAlmacen {
@@ -112,11 +111,6 @@ export const ItemOrdenForm = forwardRef<
 
   const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const precio = parseFloat(e.target.value) || 0;
-    if (precio < item.producto.precio) {
-      return toast.warning("El precio no puede ser menor que el precio lista", {
-        position: "top-center",
-      });
-    }
     updateItemTotal(item.cantidad, precio);
   };
 

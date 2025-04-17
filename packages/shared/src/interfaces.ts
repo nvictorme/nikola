@@ -184,7 +184,9 @@ export interface IProducto extends IBase {
 
   garantia: string;
   costo: number;
-  precio: number;
+  precioGeneral: number;
+  precioInstalador: number;
+  precioMayorista: number;
 
   enOferta: boolean;
   precioOferta: number;
