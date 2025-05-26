@@ -247,6 +247,13 @@ export default function OrdenForm({
     return () => clearTimeout(saveTimeout);
   }, [orden, watch]);
 
+  // Autoselect Sucursal if there's only one available.
+  useEffect(() => {
+    if (!sucursal && sucursales.length === 1) {
+      setValue("sucursal", sucursales[0]);
+    }
+  }, [sucursal, sucursales, setValue]);
+
   const isFormValid = useCallback(() => {
     const hasRequiredFields =
       (tipo === TipoOrden.reposicion ? true : !!cliente) && sucursal;
