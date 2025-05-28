@@ -247,12 +247,16 @@ export default function OrdenForm({
     return () => clearTimeout(saveTimeout);
   }, [orden, watch]);
 
-  // Autoselect Sucursal if there's only one available.
+  // Autoseleccionar sucursal si es una nueva orden y hay una sola sucursal.
   useEffect(() => {
-    if (!sucursal && sucursales.length === 1) {
-      setValue("sucursal", sucursales[0]);
+    // Solo ejecutar si es una nueva orden y hay una sola sucursal
+    if (!orden && sucursales.length === 1) {
+      const currentSucursal = getValues("sucursal");
+      if (!currentSucursal || !currentSucursal.id) {
+        setValue("sucursal", sucursales[0]);
+      }
     }
-  }, [sucursal, sucursales, setValue]);
+  }, [orden, sucursales, setValue, getValues]);
 
   const isFormValid = useCallback(() => {
     const hasRequiredFields =
@@ -397,7 +401,9 @@ export default function OrdenForm({
                       </p>
                     )}
                     <Select
-                      defaultValue={field.value?.id}
+                      // Por defecto se selecciona, de manera automatica, la primera sucursal disponible.
+                      defaultValue={field.value?.id || sucursales[0].id}
+                      //defaultValue={sucursal?.id}
                       disabled={!!orden}
                       onValueChange={(value) => {
                         field.onChange(
