@@ -6,7 +6,7 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc && npm run copy-templates",
+    "build": "tsc",
     "build:dev": "tsc --watch",
     "serve:dev": "node --no-deprecation --watch dist/server.js",
     "dev": "concurrently \"npm run build:dev\" \"npm run serve:dev\"",
@@ -19,8 +19,7 @@
     "seed:proveedores": "npx ts-node src/orm/seeds/proveedores.seed.ts",
     "seed:categorias": "npx ts-node src/orm/seeds/categorias.seed.ts",
     "seed:privilegios": "npx ts-node src/orm/seeds/privilegios.seed.ts",
-    "seed:productos": "npx ts-node src/orm/seeds/productos.seed.ts",
-    "copy-templates": "cp -r src/providers/pdf/templates dist/providers/pdf/"
+    "seed:productos": "npx ts-node src/orm/seeds/productos.seed.ts"
   },
   "keywords": [
     ""
