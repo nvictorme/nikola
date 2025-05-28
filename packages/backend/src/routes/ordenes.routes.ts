@@ -784,7 +784,7 @@ OrdenesRouter.put(
       // Fetch the updated order with all relations
       const updatedOrden = await AppDataSource.getRepository(
         Orden
-      ).findOneOrFail({
+      ).findOne({
         where: { id: ordenId },
         relations: [
           "sucursal",
@@ -795,11 +795,12 @@ OrdenesRouter.put(
           "items.producto",
         ],
       });
-
+      if (!updatedOrden) {
+        return res.status(404).json({ error: "Orden no encontrada" });
+      }
       if (
-        (updatedOrden.tipo === TipoOrden.venta ||
-          updatedOrden.tipo === TipoOrden.credito) &&
-        updatedOrden.estatus === EstatusOrden.confirmado
+          updatedOrden.tipo === TipoOrden.credito &&
+          updatedOrden.estatus === EstatusOrden.confirmado
       ) {
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
