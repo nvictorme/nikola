@@ -153,6 +153,7 @@ export default function OrdenForm({
           total: 0,
           validez: 1 as number,
           archivos: [] as IArchivo[],
+          sucursal: sucursales[0],
         },
   });
 
@@ -390,7 +391,8 @@ export default function OrdenForm({
                       </p>
                     )}
                     <Select
-                      defaultValue={field.value?.id}
+                      // Por defecto se selecciona, de manera automatica, la primera sucursal disponible.
+                      defaultValue={field.value?.id || sucursales[0].id}
                       disabled={!!orden}
                       onValueChange={(value) => {
                         field.onChange(
