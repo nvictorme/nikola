@@ -165,7 +165,11 @@ export const ItemOrdenForm = forwardRef<
         <div>
           <Label>Almacén</Label>
           <Select
-            value={item.almacen?.id || "none"}
+            // Por defecto se selecciona, de manera automatica, el Almacen "Principal".
+            value={
+              item.almacen?.id ||
+              almacenes.find((almacen) => almacen.nombre === "Principal")?.id
+            }
             onValueChange={handleAlmacenChange}
             disabled={isLoadingAlmacenes}
           >
@@ -181,7 +185,6 @@ export const ItemOrdenForm = forwardRef<
               />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="none">Sin almacén asignado</SelectItem>
               {almacenes?.map((almacen) => (
                 <SelectItem key={almacen.id} value={almacen.id}>
                   {almacen.nombre}:{" "}
