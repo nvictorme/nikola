@@ -28,7 +28,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useEffect, useCallback, useState, forwardRef } from "react";
+import { useEffect, useCallback, useState, useRef, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { Trash2Icon } from "lucide-react";
 
@@ -136,6 +136,30 @@ export const ItemOrdenForm = forwardRef<
     },
     [getValues, setValue, idx, almacenes]
   );
+
+  // Flag para evitar múltiples asignaciones automáticas (ahora con useRef)
+  const asignacionInicialRealizada = useRef(false);
+
+  // Asignar automáticamente el almacén "Principal" si no se ha seleccionado uno
+  // y solo si no se ha hecho una asignación inicial.
+  useEffect(() => {
+    if (
+      !asignacionInicialRealizada.current &&
+      almacenes.length > 0 &&
+      (!item.almacen || !item.almacen.id)
+    ) {
+      const principal = almacenes.find(
+        (almacen) => almacen.nombre === "Principal"
+      );
+      if (principal) {
+        handleAlmacenChange(principal.id);
+        asignacionInicialRealizada.current = true;
+      }
+    }
+    // Solo depende de almacenes
+    // Desactiva la advertencia de dependencias exhaustivas de React Hooks para este useEffect
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [almacenes]);
 
   return (
     <div
