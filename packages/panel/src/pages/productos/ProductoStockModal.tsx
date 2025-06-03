@@ -98,7 +98,14 @@ export default function ProductoStockModal({
     }
   }, [stock]);
 
-  // Reset state when modal closes
+  // Cargar almacenes cada vez que se abre el modal
+  useEffect(() => {
+    if (open) {
+      listarAlmacenes();
+    }
+  }, [open, listarAlmacenes]);
+
+  // Reset state cuando se cierra el modal, pero sin borrar almacenes globales
   useEffect(() => {
     if (!open) {
       setSelectedAlmacen("");
@@ -108,7 +115,7 @@ export default function ProductoStockModal({
         transito: 0,
         rma: 0,
       });
-      useAlmacenesStore.setState({ almacenes: [] });
+      // No borrar almacenes aquí
     }
   }, [open]);
 
