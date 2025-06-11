@@ -332,7 +332,7 @@ OrdenesRouter.post(
       // Order metadata
       newOrden.tipo = data.tipo || TipoOrden.venta;
       newOrden.validez = data.validez;
-      newOrden.estatus = EstatusOrden.pendiente;
+      newOrden.estatus = EstatusOrden.aprobado;
       newOrden.notas = data.notas;
 
       // Relationships
