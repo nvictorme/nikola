@@ -127,8 +127,16 @@ export const columnasProductos: ColumnDef<Producto>[] = [
     id: "precio",
     header: "Precio",
     cell: ({ row }) => {
-      const { precioGeneral, precioOferta, enOferta, inicioOferta, finOferta } =
-        row.original;
+      // Se muestra el precioInstalador como precio principal
+      // El precio tachado en caso de oferta es precioGeneral
+      const {
+        precioGeneral,
+        precioInstalador,
+        precioOferta,
+        enOferta,
+        inicioOferta,
+        finOferta,
+      } = row.original;
       const now = new Date();
       const isOfferActive =
         enOferta &&
@@ -140,9 +148,11 @@ export const columnasProductos: ColumnDef<Producto>[] = [
       if (isOfferActive) {
         return (
           <div className="flex flex-col items-end">
+            {/* Precio general tachado cuando hay oferta */}
             <span className="text-sm line-through text-muted-foreground">
               {currencyFormat({ value: precioGeneral })}
             </span>
+            {/* Precio de oferta */}
             <span className="text-sm font-semibold text-primary">
               {currencyFormat({ value: precioOferta })}
             </span>
@@ -150,10 +160,11 @@ export const columnasProductos: ColumnDef<Producto>[] = [
         );
       }
 
+      // Precio de instalador cuando no hay oferta
       return (
         <div className="text-right">
           <span className="text-sm">
-            {currencyFormat({ value: precioGeneral })}
+            {currencyFormat({ value: precioInstalador })}
           </span>
         </div>
       );
