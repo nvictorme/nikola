@@ -58,7 +58,8 @@ export const columnasProductos: ColumnDef<Producto>[] = [
   },
   {
     id: "stock",
-    header: "Stock",
+    // El título 'Stock' se alinea a la derecha para mejor visualización
+    header: () => <div className="text-right pr-20">Stock</div>,
     cell: ({ row }) => {
       const producto = row.original as IProducto;
       const { listarAlmacenesPorProducto } = useAlmacenesStore();
@@ -115,7 +116,8 @@ export const columnasProductos: ColumnDef<Producto>[] = [
   },
   {
     id: "costo",
-    header: "Costo",
+    // El título 'Costo' se alinea a la derecha para mejor visualización
+    header: () => <div className="text-right pr-1">Costo</div>,
     accessorFn: (row) => currencyFormat({ value: row.costo }),
     cell: ({ getValue }: CellContext<Producto, unknown>) => (
       <div className="text-right">
@@ -125,7 +127,8 @@ export const columnasProductos: ColumnDef<Producto>[] = [
   },
   {
     id: "precio",
-    header: "Precio",
+    // El título 'Precio' se alinea a la derecha para mejor visualización
+    header: () => <div className="text-right pr-2">Precio</div>,
     cell: ({ row }) => {
       // Se muestra el precioInstalador como precio principal
       // El precio tachado en caso de oferta es precioGeneral
@@ -172,7 +175,8 @@ export const columnasProductos: ColumnDef<Producto>[] = [
   },
   {
     id: "acciones",
-    header: "Acciones",
+    // El título 'Acciones' se alinea a la derecha para mejor visualización
+    header: () => <div className="text-right pr-24">Acciones</div>,
     cell: ({ row }) => {
       const producto = row.original as IProducto;
       const { user } = useAuthStore();
