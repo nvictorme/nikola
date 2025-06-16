@@ -185,8 +185,10 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       const estatusActualNivel = estatusOrden[orden.estatus];
 
       return canCreate ? (
+        // Usar 'value' en vez de 'defaultValue' para que el Select siempre refleje el estatus actual de la orden,
+        // incluso si cambia dinámicamente por sockets u otras actualizaciones externas.
         <Select
-          defaultValue={orden.estatus || EstatusOrden.pendiente}
+          value={orden.estatus || EstatusOrden.pendiente}
           onValueChange={(value) => {
             actualizarEstatusOrden(
               (row.original as IOrden).id,
