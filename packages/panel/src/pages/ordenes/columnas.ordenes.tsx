@@ -202,11 +202,20 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           </SelectTrigger>
           {/*
             Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
+            Si el tipo de orden es reposición, solo permitir seleccionar los estatus 'Aprobado', 'Confirmado', 'Enviado', 'Recibido' y 'Cancelado'.
             Para otros tipos de orden, mostrar todos los estatus posibles.
           */}
           <SelectContent>
             {(orden.tipo === TipoOrden.cotizacion
               ? [EstatusOrden.aprobado, EstatusOrden.rechazado]
+              : orden.tipo === TipoOrden.reposicion
+              ? [
+                  EstatusOrden.aprobado, // Solo para reposición
+                  EstatusOrden.confirmado, // Solo para reposición
+                  EstatusOrden.enviado, // Solo para reposición
+                  EstatusOrden.recibido, // Solo para reposición
+                  EstatusOrden.cancelado, // Solo para reposición
+                ]
               : Object.values(EstatusOrden)
             ).map((est) => (
               <SelectItem
