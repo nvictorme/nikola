@@ -200,8 +200,15 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           <SelectTrigger className={`${getEstatusColor(orden.estatus)}`}>
             <SelectValue>{orden.estatus || EstatusOrden.pendiente}</SelectValue>
           </SelectTrigger>
+          {/*
+            Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
+            Para otros tipos de orden, mostrar todos los estatus posibles.
+          */}
           <SelectContent>
-            {Object.values(EstatusOrden).map((est) => (
+            {(orden.tipo === TipoOrden.cotizacion
+              ? [EstatusOrden.aprobado, EstatusOrden.rechazado]
+              : Object.values(EstatusOrden)
+            ).map((est) => (
               <SelectItem
                 key={est}
                 value={est}
