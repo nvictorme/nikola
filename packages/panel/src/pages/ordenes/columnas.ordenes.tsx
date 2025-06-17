@@ -265,7 +265,19 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                     orden.estatus === EstatusOrden.cancelado &&
                     (est === EstatusOrden.rechazado ||
                       est === EstatusOrden.confirmado ||
-                      est === EstatusOrden.entregado))
+                      est === EstatusOrden.entregado)) ||
+                  // --- Reglas especiales para reposición ---
+                  // Si el estatus actual es aprobado, deshabilitar enviado y recibido
+                  (orden.tipo === TipoOrden.reposicion &&
+                    orden.estatus === EstatusOrden.aprobado &&
+                    (est === EstatusOrden.enviado ||
+                      est === EstatusOrden.recibido)) ||
+                  // Si el estatus actual es cancelado, deshabilitar confirmado, enviado y recibido
+                  (orden.tipo === TipoOrden.reposicion &&
+                    orden.estatus === EstatusOrden.cancelado &&
+                    (est === EstatusOrden.confirmado ||
+                      est === EstatusOrden.enviado ||
+                      est === EstatusOrden.recibido))
                   // --- Fin reglas especiales ---
                 }
               >
