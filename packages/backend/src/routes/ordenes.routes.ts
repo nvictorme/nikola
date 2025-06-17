@@ -798,12 +798,9 @@ OrdenesRouter.put(
       if (!updatedOrden) {
         return res.status(404).json({ error: "Orden no encontrada" });
       }
-      // Solo crear la transacción contable (registro en contabilidad) cuando la orden
-      // sea de tipo venta o crédito y su estatus pase a 'Confirmado'.
-      // Esto evita que se registre contablemente una orden solo aprobada.
       if (
-        [TipoOrden.credito, TipoOrden.venta].includes(updatedOrden.tipo) &&
-        updatedOrden.estatus === EstatusOrden.confirmado
+          updatedOrden.tipo === TipoOrden.credito &&
+          updatedOrden.estatus === EstatusOrden.confirmado
       ) {
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
