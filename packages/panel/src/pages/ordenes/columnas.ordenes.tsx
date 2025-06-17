@@ -245,7 +245,28 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                   (estatusOrden[est] === 0 && estatusActualNivel > 2) ||
                   // Deshabilitar estados anteriores
                   (estatusOrden[est] !== 0 &&
-                    estatusOrden[est] < estatusActualNivel)
+                    estatusOrden[est] < estatusActualNivel) ||
+                  // --- Reglas especiales para venta y crédito ---
+                  // Si el estatus actual es aprobado, deshabilitar entregado
+                  ((orden.tipo === TipoOrden.venta ||
+                    orden.tipo === TipoOrden.credito) &&
+                    orden.estatus === EstatusOrden.aprobado &&
+                    est === EstatusOrden.entregado) ||
+                  // Si el estatus actual es rechazado, deshabilitar confirmado, entregado y cancelado
+                  ((orden.tipo === TipoOrden.venta ||
+                    orden.tipo === TipoOrden.credito) &&
+                    orden.estatus === EstatusOrden.rechazado &&
+                    (est === EstatusOrden.confirmado ||
+                      est === EstatusOrden.entregado ||
+                      est === EstatusOrden.cancelado)) ||
+                  // Si el estatus actual es cancelado, deshabilitar rechazado, confirmado y entregado
+                  ((orden.tipo === TipoOrden.venta ||
+                    orden.tipo === TipoOrden.credito) &&
+                    orden.estatus === EstatusOrden.cancelado &&
+                    (est === EstatusOrden.rechazado ||
+                      est === EstatusOrden.confirmado ||
+                      est === EstatusOrden.entregado))
+                  // --- Fin reglas especiales ---
                 }
               >
                 {est}
