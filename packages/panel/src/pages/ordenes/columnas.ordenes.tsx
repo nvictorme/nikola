@@ -203,9 +203,16 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           {/*
             Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
             Si el tipo de orden es reposición, solo permitir seleccionar los estatus 'Aprobado', 'Confirmado', 'Enviado', 'Recibido' y 'Cancelado'.
+            Si el tipo de orden es Venta o Crédito, solo permitir seleccionar los estatus 'Aprobado', 'Rechazado', 'Confirmado', 'Entregado' y 'Cancelado'.
             Para otros tipos de orden, mostrar todos los estatus posibles.
           */}
           <SelectContent>
+            {/*
+              Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
+              Si el tipo de orden es reposición, solo permitir seleccionar los estatus 'Aprobado', 'Confirmado', 'Enviado', 'Recibido' y 'Cancelado'.
+              Si el tipo de orden es Venta o Crédito, solo permitir seleccionar los estatus 'Aprobado', 'Rechazado', 'Confirmado', 'Entregado' y 'Cancelado'.
+              Para otros tipos de orden, mostrar todos los estatus posibles.
+            */}
             {(orden.tipo === TipoOrden.cotizacion
               ? [EstatusOrden.aprobado, EstatusOrden.rechazado]
               : orden.tipo === TipoOrden.reposicion
@@ -215,6 +222,15 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                   EstatusOrden.enviado, // Solo para reposición
                   EstatusOrden.recibido, // Solo para reposición
                   EstatusOrden.cancelado, // Solo para reposición
+                ]
+              : orden.tipo === TipoOrden.venta ||
+                orden.tipo === TipoOrden.credito
+              ? [
+                  EstatusOrden.aprobado, // Solo para Venta y Crédito
+                  EstatusOrden.rechazado, // Solo para Venta y Crédito
+                  EstatusOrden.confirmado, // Solo para Venta y Crédito
+                  EstatusOrden.entregado, // Solo para Venta y Crédito
+                  EstatusOrden.cancelado, // Solo para Venta y Crédito
                 ]
               : Object.values(EstatusOrden)
             ).map((est) => (
