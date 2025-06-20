@@ -74,9 +74,11 @@ const ProductosPage: React.FC = () => {
   }, [categorias, listarCategorias]);
 
   // listar productos
+  // Forzamos la recarga del stock más reciente al montar la página de productos.
   useEffect(() => {
     listarProductos();
-  }, [listarProductos]);
+    // eslint-disable-next-line
+  }, []); // Forzar recarga solo al montar la página
 
   return (
     <div className="space-y-4">
