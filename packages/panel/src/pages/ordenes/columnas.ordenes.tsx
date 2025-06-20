@@ -454,8 +454,12 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                 </AlertDialogContent>
               </AlertDialog>
             ) : null}
-
-            {orden.tipo === TipoOrden.cotizacion ? (
+            {/* 
+            Solo mostrar la opción de convertir en orden si la cotización NO está rechazada
+            Esto previene que cotizaciones rechazadas puedan ser convertidas desde el frontend
+            */}
+            {orden.tipo === TipoOrden.cotizacion &&
+            orden.estatus !== EstatusOrden.rechazado ? (
               <AlertDialog open={openConvertir}>
                 <Button
                   variant="secondary"
