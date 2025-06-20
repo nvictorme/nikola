@@ -449,6 +449,7 @@ export default function OrdenForm({
                         if (value === TipoOrden.reposicion) {
                           setValue("cliente", null);
                           setValue("proveedor", null);
+                          setValue("tipoCambio", TipoCambio.usd); // Forzar USD cuando es reposición
                         }
                       }}
                       disabled={!!orden}
