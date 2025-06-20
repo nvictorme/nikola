@@ -620,7 +620,10 @@ export default function OrdenForm({
                                   //   ];
 
                                   // aplicar precio por tipo de cliente
-                                  if (
+                                  // Si es reposición, usar el costo como precio
+                                  if (tipo === TipoOrden.reposicion) {
+                                    item.precio = p.costo || 0;
+                                  } else if (
                                     cliente?.tipoCliente ===
                                     TipoCliente.mayorista
                                   ) {
