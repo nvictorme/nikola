@@ -523,6 +523,16 @@ OrdenesRouter.put(
       if (!before) {
         return res.status(404).json({ error: "Orden no encontrada" });
       }
+      // Validación para evitar convertir cotización rechazada en orden
+      if (
+        before.tipo === TipoOrden.cotizacion &&
+        before.estatus === EstatusOrden.rechazado
+      ) {
+        // Si la orden es cotización y está rechazada, no permitir conversión
+        return res.status(400).json({
+          error: "No se puede convertir una cotización rechazada en orden."
+        });
+      }
       await repo.update(ordenId, { tipo: TipoOrden.venta as TipoOrden });
       res.status(200).json({
         message: `Cotización #${before.serial} convertida en orden`,
