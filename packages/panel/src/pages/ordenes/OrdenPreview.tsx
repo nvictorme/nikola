@@ -147,11 +147,12 @@ export const OrdenPreview = ({
                           </p>
                         )}
 
-                        {item.garantia && (
+                        {/* Ocultando la garantía, pero dejando el código comentado para referencia futura */}
+                        {/* {item.garantia && (
                           <p className="text-xs italic text-gray-500 mt-1">
                             {item.garantia}
                           </p>
-                        )}
+                        )} */}
                       </div>
                     </td>
                     <td className="py-4 text-right align-top">
@@ -201,7 +202,14 @@ export const OrdenPreview = ({
                   </span>
                 </div>
               )}
-              <div className="flex justify-between">
+              {orden.credito > 0 && (
+                <div className="flex justify-between text-red-600">
+                  <span>Crédito aplicado:</span>
+                  <span>-{currencyFormat({ value: orden.credito })}</span>
+                </div>
+              )}
+              {/* Ocultando la fila de impuesto en la sección de totales, pero dejando el código comentado para referencia futura */}
+              {/* <div className="flex justify-between">
                 <span>Impuesto ({orden.impuesto}%):</span>
                 <span className="font-medium">
                   {currencyFormat({
@@ -214,13 +222,7 @@ export const OrdenPreview = ({
                       100,
                   })}
                 </span>
-              </div>
-              {orden.credito > 0 && (
-                <div className="flex justify-between text-red-600">
-                  <span>Crédito aplicado:</span>
-                  <span>-{currencyFormat({ value: orden.credito })}</span>
-                </div>
-              )}
+              </div> */}
               <div className="flex justify-between pt-3">
                 <span className="font-bold">Total:</span>
                 <span className="font-bold">
