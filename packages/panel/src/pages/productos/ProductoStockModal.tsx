@@ -72,10 +72,16 @@ export default function ProductoStockModal({
     }
   );
 
-  // Load stock when almacén changes
+  // Estado local para mostrar un spinner mientras se carga el stock del almacén seleccionado
+  const [loadingStock, setLoadingStock] = useState(false);
+
+  // Cuando cambia el almacén seleccionado, se solicita el stock y se muestra un spinner hasta que termina
   useEffect(() => {
     if (selectedAlmacen && producto) {
-      getStock(producto.id, selectedAlmacen);
+      setLoadingStock(true);
+      getStock(producto.id, selectedAlmacen).finally(() =>
+        setLoadingStock(false)
+      );
     }
   }, [selectedAlmacen, producto, getStock]);
 
@@ -160,63 +166,76 @@ export default function ProductoStockModal({
                 </Select>
               </div>
 
-              {selectedAlmacen && (
-                <>
-                  <div className="space-y-2">
-                    <Label>Actual</Label>
-                    <Input
-                      type="number"
-                      value={currentStock.actual?.toString() || "0"}
-                      onChange={(e) =>
-                        setCurrentStock({
-                          ...currentStock,
-                          actual: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
+              {selectedAlmacen &&
+                // Si loadingStock es true, se muestra un spinner en vez de los inputs de stock
+                (loadingStock ? (
+                  <div className="flex justify-center items-center py-8">
+                    <Spinner />
                   </div>
-                  <div className="space-y-2">
-                    <Label>Reservado</Label>
-                    <Input
-                      type="number"
-                      value={currentStock.reservado?.toString() || "0"}
-                      onChange={(e) =>
-                        setCurrentStock({
-                          ...currentStock,
-                          reservado: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>En Tránsito</Label>
-                    <Input
-                      type="number"
-                      value={currentStock.transito?.toString() || "0"}
-                      onChange={(e) =>
-                        setCurrentStock({
-                          ...currentStock,
-                          transito: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>RMA</Label>
-                    <Input
-                      type="number"
-                      value={currentStock.rma?.toString() || "0"}
-                      onChange={(e) =>
-                        setCurrentStock({
-                          ...currentStock,
-                          rma: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                  <Button onClick={handleStockSubmit}>Actualizar Stock</Button>
-                </>
-              )}
+                ) : (
+                  // Si loadingStock es false, se muestran los inputs para modificar el stock
+                  <>
+                    {/* Input para stock actual */}
+                    <div className="space-y-2">
+                      <Label>Actual</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.actual?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            actual: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    {/* Input para stock reservado */}
+                    <div className="space-y-2">
+                      <Label>Reservado</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.reservado?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            reservado: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    {/* Input para stock en tránsito */}
+                    <div className="space-y-2">
+                      <Label>En Tránsito</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.transito?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            transito: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    {/* Input para stock RMA */}
+                    <div className="space-y-2">
+                      <Label>RMA</Label>
+                      <Input
+                        type="number"
+                        value={currentStock.rma?.toString() || "0"}
+                        onChange={(e) =>
+                          setCurrentStock({
+                            ...currentStock,
+                            rma: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                    <Button onClick={handleStockSubmit}>
+                      Actualizar Stock
+                    </Button>
+                  </>
+                ))}
             </div>
           )}
         </div>
