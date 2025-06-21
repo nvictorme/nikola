@@ -180,11 +180,21 @@ const OrdenesPage: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Todos">Todos</SelectItem>
-                {Object.values(EstatusOrden).map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
-                  </SelectItem>
-                ))}
+                {/* Solo se muestran los estatus que NO son Pendiente, Procesando ni Cerrado */}
+                {Object.values(EstatusOrden)
+                  .filter(
+                    (c) =>
+                      ![
+                        EstatusOrden.pendiente,
+                        EstatusOrden.procesando,
+                        EstatusOrden.cerrado,
+                      ].includes(c)
+                  )
+                  .map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
