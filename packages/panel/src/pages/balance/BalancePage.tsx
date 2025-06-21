@@ -43,6 +43,7 @@ export default function TransactionPage() {
     limit,
     setPage,
     setLimit,
+    reset, // Método para limpiar el estado global del store de transacciones
   } = useTransaccionesStore();
 
   useEffect(() => {
@@ -52,6 +53,14 @@ export default function TransactionPage() {
       setPersona(null);
     };
   }, [listarTransacciones, persona, limit, page]);
+
+  // Limpiar el cliente seleccionado y el store de transacciones al desmontar la página de Balance
+  useEffect(() => {
+    return () => {
+      setPersona(null); // Limpia el cliente seleccionado
+      reset(); // Limpia el estado global del store (balance, pagos, reembolsos, transacciones, etc.)
+    };
+  }, [reset]);
 
   const [runTour, setRunTour] = useState(false);
 
