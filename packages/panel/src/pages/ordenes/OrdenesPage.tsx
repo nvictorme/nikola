@@ -216,12 +216,21 @@ const OrdenesPage: React.FC = () => {
           hideFilter
         />
       )}
-      <div className="fixed bottom-4 left-4 z-50 group">
-        <div className="w-[300px] h-[200px] transition-all duration-300 ease-in-out transform translate-y-[180px] group-hover:translate-y-0">
+      {/* Widget de cotización flotante, solo visible una franja de 35px pegada al borde inferior. Al hacer hover se expande. */}
+      <div className="fixed bottom-0 left-4 z-50" style={{ width: 300 }}>
+        <div
+          className="group w-full transition-all duration-300 ease-in-out overflow-hidden rounded-t-lg shadow border border-gray-200 bg-white"
+          style={{ height: "35px" }} // Altura inicial visible
+          // Al hacer hover, expande el widget; al salir, lo colapsa
+          onMouseEnter={(e) => (e.currentTarget.style.height = "263px")}
+          onMouseLeave={(e) => (e.currentTarget.style.height = "35px")}
+        >
+          {/* Iframe de elcamb.io, siempre ocupa 263px pero solo se muestra completo al expandirse */}
           <iframe
             src="https://elcamb.io/?embed=true"
-            className="w-full h-full rounded-lg border-0"
+            className="w-full h-[263px] rounded-lg border-0"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            style={{ pointerEvents: "auto" }}
           />
         </div>
       </div>
