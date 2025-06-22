@@ -13,7 +13,7 @@ import { EditIcon, EyeIcon } from "lucide-react";
 
 export type Persona = Pick<
   IPersona,
-  "nif" | "empresa" | "email" | "nombre" | "apellido" | "notas"
+  "nif" | "empresa" | "nombre" | "apellido" | "notas"
 >;
 
 export const columnasPersonas: ColumnDef<Persona>[] = [
@@ -32,10 +32,6 @@ export const columnasPersonas: ColumnDef<Persona>[] = [
   {
     accessorKey: "apellido",
     header: "Apellido",
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
   },
   {
     accessorKey: "notas",
