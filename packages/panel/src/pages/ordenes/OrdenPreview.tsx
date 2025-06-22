@@ -52,9 +52,20 @@ export const OrdenPreview = ({
                 <h2 className="text-2xl font-bold mb-1">
                   Orden #{orden.serial}
                 </h2>
+                {/* Mostrando el tipo de orden en negritas */}
                 <span className="text-sm text-gray-500">
-                  Tipo: {orden.tipo}
+                  <span className="font-semibold">Tipo:</span> {orden.tipo}
                 </span>
+                {/* Mostrando el tiempo de validez en negritas solo para crédito y cotización */}
+                {(orden.tipo === TipoOrden.credito ||
+                  orden.tipo === TipoOrden.cotizacion) &&
+                  orden.validez && (
+                    <span className="text-sm text-gray-500 block">
+                      <span className="font-semibold">Tiempo de Validez:</span>{" "}
+                      {orden.validez} día
+                      {orden.validez > 1 ? "s" : ""}
+                    </span>
+                  )}
               </div>
               <div className="text-right">
                 <p className="font-semibold">Fecha de Orden:</p>
