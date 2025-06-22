@@ -56,7 +56,6 @@ import { IArchivo } from "shared/interfaces";
 import Joyride, { CallBackProps, Step } from "react-joyride";
 import { useConfiguracionStore } from "@/store/configuracion.store";
 import { useProveedoresStore } from "@/store/proveedores.store";
-import { useProductosStore } from "@/store/productos.store";
 const orderSteps: Step[] = [
   {
     target: "body",
