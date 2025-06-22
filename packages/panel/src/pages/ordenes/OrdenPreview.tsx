@@ -34,7 +34,13 @@ export const OrdenPreview = ({
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
         <DialogTitle className="sr-only">Orden #{orden.serial}</DialogTitle>
         <DialogDescription className="sr-only">
-          Fecha: {new Date(orden.fechaCreado).toLocaleDateString()}
+          {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
+          Fecha:{" "}
+          {new Date(orden.fechaCreado).toLocaleDateString("es-ES", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
         </DialogDescription>
 
         {/* Scrollable container */}
@@ -52,7 +58,14 @@ export const OrdenPreview = ({
               </div>
               <div className="text-right">
                 <p className="font-semibold">Fecha de Orden:</p>
-                <p>{new Date(orden.fechaCreado).toLocaleDateString()}</p>
+                {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
+                <p>
+                  {new Date(orden.fechaCreado).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </p>
                 {orden.tipoCambio === "BCV" && (
                   <p className="text-sm text-gray-500 mt-1">
                     Tasa BCV: {orden.tasaCambio}
