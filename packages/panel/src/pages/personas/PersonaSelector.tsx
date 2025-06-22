@@ -134,6 +134,22 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                     <p className="text-sm text-muted-foreground">
                       {persona.nif}
                     </p>
+                    {/* Mostrar si el cliente tiene crédito habilitado o no, con estilos personalizados y tamaño de fuente más pequeño */}
+                    <p className="text-sm">
+                      <span className="font-semibold">Crédito:</span>{" "}
+                      {/* Si tiene crédito habilitado, el texto es verde; si no, color normal */}
+                      <span
+                        className={
+                          persona.creditoHabilitado
+                            ? "font-normal text-green-600"
+                            : "font-normal"
+                        }
+                      >
+                        {persona.creditoHabilitado
+                          ? "Habilitado"
+                          : "No habilitado"}
+                      </span>
+                    </p>
                   </div>
                 </div>
               ))}
