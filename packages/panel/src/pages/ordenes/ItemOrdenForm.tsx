@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useCallback, useState, useRef, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
-import { Trash2Icon } from "lucide-react";
+import { Trash2Icon, RefreshCwIcon } from "lucide-react";
 
 export interface AlmacenWithStock extends IAlmacen {
   stock: {
@@ -94,11 +94,13 @@ export const ItemOrdenForm = forwardRef<
   }, [cargarAlmacenes]);
 
   const updateItemTotal = useCallback(
-    (cantidad: number, precio: number) => {
+    (cantidad: number, precio: number, manual: boolean = false) => {
       const newItems = [...getValues("items")];
       newItems[idx].cantidad = cantidad;
       newItems[idx].precio = precio;
       newItems[idx].total = cantidad * precio;
+      // Si el cambio es manual, marcar el flag para evitar que el precio se sobrescriba automáticamente
+      if (manual) newItems[idx].precioManual = true;
       setValue("items", newItems);
     },
     [getValues, setValue, idx]
@@ -111,7 +113,7 @@ export const ItemOrdenForm = forwardRef<
 
   const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const precio = parseFloat(e.target.value) || 0;
-    updateItemTotal(item.cantidad, precio);
+    updateItemTotal(item.cantidad, precio, true); // Marcar como manual
   };
 
   const handleNotasChange = useCallback(
@@ -251,17 +253,39 @@ export const ItemOrdenForm = forwardRef<
         </div>
         <div>
           <Label>Precio</Label>
-          <Input
-            type="number"
-            {...register(`items.${idx}.precio` as const, {
-              required: "Precio requerido",
-              valueAsNumber: true,
-              min: { value: 0, message: "Debe ser mayor o igual a 0" },
-            })}
-            defaultValue={item.precio}
-            className="w-full p-2 border border-gray-300 rounded-lg item-precio"
-            onChange={handlePrecioChange}
-          />
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
+              {...register(`items.${idx}.precio` as const, {
+                required: "Precio requerido",
+                valueAsNumber: true,
+                min: { value: 0, message: "Debe ser mayor o igual a 0" },
+              })}
+              // Usar value en vez de defaultValue para que el campo se actualice si item.precio cambia por tipo de cambio u otros factores
+              value={item.precio}
+              className="w-full p-2 border border-gray-300 rounded-lg item-precio"
+              onChange={handlePrecioChange}
+            />
+            {/* Botón para restablecer el precio automático si el usuario lo editó manualmente.
+                Usa el mismo estilo visual que el botón 'Orden' de OrdenesPage, pero solo con el icono.
+                Se le aumenta el ancho mínimo para mejor presencia visual. */}
+            {item.precioManual && (
+              <Button
+                type="button"
+                size="default"
+                variant="default"
+                className="gap-2 p-2 min-w-[48px]"
+                title="Restablecer precio automático"
+                onClick={() => {
+                  const newItems = [...getValues("items")];
+                  newItems[idx].precioManual = false;
+                  setValue("items", newItems);
+                }}
+              >
+                <RefreshCwIcon className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 
