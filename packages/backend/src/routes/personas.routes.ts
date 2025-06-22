@@ -89,10 +89,22 @@ PersonasRouter.post(
       newPersona.apellido = persona.apellido;
       newPersona.email = persona.email;
       newPersona.nif = persona.nif;
+      // Si existe empresa, se asigna
       persona.empresa && (newPersona.empresa = persona.empresa);
+      // Si existe teléfono, se asigna
       persona.telefono && (newPersona.telefono = persona.telefono);
       // Guardar las notas del cliente si existen
       persona.notas && (newPersona.notas = persona.notas);
+      // Guardar el tipo de cliente si viene en el request
+      if (typeof persona.tipoCliente !== "undefined")
+        newPersona.tipoCliente = persona.tipoCliente;
+      // Guardar si el crédito está habilitado si viene en el request
+      if (typeof persona.creditoHabilitado !== "undefined")
+        newPersona.creditoHabilitado = persona.creditoHabilitado;
+      // Guardar el límite de crédito si viene en el request
+      if (typeof persona.creditoLimite !== "undefined")
+        newPersona.creditoLimite = persona.creditoLimite;
+      // Guardar la persona en la base de datos
       const savedPersona = await AppDataSource.getRepository(Persona).save(
         newPersona
       );
