@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useOrdenesStore } from "@/store/ordenes.store";
 import { Controller, useForm } from "react-hook-form";
-import { IItemOrden, IOrden } from "shared/interfaces";
+import { IItemOrden, IOrden, IPersona, IFactores } from "shared/interfaces";
 import PersonaSelector from "../personas/PersonaSelector";
 import { useAuthStore } from "@/store/auth.store";
 import {
@@ -56,6 +56,7 @@ import { IArchivo } from "shared/interfaces";
 import Joyride, { CallBackProps, Step } from "react-joyride";
 import { useConfiguracionStore } from "@/store/configuracion.store";
 import { useProveedoresStore } from "@/store/proveedores.store";
+import { useProductosStore } from "@/store/productos.store";
 const orderSteps: Step[] = [
   {
     target: "body",
@@ -102,6 +103,79 @@ const orderSteps: Step[] = [
   },
 ];
 
+// Utilidades para calcular el precio actual de un producto según la lógica de la app
+/**
+ * Calcula el precio "actual" de un producto según el catálogo, tipo de cliente, tipo de orden,
+ * tipo de cambio y ofertas. Esta función se usa para comparar con el precio guardado en la orden
+ * y así detectar si el precio fue modificado manualmente.
+ */
+function calcularPrecioActual(
+  item: IItemOrden,
+  cliente: IPersona | null,
+  tipo: TipoOrden,
+  tipoCambio: TipoCambio,
+  factores: IFactores
+) {
+  let precio = item.producto.precioGeneral || 0;
+  if (tipo === TipoOrden.reposicion) {
+    precio = item.producto.costo || 0;
+  } else if (cliente?.tipoCliente === TipoCliente.mayorista) {
+    precio = item.producto.precioMayorista || 0;
+  } else if (cliente?.tipoCliente === TipoCliente.instalador) {
+    precio = item.producto.precioInstalador || 0;
+  }
+  // Oferta
+  if (
+    item.producto.enOferta &&
+    item.producto.precioOferta &&
+    item.producto.inicioOferta &&
+    (!item.producto.finOferta
+      ? new Date() >= new Date(item.producto.inicioOferta)
+      : new Date() >= new Date(item.producto.inicioOferta) &&
+        new Date() <= new Date(item.producto.finOferta))
+  ) {
+    precio = item.producto.precioOferta;
+  }
+  // Tipo de cambio
+  if (tipoCambio === TipoCambio.usd) {
+    precio = precio * factores[TipoCambio.usd];
+  } else if (tipoCambio === TipoCambio.bcv) {
+    precio = precio * factores[TipoCambio.bcv];
+  }
+  // Redondear
+  precio = Math.round(precio * 100) / 100;
+  return precio;
+}
+
+/**
+ * Marca cada item con precioManual: true si el precio guardado en la orden es diferente
+ * al precio actual calculado. Esto permite que, al editar una orden, los precios personalizados
+ * no se sobrescriban por los precios del catálogo.
+ */
+function ajustarItemsConPrecioManual(
+  items: IItemOrden[],
+  cliente: IPersona | null,
+  tipo: TipoOrden,
+  tipoCambio: TipoCambio,
+  factores: IFactores
+): IItemOrden[] {
+  if (!items) return items;
+  return items.map((item) => {
+    const precioActual = calcularPrecioActual(
+      item,
+      cliente,
+      tipo,
+      tipoCambio,
+      factores
+    );
+    // Si el precio guardado es diferente al calculado, marcar precioManual
+    if (Number(item.precio) !== Number(precioActual)) {
+      return { ...item, precioManual: true };
+    }
+    return { ...item, precioManual: false };
+  });
+}
+
 export default function OrdenForm({
   orden,
   onCloseForm,
@@ -111,16 +185,13 @@ export default function OrdenForm({
 }) {
   const { user } = useAuthStore();
   const isAdmin = isSuperAdmin(user);
-
   const { sucursales } = useSucursalesStore();
-
+  const { factores } = useConfiguracionStore();
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [clienteDialogOpen, setClienteDialogOpen] = useState(false);
   const [productosDialogOpen, setProductosDialogOpen] = useState(false);
   const [idOrden] = useState<string | null>(orden?.id || uuidv4());
-
-  const { factores } = useConfiguracionStore();
 
   const { proveedores, listarTodosLosProveedores } = useProveedoresStore();
 
@@ -138,7 +209,18 @@ export default function OrdenForm({
     formState: { errors },
   } = useForm<IOrden>({
     defaultValues: orden?.id
-      ? { ...orden }
+      ? {
+          ...orden,
+          // Al editar una orden, ajusta los items para marcar precioManual si el precio guardado
+          // es diferente al precio actual del catálogo. Así se respeta el precio personalizado.
+          items: ajustarItemsConPrecioManual(
+            orden.items,
+            orden.cliente,
+            orden.tipo,
+            orden.tipoCambio,
+            factores
+          ),
+        }
       : {
           id: idOrden || undefined,
           ...(user && { vendedor: user }),
