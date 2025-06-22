@@ -34,7 +34,15 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   {
     accessorKey: "fechaCreado",
     header: "Fecha",
-    accessorFn: (row) => new Date(row.fechaCreado).toLocaleDateString(),
+    // Formatea la fecha en formato 'dd/mm/yyyy' usando la configuración regional 'es-ES'
+    accessorFn: (row) => {
+      const fecha = new Date(row.fechaCreado);
+      return fecha.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    },
   },
   {
     accessorKey: "referencia",
