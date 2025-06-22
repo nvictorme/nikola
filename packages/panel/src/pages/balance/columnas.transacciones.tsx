@@ -33,7 +33,8 @@ export type Transaccion = Pick<
 export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   {
     accessorKey: "fechaCreado",
-    header: "Fecha",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Fecha</div>,
     // Formatea la fecha en formato 'dd/mm/yyyy' usando la configuración regional 'es-ES'
     accessorFn: (row) => {
       const fecha = new Date(row.fechaCreado);
@@ -46,7 +47,8 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "referencia",
-    header: "Referencia",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Referencia</div>,
     accessorFn: (row) =>
       `T-${row.referencia < 10 ? "00" : row.referencia < 100 ? "0" : ""}${
         row.referencia
@@ -54,7 +56,8 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "descripcion",
-    header: "Descripción",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Descripción</div>,
     cell: ({ row }) => {
       const transaccion = row.original as Transaccion;
       return <div className="text-xs">{transaccion.descripcion}</div>;
@@ -62,11 +65,13 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "tipo",
-    header: "Tipo",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Tipo</div>,
   },
   {
     accessorKey: "estatusPago",
-    header: "Estatus",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Estatus</div>,
     cell: ({ row }) => {
       const { user } = useAuthStore();
       const isAdmin = isSuperAdmin(user);
@@ -117,11 +122,13 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "metodoPago",
-    header: "Método",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Método</div>,
   },
   {
     accessorKey: "archivos",
-    header: "Comprobantes",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Comprobantes</div>,
     cell: ({ row }) => {
       const archivos = row.original.archivos as IArchivo[];
       if (!archivos.length) return null;
@@ -157,12 +164,14 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "monto",
-    header: "Monto",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Monto</div>,
     accessorFn: (row) => currencyFormat({ value: row.monto }),
   },
   {
     accessorKey: "balance",
-    header: "Balance",
+    // Centra el título de la columna usando una función en header
+    header: () => <div className="text-center">Balance</div>,
     cell: ({ row }) => {
       const tipo = row.original.tipo;
       const estatus = row.original.estatusPago;
