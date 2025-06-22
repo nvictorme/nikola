@@ -171,7 +171,15 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   {
     accessorKey: "fechaCreado",
     header: "Fecha",
-    accessorFn: (row) => new Date(row.fechaCreado).toLocaleDateString(),
+    // Formatear la fecha como día/mes/año usando la configuración regional 'es-ES'
+    accessorFn: (row) => {
+      const fecha = new Date(row.fechaCreado);
+      return fecha.toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      });
+    },
   },
   {
     id: "estatus",
