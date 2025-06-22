@@ -127,9 +127,10 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                     <p className="font-semibold">
                       {persona.nombre} {persona.apellido}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    {/*
+                      Se ocultó el correo electrónico del cliente en la lista de selección
                       {persona.email}
-                    </p>
+                    */}
                     <p className="text-sm text-muted-foreground">
                       {persona.nif}
                     </p>
