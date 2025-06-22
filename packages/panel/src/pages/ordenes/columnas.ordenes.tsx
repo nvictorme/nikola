@@ -170,7 +170,8 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     accessorKey: "fechaCreado",
-    header: "Fecha",
+    // Centrar el encabezado y la celda de la columna Fecha
+    header: () => <div className="text-center w-full">Fecha</div>,
     // Formatear la fecha como día/mes/año usando la configuración regional 'es-ES'
     accessorFn: (row) => {
       const fecha = new Date(row.fechaCreado);
@@ -180,6 +181,10 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
         year: "numeric",
       });
     },
+    cell: ({ getValue }) => (
+      // Centrar el contenido de la celda Fecha
+      <div className="text-center w-full">{String(getValue() ?? "")}</div>
+    ),
   },
   {
     id: "estatus",
@@ -227,32 +232,27 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                   estatusActualNivel,
                 })}
               >
-                {est}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      ) : (
-        <div className="flex items-center gap-2">
-          <span
-            className={`px-2 py-1 text-xs rounded-full ${getEstatusColor(
-              orden.estatus
-            )}`}
-          >
-            {orden.estatus}
-          </span>
-        </div>
-      );
-    },
+                {orden.estatus}
+              </span>
+            </div>
+          );
+        })()}
+      </div>
+    ),
   },
   {
     accessorKey: "tipo",
-    header: "Tipo",
+    // Centrar el encabezado y la celda de la columna Tipo
+    header: () => <div className="text-center w-full">Tipo</div>,
     accessorFn: (row) => row.tipo,
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{String(getValue() ?? "")}</div>
+    ),
   },
   {
     accessorKey: "cliente",
-    header: "Cliente",
+    // Centrar el encabezado y la celda de la columna Cliente
+    header: () => <div className="text-center w-full">Cliente</div>,
     accessorFn: (row) => {
       const cliente = row.cliente;
       if (!cliente) return null;
@@ -264,16 +264,27 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       }
       return clienteStr;
     },
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{String(getValue() ?? "")}</div>
+    ),
   },
   {
     accessorKey: "proveedor",
-    header: "Proveedor",
+    // Centrar el encabezado y la celda de la columna Proveedor
+    header: () => <div className="text-center w-full">Proveedor</div>,
     accessorFn: (row) => row.proveedor?.marca,
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{String(getValue() ?? "")}</div>
+    ),
   },
   {
     accessorKey: "total",
-    header: "Total (USD)",
+    // Centrar el encabezado y la celda de la columna Total (USD)
+    header: () => <div className="text-center w-full">Total (USD)</div>,
     accessorFn: (row) => currencyFormat({ value: row.total || 0 }),
+    cell: ({ getValue }) => (
+      <div className="text-center w-full">{String(getValue() ?? "")}</div>
+    ),
   },
   {
     accessorKey: "archivos",
@@ -313,8 +324,10 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     id: "acciones",
-    header: "Acciones",
-    cell: ({ row }) => {
+    // Centrar solo el encabezado de la columna Acciones, no el contenido
+    header: () => <div className="text-center w-full">Acciones</div>,
+    cell: (props) => {
+      const { row } = props;
       const orden = row.original as IOrden;
       const { user } = useAuthStore();
       const isAdmin = isSuperAdmin(user);
@@ -329,7 +342,6 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
         actualizarEstatusOrden,
       } = useOrdenesStore();
       const [openEnvio, setOpenEnvio] = useState<boolean>(false);
-
       const canEdit = useMemo(() => {
         return [
           EstatusOrden.pendiente,
@@ -337,13 +349,11 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           EstatusOrden.aprobado,
         ].includes(orden.estatus);
       }, [orden.estatus]);
-
       const canAddTracking = useMemo(() => {
         return [EstatusOrden.procesando, EstatusOrden.enviado].includes(
           orden.estatus
         );
       }, [orden.estatus]);
-
       return (
         <>
           <div className="flex gap-2">
