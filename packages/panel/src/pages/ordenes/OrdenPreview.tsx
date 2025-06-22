@@ -91,7 +91,8 @@ export const OrdenPreview = ({
                       {orden.cliente?.nombre} {orden.cliente?.apellido}
                     </p>
                   ) : null}
-                  <p className="text-sm">{orden.cliente?.email}</p>
+                  {/* Se ocultó el correo del cliente por requerimiento */}
+                  {/* <p className="text-sm">{orden.cliente?.email}</p> */}
                   <p className="text-sm">{orden.cliente?.telefono}</p>
                 </div>
               </div>
@@ -127,7 +128,8 @@ export const OrdenPreview = ({
                     {orden.vendedor.nombre} {orden.vendedor.apellido}
                   </p>
                 ) : null}
-                <p className="text-sm">{orden.vendedor.email}</p>
+                {/* Se ocultó el correo del vendedor por requerimiento */}
+                {/* <p className="text-sm">{orden.vendedor.email}</p> */}
                 <p className="text-sm">{orden.vendedor.telefono}</p>
               </div>
             </div>
