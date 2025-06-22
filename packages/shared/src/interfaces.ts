@@ -211,6 +211,10 @@ export interface IItemOrden extends IBase {
   notas: string;
   almacen: IAlmacen | null;
   garantia: string;
+  /** Nuevo: Indica si el precio fue editado manualmente por el usuario.
+   * Si es true, el precio no se sobrescribe automáticamente al cambiar el tipo de cambio u otros factores.
+   */
+  precioManual?: boolean;
 }
 
 export interface IOrden extends IBase {
