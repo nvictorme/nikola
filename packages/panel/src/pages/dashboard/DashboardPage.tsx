@@ -1,5 +1,12 @@
 // =============================
 // Cambios realizados en este archivo:
+// - Se descomentó y agregó fetchChartsData al useDashboardStore y al useEffect de montaje para asegurar la actualización de los datos de gráficos (ventas diarias, reposiciones, etc.).
+// - Se agregó un log para mostrar el contenido de charts.dailySales y facilitar la depuración de ventas diarias.
+// - Se mantiene fetchDeudores y fetchDashboardData en el useEffect para asegurar la actualización de la lista de deudores y totales de deuda.
+// - El cálculo de Total Ventas del Día ahora suma todas las ventas del día actual presentes en charts.dailySales.
+// =============================
+// =============================
+// Cambios realizados en este archivo:
 // - Se agregó una nueva fila de MetricCards para mostrar la valoración de inventario (COSTO y VENTA)
 //   justo debajo de la fila de "Total General de Deuda de Clientes" y "Total Reposicion Mes",
 //   manteniendo el mismo ancho y estilo visual.
@@ -128,18 +135,23 @@ const DebtorsList = ({ deudores }: { deudores: IPersona[] }) => {
   );
 };
 
+// Definir tipo para los datos de ventas diarias
+interface DailySale {
+  date: string | Date;
+  total: number;
+}
+
 const DashboardPage: React.FC = () => {
   const {
     isLoading,
     isLoadingCharts,
     ventasMensuales,
     totalVentasMes,
-    promedioVenta,
     charts,
     deudores,
-    // fetchDashboardData,
-    // fetchChartsData,
-    // fetchDeudores,
+    fetchDashboardData,
+    fetchChartsData, // Descomentar para asegurar actualización de charts
+    fetchDeudores,
     // Líneas comentadas: estas funciones se extraían del store pero no se usan en el componente.
   } = useDashboardStore();
 
@@ -177,6 +189,19 @@ const DashboardPage: React.FC = () => {
       listarAlmacenes();
     }
   }, [almacenes, listarAlmacenes]);
+
+  // Recargar datos del dashboard, charts y deudores al montar el componente
+  React.useEffect(() => {
+    if (typeof fetchDashboardData === "function") {
+      fetchDashboardData();
+    }
+    if (typeof fetchChartsData === "function") {
+      fetchChartsData();
+    }
+    if (typeof fetchDeudores === "function") {
+      fetchDeudores();
+    }
+  }, [fetchDashboardData, fetchChartsData, fetchDeudores]);
 
   // Funciones para calcular cada valoración bajo pedido
   const calcularValorCosto = async () => {
@@ -259,6 +284,23 @@ const DashboardPage: React.FC = () => {
     0
   );
 
+  // =============================
+  // Cálculo del total de ventas del día actual (más robusto)
+  // =============================
+  const today = new Date();
+  const todayString = today.toISOString().split("T")[0]; // yyyy-mm-dd
+  let totalVentasDia = 0;
+  if (charts && charts.dailySales && Array.isArray(charts.dailySales)) {
+    // Sumar todas las ventas del día actual (no solo la primera coincidencia)
+    totalVentasDia = (charts.dailySales as DailySale[])
+      .filter((d) => {
+        const dDate =
+          typeof d.date === "string" ? d.date.split("T")[0] : d.date;
+        return dDate === todayString;
+      })
+      .reduce((acc, d) => acc + (d.total || 0), 0);
+  }
+
   // LOG para depuración: Verificar productos y estructura
   console.log("productos:", productos);
   if (productos.length > 0) {
@@ -307,6 +349,9 @@ const DashboardPage: React.FC = () => {
     }
   });
 
+  // LOG para depuración: Verificar ventas diarias
+  console.log("charts.dailySales", charts.dailySales);
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -332,9 +377,16 @@ const DashboardPage: React.FC = () => {
           icon={BanknoteIcon}
           className="bg-blue-500/70 dark:bg-blue-400/70"
         />
-        <MetricCard
+        {/* <MetricCard
           title="Promedio por Venta"
           value={currencyFormat({ value: promedioVenta })}
+          icon={BarChart2}
+          className="bg-amber-500/70 dark:bg-amber-400/70"
+        /> */}
+        {/* Nuevo MetricCard: Total Ventas del Día */}
+        <MetricCard
+          title="Total Ventas del Día"
+          value={currencyFormat({ value: totalVentasDia })}
           icon={BarChart2}
           className="bg-amber-500/70 dark:bg-amber-400/70"
         />
@@ -592,13 +644,8 @@ export default DashboardPage;
 
 // =============================
 // Cambios realizados en este archivo:
-// - Se agregó una nueva fila de MetricCards para mostrar la valoración de inventario (COSTO y VENTA)
-//   justo debajo de la fila de "Total General de Deuda de Clientes" y "Total Reposicion Mes",
-//   manteniendo el mismo ancho y estilo visual.
-// - Se corrigió el uso de los íconos en los nuevos MetricCards para que sean visibles y consistentes.
-// - Se utiliza currencyFormat para mostrar los totales de inventario de forma consistente con el resto del dashboard.
-// - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
-// - Se agregó un MetricCard "Cantidad de Productos Registrados" que ahora muestra el total real de productos usando el valor 'total' del store, no solo la cantidad de la página actual.
-// - Se cambió el icono de este MetricCard a 'Package' de Lucide para mayor claridad visual.
-//   Puedes ver y elegir otros iconos en https://lucide.dev/icons/
+// - Se comenta todo lo referente a 'promedioVenta' (ya no se usa en el dashboard).
+// - Se agrega el cálculo de 'totalVentasDia' a partir de charts.dailySales, mostrando el total de ventas del día actual.
+// - Se reemplaza el MetricCard de 'Promedio por Venta' por uno nuevo llamado 'Total Ventas del Día'.
+// - Se tipifica correctamente el objeto de ventas diarias para evitar el uso de 'any'.
 // =============================
