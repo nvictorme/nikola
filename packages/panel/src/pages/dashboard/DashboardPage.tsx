@@ -6,6 +6,9 @@
 // - Se corrigió el uso de los íconos en los nuevos MetricCards para que sean visibles y consistentes.
 // - Se utiliza currencyFormat para mostrar los totales de inventario de forma consistente con el resto del dashboard.
 // - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
+// - Se agregó un MetricCard "Cantidad de Productos Registrados" que ahora muestra el total real de productos usando el valor 'total' del store, no solo la cantidad de la página actual.
+// - Se cambió el icono de este MetricCard a 'Package' de Lucide para mayor claridad visual.
+//   Puedes ver y elegir otros iconos en https://lucide.dev/icons/
 // =============================
 
 import React from "react";
@@ -16,6 +19,7 @@ import {
   BanknoteIcon,
   BarChart2,
   AlertCircle,
+  Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { currencyFormat } from "shared/helpers";
@@ -142,6 +146,7 @@ const DashboardPage: React.FC = () => {
   const almacenes = useAlmacenesStore((state) => state.almacenes);
   const listarAlmacenes = useAlmacenesStore((state) => state.listarAlmacenes);
   const productos = useProductosStore((state) => state.productos);
+  const totalProductos = useProductosStore((state) => state.total);
   const [valorCosto, setValorCosto] = React.useState<number | null>(null);
   const [valorVenta, setValorVenta] = React.useState<number | null>(null);
   const [calculandoCosto, setCalculandoCosto] = React.useState(false);
@@ -347,7 +352,12 @@ const DashboardPage: React.FC = () => {
           icon={BarChart2}
           className="bg-indigo-500/70 dark:bg-indigo-400/70"
         />
-        <div />
+        <MetricCard
+          title="Cantidad de Productos Registrados"
+          value={totalProductos}
+          icon={Package}
+          className="bg-indigo-500/70 dark:bg-indigo-400/70"
+        />
       </div>
 
       {/* Nueva fila: Valoración de Inventario bajo demanda */}
@@ -588,4 +598,7 @@ export default DashboardPage;
 // - Se corrigió el uso de los íconos en los nuevos MetricCards para que sean visibles y consistentes.
 // - Se utiliza currencyFormat para mostrar los totales de inventario de forma consistente con el resto del dashboard.
 // - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
+// - Se agregó un MetricCard "Cantidad de Productos Registrados" que ahora muestra el total real de productos usando el valor 'total' del store, no solo la cantidad de la página actual.
+// - Se cambió el icono de este MetricCard a 'Package' de Lucide para mayor claridad visual.
+//   Puedes ver y elegir otros iconos en https://lucide.dev/icons/
 // =============================
