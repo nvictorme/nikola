@@ -8,7 +8,7 @@
 // - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
 // =============================
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useDashboardStore } from "../../store/dashboard.store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,7 +21,6 @@ import { cn } from "@/lib/utils";
 import { currencyFormat } from "shared/helpers";
 import { LineChart, BarChart, PieChart } from "@/components/ui/charts";
 import { useTheme } from "next-themes";
-import { useAuthStore } from "@/store/auth.store";
 import {
   Table,
   TableBody,
@@ -134,9 +133,10 @@ const DashboardPage: React.FC = () => {
     promedioVenta,
     charts,
     deudores,
-    fetchDashboardData,
-    fetchChartsData,
-    fetchDeudores,
+    // fetchDashboardData,
+    // fetchChartsData,
+    // fetchDeudores,
+    // Líneas comentadas: estas funciones se extraían del store pero no se usan en el componente.
   } = useDashboardStore();
 
   const almacenes = useAlmacenesStore((state) => state.almacenes);
