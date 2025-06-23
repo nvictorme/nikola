@@ -146,6 +146,10 @@ const DashboardPage: React.FC = () => {
     (acc, d) => acc + (d.balance || 0),
     0
   );
+  const totalReposicionMes = charts.reposicionesMes?.reduce(
+    (acc: number, r: { monto: number }) => acc + (r.monto || 0),
+    0
+  );
 
   if (isLoading) {
     return (
@@ -174,27 +178,29 @@ const DashboardPage: React.FC = () => {
         />
         <MetricCard
           title="Promedio por Venta"
-          value={currencyFormat({
-            value: promedioVenta,
-          })}
+          value={currencyFormat({ value: promedioVenta })}
           icon={BarChart2}
           className="bg-amber-500/70 dark:bg-amber-400/70"
         />
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {/* =============================
-            Modificación: Nuevo MetricCard para mostrar el total general de deuda de los clientes
-            usando la suma de los balances de los deudores
-         ============================= */}
         <MetricCard
           title="Total General de Deuda de Clientes"
           value={currencyFormat({ value: totalGeneralDeuda })}
           icon={AlertCircle}
           className="bg-rose-500/70 dark:bg-rose-400/70"
         />
+        <MetricCard
+          title="Total Reposicion Mes"
+          value={currencyFormat({ value: totalReposicionMes })}
+          icon={BarChart2}
+          className="bg-indigo-500/70 dark:bg-indigo-400/70"
+        />
+        <div />
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* Modificación aquí: grilla de 2 columnas para los cuadros de información */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card className="overflow-hidden">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Ventas Diarias</CardTitle>
@@ -237,7 +243,6 @@ const DashboardPage: React.FC = () => {
             )}
           </CardContent>
         </Card>
-
         <Card className="overflow-hidden">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Ventas por Categoría</CardTitle>
@@ -336,3 +341,12 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
+
+// =============================
+// Cambios realizados en este archivo:
+// - Se agregó el cálculo y visualización del MetricCard "Total Reposición Mes".
+// - Se reorganizó la grilla de MetricCard para que la primera fila tenga 3 métricas y la segunda 2,
+//   manteniendo la alineación visual.
+// - Se ajustó la grilla de los cuadros "Ventas Diarias" y "Ventas por Categoría" para que estén
+//   en una sola fila (lg:grid-cols-2), cada uno ocupando la mitad del ancho.
+// =============================

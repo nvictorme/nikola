@@ -140,6 +140,22 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .groupBy("sucursal.nombre")
     .getRawMany();
 
+  // Get reposiciones del mes
+  const reposicionesMes = await ordenesRepository
+    .createQueryBuilder("orden")
+    .select(["orden.id", "orden.total"])
+    .leftJoin("orden.vendedor", "vendedor")
+    .where(isAdmin ? "1=1" : "vendedor.id = :userId", {
+      userId: user.id,
+    })
+    .andWhere("orden.tipo = :tipo", { tipo: TipoOrden.reposicion })
+    .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
+      start: monthStart,
+      end: monthEnd,
+    })
+    .getRawMany();
+
+  // Return response
   return res.status(200).json({
     dailySales: formattedDailySales,
     salesByCategory: salesByCategory.map((category) => ({
@@ -152,6 +168,7 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
       total: Number(branch.total),
       quantity: Number(branch.quantity),
     })),
+    reposicionesMes: reposicionesMes.map((r) => ({ id: r.orden_id || r.id, monto: Number(r.orden_total || r.total) })),
   });
 });
 
@@ -172,3 +189,8 @@ DashboardRouter.get("/deudores", async (req: Request, res: Response) => {
 });
 
 export { DashboardRouter };
+// =============================
+// Se modificó el endpoint /dashboard/charts para calcular y devolver la suma de los montos
+// de las órdenes de reposición del mes (reposicionesMes), permitiendo que el frontend muestre
+// esta métrica en el dashboard.
+// =============================
