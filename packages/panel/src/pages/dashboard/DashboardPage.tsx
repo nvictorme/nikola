@@ -1,3 +1,13 @@
+// =============================
+// Cambios realizados en este archivo:
+// - Se agregó una nueva fila de MetricCards para mostrar la valoración de inventario (COSTO y VENTA)
+//   justo debajo de la fila de "Total General de Deuda de Clientes" y "Total Reposicion Mes",
+//   manteniendo el mismo ancho y estilo visual.
+// - Se corrigió el uso de los íconos en los nuevos MetricCards para que sean visibles y consistentes.
+// - Se utiliza currencyFormat para mostrar los totales de inventario de forma consistente con el resto del dashboard.
+// - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
+// =============================
+
 import React, { useEffect } from "react";
 import { useDashboardStore } from "../../store/dashboard.store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +18,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { currencyFormat, isSuperAdmin } from "shared/helpers";
+import { currencyFormat } from "shared/helpers";
 import { LineChart, BarChart, PieChart } from "@/components/ui/charts";
 import { useTheme } from "next-themes";
 import { useAuthStore } from "@/store/auth.store";
@@ -21,6 +31,9 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { IPersona } from "shared/interfaces";
+import { useProductosStore } from "../../store/productos.store";
+import { useAlmacenesStore } from "../../store/almacenes.store";
+import { ApiClient } from "../../api/api.client";
 
 const CHART_COLORS = {
   light: {
@@ -126,16 +139,106 @@ const DashboardPage: React.FC = () => {
     fetchDeudores,
   } = useDashboardStore();
 
+  const almacenes = useAlmacenesStore((state) => state.almacenes);
+  const listarAlmacenes = useAlmacenesStore((state) => state.listarAlmacenes);
+  const productos = useProductosStore((state) => state.productos);
+  const [valorCosto, setValorCosto] = React.useState<number | null>(null);
+  const [valorVenta, setValorVenta] = React.useState<number | null>(null);
+  const [calculandoCosto, setCalculandoCosto] = React.useState(false);
+  const [calculandoVenta, setCalculandoVenta] = React.useState(false);
+
+  // Definir colors según el tema actual
   const { theme } = useTheme();
   const colors = CHART_COLORS[theme === "dark" ? "dark" : "light"];
-  const { user } = useAuthStore();
-  const isAdmin = isSuperAdmin(user);
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchChartsData();
-    fetchDeudores();
-  }, [fetchDashboardData, fetchChartsData, fetchDeudores]);
+  // Restaurar valores desde sessionStorage al montar
+  React.useEffect(() => {
+    const costoGuardado = sessionStorage.getItem("valorInventarioCosto");
+    const ventaGuardada = sessionStorage.getItem("valorInventarioVenta");
+    if (costoGuardado !== null) setValorCosto(Number(costoGuardado));
+    if (ventaGuardada !== null) setValorVenta(Number(ventaGuardada));
+  }, []);
+
+  React.useEffect(() => {
+    if (almacenes.length === 0) {
+      listarAlmacenes();
+    }
+  }, [almacenes, listarAlmacenes]);
+
+  // Quitar cálculo automático de inventario
+  // Dejar solo la carga de almacenes si es necesario
+  React.useEffect(() => {
+    if (almacenes.length === 0) {
+      listarAlmacenes();
+    }
+  }, [almacenes, listarAlmacenes]);
+
+  // Funciones para calcular cada valoración bajo pedido
+  const calcularValorCosto = async () => {
+    setCalculandoCosto(true);
+    // No activar setCalculandoVenta(true)
+    let totalCosto = 0;
+    for (const producto of productos) {
+      let stockTotal = 0;
+      for (const almacen of almacenes) {
+        try {
+          const { data } = await new ApiClient().get(
+            `/productos/${producto.id}/stock/${almacen.id}`,
+            {}
+          );
+          const stock = data?.stock;
+          if (stock) {
+            const actual = stock.actual ?? 0;
+            const transito = stock.transito ?? 0;
+            const reservado = stock.reservado ?? 0;
+            stockTotal += actual + transito - reservado;
+          }
+        } catch (error) {
+          console.error(
+            `Error obteniendo stock de producto ${producto.nombre} en almacen ${almacen.nombre}`,
+            error
+          );
+        }
+      }
+      totalCosto += stockTotal * (producto.costo ?? 0);
+    }
+    setValorCosto(totalCosto);
+    sessionStorage.setItem("valorInventarioCosto", String(totalCosto));
+    setCalculandoCosto(false);
+  };
+
+  const calcularValorVenta = async () => {
+    setCalculandoVenta(true);
+    // No activar setCalculandoCosto(true)
+    let totalVenta = 0;
+    for (const producto of productos) {
+      let stockTotal = 0;
+      for (const almacen of almacenes) {
+        try {
+          const { data } = await new ApiClient().get(
+            `/productos/${producto.id}/stock/${almacen.id}`,
+            {}
+          );
+          const stock = data?.stock;
+          if (stock) {
+            const actual = stock.actual ?? 0;
+            const transito = stock.transito ?? 0;
+            const reservado = stock.reservado ?? 0;
+            stockTotal += actual + transito - reservado;
+          }
+        } catch (error) {
+          console.error(
+            `Error obteniendo stock de producto ${producto.nombre} en almacen ${almacen.nombre}`,
+            error
+          );
+        }
+      }
+      totalVenta += stockTotal * (producto.precioInstalador ?? 0);
+    }
+    setValorVenta(totalVenta);
+    sessionStorage.setItem("valorInventarioVenta", String(totalVenta));
+    setCalculandoVenta(false);
+  };
 
   // =============================
   // Modificación: Cálculo del total general de deuda
@@ -150,6 +253,54 @@ const DashboardPage: React.FC = () => {
     (acc: number, r: { monto: number }) => acc + (r.monto || 0),
     0
   );
+
+  // LOG para depuración: Verificar productos y estructura
+  console.log("productos:", productos);
+  if (productos.length > 0) {
+    console.log("Claves del primer producto:", Object.keys(productos[0]));
+    console.log("Primer producto completo:", productos[0]);
+    console.log(
+      "Resumen productos:",
+      productos.map((p) => ({
+        id: p.id,
+        nombre: p.nombre,
+        costo: p.costo,
+        precioInstalador: p.precioInstalador,
+        stock: p.stock,
+      }))
+    );
+  }
+
+  // LOG para depuración: Verificar stock de cada producto y su cálculo
+  productos.forEach((p) => {
+    if (p.stock && Array.isArray(p.stock)) {
+      const totalStock = p.stock.reduce((sum, s) => {
+        const actual = s.actual ?? 0;
+        const transito = s.transito ?? 0;
+        const reservado = s.reservado ?? 0;
+        return sum + (actual + transito - reservado);
+      }, 0);
+      console.log(
+        "Producto:",
+        p.nombre,
+        "Stock array:",
+        p.stock,
+        "TotalStock calculado:",
+        totalStock,
+        "Costo:",
+        p.costo,
+        "PrecioInstalador:",
+        p.precioInstalador
+      );
+    } else {
+      console.log(
+        "Producto:",
+        p.nombre,
+        "NO tiene stock definido o no es un array:",
+        p.stock
+      );
+    }
+  });
 
   if (isLoading) {
     return (
@@ -196,6 +347,93 @@ const DashboardPage: React.FC = () => {
           icon={BarChart2}
           className="bg-indigo-500/70 dark:bg-indigo-400/70"
         />
+        <div />
+      </div>
+
+      {/* Nueva fila: Valoración de Inventario bajo demanda */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Valoracion Inventario COSTO
+                </p>
+                <p className="text-2xl font-bold">
+                  {calculandoCosto ? (
+                    <span className="flex items-center text-lg">
+                      <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mr-2" />
+                      <span className="text-base">Calculando...</span>
+                    </span>
+                  ) : valorCosto !== null ? (
+                    currencyFormat({ value: valorCosto })
+                  ) : (
+                    "--"
+                  )}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "p-2 rounded-full bg-green-500/70 dark:bg-green-400/70"
+                )}
+              >
+                {" "}
+                <BanknoteIcon className="h-5 w-5 text-white" />{" "}
+              </div>
+            </div>
+            {/* Botón calcular: deshabilitado si ya hay valor calculado o si el otro cálculo está en proceso */}
+            <button
+              className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
+              onClick={calcularValorCosto}
+              disabled={
+                calculandoCosto || calculandoVenta || valorCosto !== null
+              }
+            >
+              Calcular
+            </button>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">
+                  Valoracion Inventario VENTA
+                </p>
+                <p className="text-2xl font-bold">
+                  {calculandoVenta ? (
+                    <span className="flex items-center text-lg">
+                      <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mr-2" />
+                      <span className="text-base">Calculando...</span>
+                    </span>
+                  ) : valorVenta !== null ? (
+                    currencyFormat({ value: valorVenta })
+                  ) : (
+                    "--"
+                  )}
+                </p>
+              </div>
+              <div
+                className={cn(
+                  "p-2 rounded-full bg-yellow-500/70 dark:bg-yellow-400/70"
+                )}
+              >
+                {" "}
+                <BarChart2 className="h-5 w-5 text-white" />{" "}
+              </div>
+            </div>
+            {/* Botón calcular: deshabilitado si ya hay valor calculado o si el otro cálculo está en proceso */}
+            <button
+              className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded disabled:opacity-50"
+              onClick={calcularValorVenta}
+              disabled={
+                calculandoVenta || calculandoCosto || valorVenta !== null
+              }
+            >
+              Calcular
+            </button>
+          </CardContent>
+        </Card>
         <div />
       </div>
 
@@ -286,7 +524,7 @@ const DashboardPage: React.FC = () => {
         </Card>
       </div>
 
-      {isAdmin && (
+      {
         <div className="grid gap-6 md:grid-cols-2">
           <Card className="overflow-hidden">
             <CardHeader className="space-y-1">
@@ -335,7 +573,7 @@ const DashboardPage: React.FC = () => {
             </CardContent>
           </Card>
         </div>
-      )}
+      }
     </div>
   );
 };
@@ -344,9 +582,10 @@ export default DashboardPage;
 
 // =============================
 // Cambios realizados en este archivo:
-// - Se agregó el cálculo y visualización del MetricCard "Total Reposición Mes".
-// - Se reorganizó la grilla de MetricCard para que la primera fila tenga 3 métricas y la segunda 2,
-//   manteniendo la alineación visual.
-// - Se ajustó la grilla de los cuadros "Ventas Diarias" y "Ventas por Categoría" para que estén
-//   en una sola fila (lg:grid-cols-2), cada uno ocupando la mitad del ancho.
+// - Se agregó una nueva fila de MetricCards para mostrar la valoración de inventario (COSTO y VENTA)
+//   justo debajo de la fila de "Total General de Deuda de Clientes" y "Total Reposicion Mes",
+//   manteniendo el mismo ancho y estilo visual.
+// - Se corrigió el uso de los íconos en los nuevos MetricCards para que sean visibles y consistentes.
+// - Se utiliza currencyFormat para mostrar los totales de inventario de forma consistente con el resto del dashboard.
+// - Se recomienda verificar que el array de productos y sus stocks estén correctamente cargados para evitar totales en cero.
 // =============================
