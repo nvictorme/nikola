@@ -49,15 +49,12 @@ export default function TransaccionForm({
     handleSubmit,
     control,
     watch,
-    reset,
     getValues,
     setValue,
+    reset,
     formState: { errors },
   } = useForm<ITransaccion>({
     defaultValues: {
-      ...(!isAdmin && { tipo: TipoTransaccion.pago }),
-      ...(!isAdmin && { estatusPago: EstatusPago.pendiente }),
-      ...(!isAdmin && { metodoPago: MetodoPago.transferencia }),
       archivos: [],
     },
     mode: "onSubmit",
@@ -111,9 +108,12 @@ export default function TransaccionForm({
   const onSubmit = useCallback(
     (data: ITransaccion) => {
       crearTransaccion({ ...data, persona: persona! });
+      // Cierra el acordeón para ocultar el formulario después de registrar
+      setAccordionValue("");
+      // Limpia el formulario para que al volver a abrirlo esté vacío
       reset();
     },
-    [persona, crearTransaccion, reset]
+    [persona, crearTransaccion, setAccordionValue, reset]
   );
 
   if (!persona) return null;
