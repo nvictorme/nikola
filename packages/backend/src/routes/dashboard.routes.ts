@@ -5,7 +5,7 @@ import { AppDataSource } from "../orm/data-source";
 import { Orden } from "../orm/entity/orden";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { eachDayOfInterval } from "date-fns/eachDayOfInterval";
-import { TipoOrden } from "shared/enums";
+import { EstatusOrden, TipoOrden } from "shared/enums";
 import { Persona } from "../orm/entity/persona";
 import { MoreThan } from "typeorm";
 const DashboardRouter = Router();
@@ -31,7 +31,7 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
       tipos: [TipoOrden.venta, TipoOrden.credito],
     })
     // Filtrar solo órdenes con estatus Confirmado o Entregado
-    .andWhere("orden.estatus IN (:...estatus)", { estatus: ["Confirmado", "Entregado"] })
+    .andWhere("orden.estatus IN (:...estatus)", { estatus: [EstatusOrden.confirmado, EstatusOrden.entregado] })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,

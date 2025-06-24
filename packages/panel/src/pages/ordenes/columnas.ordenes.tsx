@@ -54,6 +54,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getAllowedStatuses, isStatusDisabled } from "./ordenes.helpers";
 
 export type Orden = Pick<
   IOrden,
@@ -207,79 +208,16 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
             Para otros tipos de orden, mostrar todos los estatus posibles.
           */}
           <SelectContent>
-            {/*
-              Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
-              Si el tipo de orden es reposición, solo permitir seleccionar los estatus 'Aprobado', 'Confirmado', 'Enviado', 'Recibido' y 'Cancelado'.
-              Si el tipo de orden es Venta o Crédito, solo permitir seleccionar los estatus 'Aprobado', 'Rechazado', 'Confirmado', 'Entregado' y 'Cancelado'.
-              Para otros tipos de orden, mostrar todos los estatus posibles.
-            */}
-            {(orden.tipo === TipoOrden.cotizacion
-              ? [EstatusOrden.aprobado, EstatusOrden.rechazado]
-              : orden.tipo === TipoOrden.reposicion
-              ? [
-                  EstatusOrden.aprobado, // Solo para reposición
-                  EstatusOrden.confirmado, // Solo para reposición
-                  EstatusOrden.enviado, // Solo para reposición
-                  EstatusOrden.recibido, // Solo para reposición
-                  EstatusOrden.cancelado, // Solo para reposición
-                ]
-              : orden.tipo === TipoOrden.venta ||
-                orden.tipo === TipoOrden.credito
-              ? [
-                  EstatusOrden.aprobado, // Solo para Venta y Crédito
-                  EstatusOrden.rechazado, // Solo para Venta y Crédito
-                  EstatusOrden.confirmado, // Solo para Venta y Crédito
-                  EstatusOrden.entregado, // Solo para Venta y Crédito
-                  EstatusOrden.cancelado, // Solo para Venta y Crédito
-                ]
-              : Object.values(EstatusOrden)
-            ).map((est) => (
+            {getAllowedStatuses(orden).map((est) => (
               <SelectItem
                 key={est}
                 value={est}
-                disabled={
-                  // Deshabilitar entregado si es orden de reposición
-                  (est === EstatusOrden.entregado &&
-                    orden.tipo === TipoOrden.reposicion) ||
-                  // Deshabilitar estados especiales después de cierto nivel
-                  (estatusOrden[est] === 0 && estatusActualNivel > 2) ||
-                  // Deshabilitar estados anteriores
-                  (estatusOrden[est] !== 0 &&
-                    estatusOrden[est] < estatusActualNivel) ||
-                  // --- Reglas especiales para venta y crédito ---
-                  // Si el estatus actual es aprobado, deshabilitar entregado
-                  ((orden.tipo === TipoOrden.venta ||
-                    orden.tipo === TipoOrden.credito) &&
-                    orden.estatus === EstatusOrden.aprobado &&
-                    est === EstatusOrden.entregado) ||
-                  // Si el estatus actual es rechazado, deshabilitar confirmado, entregado y cancelado
-                  ((orden.tipo === TipoOrden.venta ||
-                    orden.tipo === TipoOrden.credito) &&
-                    orden.estatus === EstatusOrden.rechazado &&
-                    (est === EstatusOrden.confirmado ||
-                      est === EstatusOrden.entregado ||
-                      est === EstatusOrden.cancelado)) ||
-                  // Si el estatus actual es cancelado, deshabilitar rechazado, confirmado y entregado
-                  ((orden.tipo === TipoOrden.venta ||
-                    orden.tipo === TipoOrden.credito) &&
-                    orden.estatus === EstatusOrden.cancelado &&
-                    (est === EstatusOrden.rechazado ||
-                      est === EstatusOrden.confirmado ||
-                      est === EstatusOrden.entregado)) ||
-                  // --- Reglas especiales para reposición ---
-                  // Si el estatus actual es aprobado, deshabilitar enviado y recibido
-                  (orden.tipo === TipoOrden.reposicion &&
-                    orden.estatus === EstatusOrden.aprobado &&
-                    (est === EstatusOrden.enviado ||
-                      est === EstatusOrden.recibido)) ||
-                  // Si el estatus actual es cancelado, deshabilitar confirmado, enviado y recibido
-                  (orden.tipo === TipoOrden.reposicion &&
-                    orden.estatus === EstatusOrden.cancelado &&
-                    (est === EstatusOrden.confirmado ||
-                      est === EstatusOrden.enviado ||
-                      est === EstatusOrden.recibido))
-                  // --- Fin reglas especiales ---
-                }
+                disabled={isStatusDisabled({
+                  est,
+                  orden,
+                  estatusOrden,
+                  estatusActualNivel,
+                })}
               >
                 {est}
               </SelectItem>
