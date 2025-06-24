@@ -868,44 +868,48 @@ OrdenesRouter.put(
         });
       }
 
+      // --- Refactor: Reduce cognitive complexity for reposicion stock/costo updates ---
+      async function updateStockAndCostoForReposicion(
+        orden: Orden,
+        estatus: EstatusOrden
+      ) {
+        const stockRepo = AppDataSource.getRepository(Stock);
+        const productoRepo = AppDataSource.getRepository(Producto);
+        const updatePromises = orden.items.map(async (item: ItemOrden) => {
+          const almacen = item.almacen;
+          if (!almacen) return;
+          const producto = item.producto;
+          const stock = await stockRepo.findOne({
+            where: {
+              almacen: { id: almacen.id },
+              producto: { id: producto.id },
+            },
+          });
+          if (!stock) return;
+          if (estatus === EstatusOrden.confirmado) {
+            // Al confirmar la orden, el stock en tránsito aumenta (productos en camino)
+            await stockRepo.update(stock.id, { transito: stock.transito + item.cantidad });
+          } else if (estatus === EstatusOrden.recibido) {
+            // Actualizar el costo del producto solo si el estatus es recibido
+            if (producto && typeof item.precio === 'number') {
+              await productoRepo.update({ id: producto.id }, { costo: item.precio });
+            }
+            // Al recibir la orden, el stock en tránsito disminuye y el stock real aumenta
+            await stockRepo.update(stock.id, {
+              transito: stock.transito - item.cantidad,
+              actual: stock.actual + item.cantidad,
+            });
+          }
+        });
+        await Promise.all(updatePromises);
+      }
+
       // aplicar reglas de stock para cada item de la orden si es reposicion y el estatus es confirmado o recibido
       if (
         updatedOrden.tipo === TipoOrden.reposicion &&
-        [EstatusOrden.confirmado, EstatusOrden.recibido].includes(
-          updatedOrden.estatus
-        )
+        [EstatusOrden.confirmado, EstatusOrden.recibido].includes(updatedOrden.estatus)
       ) {
-        updatedOrden.items.forEach(async (item) => {
-          const almacen = item.almacen;
-          if (almacen) {
-            const producto = item.producto;
-            const stock = await AppDataSource.getRepository(Stock).findOne({
-              where: {
-                almacen: { id: almacen.id },
-                producto: { id: producto.id },
-              },
-            });
-            if (stock) {
-              let payload = {};
-              if (updatedOrden.estatus === EstatusOrden.confirmado) {
-                // si el estatus es confirmado, se incrementa el stock transito
-                payload = {
-                  transito: stock.transito + item.cantidad,
-                };
-              } else if (updatedOrden.estatus === EstatusOrden.recibido) {
-                // si el estatus es recibido, se decrementa el stock transito y se incrementa el stock actual
-                payload = {
-                  transito: stock.transito - item.cantidad,
-                  actual: stock.actual + item.cantidad,
-                };
-              }
-              await AppDataSource.getRepository(Stock).update(
-                stock.id,
-                payload
-              );
-            }
-          }
-        });
+        await updateStockAndCostoForReposicion(updatedOrden, updatedOrden.estatus);
       }
 
       // Email vendedor when order status changes
