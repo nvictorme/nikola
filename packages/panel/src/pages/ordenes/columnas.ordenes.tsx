@@ -54,6 +54,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getAllowedStatuses, isStatusDisabled } from "./ordenes.helpers";
 
 export type Orden = Pick<
   IOrden,
@@ -185,8 +186,10 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       const estatusActualNivel = estatusOrden[orden.estatus];
 
       return canCreate ? (
+        // Usar 'value' en vez de 'defaultValue' para que el Select siempre refleje el estatus actual de la orden,
+        // incluso si cambia dinámicamente por sockets u otras actualizaciones externas.
         <Select
-          defaultValue={orden.estatus || EstatusOrden.pendiente}
+          value={orden.estatus || EstatusOrden.pendiente}
           onValueChange={(value) => {
             actualizarEstatusOrden(
               (row.original as IOrden).id,
@@ -198,21 +201,23 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           <SelectTrigger className={`${getEstatusColor(orden.estatus)}`}>
             <SelectValue>{orden.estatus || EstatusOrden.pendiente}</SelectValue>
           </SelectTrigger>
+          {/*
+            Si el tipo de orden es cotización, solo permitir seleccionar los estatus 'Aprobado' y 'Rechazado'.
+            Si el tipo de orden es reposición, solo permitir seleccionar los estatus 'Aprobado', 'Confirmado', 'Enviado', 'Recibido' y 'Cancelado'.
+            Si el tipo de orden es Venta o Crédito, solo permitir seleccionar los estatus 'Aprobado', 'Rechazado', 'Confirmado', 'Entregado' y 'Cancelado'.
+            Para otros tipos de orden, mostrar todos los estatus posibles.
+          */}
           <SelectContent>
-            {Object.values(EstatusOrden).map((est) => (
+            {getAllowedStatuses(orden).map((est) => (
               <SelectItem
                 key={est}
                 value={est}
-                disabled={
-                  // Deshabilitar entregado si es orden de reposición
-                  (est === EstatusOrden.entregado &&
-                    orden.tipo === TipoOrden.reposicion) ||
-                  // Deshabilitar estados especiales después de cierto nivel
-                  (estatusOrden[est] === 0 && estatusActualNivel > 2) ||
-                  // Deshabilitar estados anteriores
-                  (estatusOrden[est] !== 0 &&
-                    estatusOrden[est] < estatusActualNivel)
-                }
+                disabled={isStatusDisabled({
+                  est,
+                  orden,
+                  estatusOrden,
+                  estatusActualNivel,
+                })}
               >
                 {est}
               </SelectItem>

@@ -5,7 +5,7 @@ import { AppDataSource } from "../orm/data-source";
 import { Orden } from "../orm/entity/orden";
 import { startOfMonth, endOfMonth, format } from "date-fns";
 import { eachDayOfInterval } from "date-fns/eachDayOfInterval";
-import { TipoOrden } from "shared/enums";
+import { EstatusOrden, TipoOrden } from "shared/enums";
 import { Persona } from "../orm/entity/persona";
 import { MoreThan } from "typeorm";
 const DashboardRouter = Router();
@@ -20,6 +20,7 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
 
   const ordenesRepository = AppDataSource.getRepository(Orden);
 
+  // Solo se consideran ventas con estatus Confirmado o Entregado para el dashboard
   const ventasMensuales = await ordenesRepository
     .createQueryBuilder("orden")
     .leftJoin("orden.vendedor", "vendedor")
@@ -29,16 +30,20 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
     .andWhere("orden.tipo IN (:...tipos)", {
       tipos: [TipoOrden.venta, TipoOrden.credito],
     })
+    // Filtrar solo órdenes con estatus Confirmado o Entregado
+    .andWhere("orden.estatus IN (:...estatus)", { estatus: [EstatusOrden.confirmado, EstatusOrden.entregado] })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,
     })
     .getMany();
 
+  // Sumar el total de ventas del mes solo con las órdenes filtradas
   const totalVentasMes = ventasMensuales.reduce(
     (acc, orden) => acc + orden.total,
     0
   );
+  // Calcular el promedio de venta solo con las órdenes filtradas
   const promedioVenta =
     ventasMensuales.length > 0 ? totalVentasMes / ventasMensuales.length : 0;
 

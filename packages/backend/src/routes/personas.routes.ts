@@ -91,6 +91,8 @@ PersonasRouter.post(
       newPersona.nif = persona.nif;
       persona.empresa && (newPersona.empresa = persona.empresa);
       persona.telefono && (newPersona.telefono = persona.telefono);
+      // Guardar las notas del cliente si existen
+      persona.notas && (newPersona.notas = persona.notas);
       const savedPersona = await AppDataSource.getRepository(Persona).save(
         newPersona
       );
