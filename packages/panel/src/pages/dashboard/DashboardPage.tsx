@@ -137,6 +137,16 @@ const DashboardPage: React.FC = () => {
     fetchDeudores();
   }, [fetchDashboardData, fetchChartsData, fetchDeudores]);
 
+  // =============================
+  // Modificación: Cálculo del total general de deuda
+  // Se suma el balance de todos los clientes en el array deudores,
+  // que es la misma información mostrada en la Lista de Deudores.
+  // =============================
+  const totalGeneralDeuda = deudores.reduce(
+    (acc, d) => acc + (d.balance || 0),
+    0
+  );
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -169,6 +179,18 @@ const DashboardPage: React.FC = () => {
           })}
           icon={BarChart2}
           className="bg-amber-500/70 dark:bg-amber-400/70"
+        />
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {/* =============================
+            Modificación: Nuevo MetricCard para mostrar el total general de deuda de los clientes
+            usando la suma de los balances de los deudores
+         ============================= */}
+        <MetricCard
+          title="Total General de Deuda de Clientes"
+          value={currencyFormat({ value: totalGeneralDeuda })}
+          icon={AlertCircle}
+          className="bg-rose-500/70 dark:bg-rose-400/70"
         />
       </div>
 
