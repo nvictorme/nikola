@@ -30,6 +30,7 @@ export type TransaccionesStore = {
   balance: number;
   setBalance: (balance: number) => void;
   isLoading: boolean;
+  reset: () => void; // Método para limpiar el estado del store y dejarlo en su estado inicial
 };
 
 const initialState: Pick<
@@ -102,6 +103,7 @@ export const useTransaccionesStore = create<TransaccionesStore>()(
       },
       setLimit: (limit) => set({ limit }),
       setBalance: (balance) => set({ balance }),
+      reset: () => set({ ...initialState }), // Limpia el estado del store de transacciones al estado inicial
     }),
     {
       name: "transacciones-store",

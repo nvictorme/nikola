@@ -454,16 +454,25 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
                 </AlertDialogContent>
               </AlertDialog>
             ) : null}
-
-            {orden.tipo === TipoOrden.cotizacion ? (
+            {/* 
+            Solo mostrar la opción de convertir en orden si la cotización NO está rechazada
+            Esto previene que cotizaciones rechazadas puedan ser convertidas desde el frontend
+            */}
+            {orden.tipo === TipoOrden.cotizacion &&
+            orden.estatus !== EstatusOrden.rechazado ? (
               <AlertDialog open={openConvertir}>
                 <Button
                   variant="secondary"
-                  className="text-xs gap-2 hover:text-green-500"
+                  className="text-xs gap-1 hover:text-green-500 whitespace-pre-line text-center min-w-[110px] pr-2"
                   onClick={() => setOpenConvertir(true)}
                 >
-                  <CheckCircleIcon size={16} className="text-green-500" />{" "}
-                  Convertir en orden
+                  {/* Icono de verificación alineado a la izquierda del texto */}
+                  <CheckCircleIcon
+                    size={16}
+                    className="text-green-500 mr-0.5 -ml-2"
+                  />{" "}
+                  {/* Texto en dos líneas para evitar scroll horizontal innecesario */}
+                  {`Convertir en\nOrden`}
                 </Button>
                 <AlertDialogContent>
                   <AlertDialogHeader>
