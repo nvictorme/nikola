@@ -63,6 +63,7 @@ export const ItemOrdenForm = forwardRef<
   const [almacenes, setAlmacenes] = useState<AlmacenWithStock[]>([]);
   const [isLoadingAlmacenes, setIsLoadingAlmacenes] = useState(false);
   const [errorAlmacenes, setErrorAlmacenes] = useState<string | null>(null);
+  const [manual, setManual] = useState(false);
 
   const cargarAlmacenes = useCallback(async () => {
     if (almacenes.length === 0) {
@@ -94,13 +95,14 @@ export const ItemOrdenForm = forwardRef<
   }, [cargarAlmacenes]);
 
   const updateItemTotal = useCallback(
-    (cantidad: number, precio: number, manual: boolean = false) => {
+    (cantidad: number, precio: number) => {
       const newItems = [...getValues("items")];
-      newItems[idx].cantidad = cantidad;
-      newItems[idx].precio = precio;
-      newItems[idx].total = cantidad * precio;
-      // Si el cambio es manual, marcar el flag para evitar que el precio se sobrescriba automáticamente
-      if (manual) newItems[idx].precioManual = true;
+      newItems[idx] = {
+        ...newItems[idx],
+        cantidad,
+        precio,
+        total: cantidad * precio,
+      };
       setValue("items", newItems);
     },
     [getValues, setValue, idx]
@@ -112,8 +114,10 @@ export const ItemOrdenForm = forwardRef<
   };
 
   const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setManual(true); // Marcar como manual al cambiar el precio
     const precio = parseFloat(e.target.value) || 0;
-    updateItemTotal(item.cantidad, precio, true); // Marcar como manual
+
+    updateItemTotal(item.cantidad, precio);
   };
 
   const handleNotasChange = useCallback(
@@ -256,20 +260,20 @@ export const ItemOrdenForm = forwardRef<
           <div className="flex gap-2 items-center">
             <Input
               type="number"
+              step="0.01"
               {...register(`items.${idx}.precio` as const, {
                 required: "Precio requerido",
                 valueAsNumber: true,
                 min: { value: 0, message: "Debe ser mayor o igual a 0" },
               })}
-              // Usar value en vez de defaultValue para que el campo se actualice si item.precio cambia por tipo de cambio u otros factores
-              value={item.precio}
+              defaultValue={item.precio || 0}
               className="w-full p-2 border border-gray-300 rounded-lg item-precio"
               onChange={handlePrecioChange}
             />
             {/* Botón para restablecer el precio automático si el usuario lo editó manualmente.
                 Usa el mismo estilo visual que el botón 'Orden' de OrdenesPage, pero solo con el icono.
                 Se le aumenta el ancho mínimo para mejor presencia visual. */}
-            {item.precioManual && (
+            {manual && (
               <Button
                 type="button"
                 size="default"
@@ -278,8 +282,8 @@ export const ItemOrdenForm = forwardRef<
                 title="Restablecer precio automático"
                 onClick={() => {
                   const newItems = [...getValues("items")];
-                  newItems[idx].precioManual = false;
                   setValue("items", newItems);
+                  setManual(false);
                 }}
               >
                 <RefreshCwIcon className="w-4 h-4" />

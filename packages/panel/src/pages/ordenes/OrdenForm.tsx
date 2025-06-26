@@ -277,18 +277,15 @@ export default function OrdenForm({
       !creditExceedsAvailable
     );
   }, [cliente, sucursal, items, total, tipo, getValues]);
-
+ 
   // Actualizar precios de los items cuando cambia el tipo de cambio, tipo de orden, cliente o factores
   // Se agregó 'items' como dependencia para evitar advertencias de React y asegurar que los precios se recalculen correctamente si los items cambian
-  useEffect(() => {
-    // Solo si hay items
+  // Extract price recalculation logic into a useCallback
+  const recalcularPreciosPorTipoCambio = useCallback(() => {
+    const items = getValues("items");
     if (!items || items.length === 0) return;
-    // Recalcular precios según el tipo de cambio seleccionado
     const nuevosItems = items.map((item) => {
-      // Si el precio fue editado manualmente, no lo sobrescribas
-      if (item.precioManual) return item;
       let nuevoPrecio = item.precio;
-      // Si es reposición, usar el costo como precio base
       if (tipo === TipoOrden.reposicion) {
         nuevoPrecio = item.producto.costo || 0;
       } else if (cliente?.tipoCliente === TipoCliente.mayorista) {
@@ -298,7 +295,6 @@ export default function OrdenForm({
       } else {
         nuevoPrecio = item.producto.precioGeneral || 0;
       }
-      // Si el producto está en oferta y la fecha es válida, usar el precio de oferta
       if (
         item.producto.enOferta &&
         item.producto.precioOferta &&
@@ -310,13 +306,11 @@ export default function OrdenForm({
       ) {
         nuevoPrecio = item.producto.precioOferta;
       }
-      // Aplicar el factor por tipo de cambio
       if (tipoCambio === TipoCambio.usd) {
         nuevoPrecio = nuevoPrecio * factores[TipoCambio.usd];
       } else if (tipoCambio === TipoCambio.bcv) {
         nuevoPrecio = nuevoPrecio * factores[TipoCambio.bcv];
       }
-      // Redondear a 2 decimales
       nuevoPrecio = Math.round(nuevoPrecio * 100) / 100;
       return {
         ...item,
@@ -325,7 +319,12 @@ export default function OrdenForm({
       };
     });
     setValue("items", nuevosItems);
-  }, [tipoCambio, tipo, cliente, factores, setValue, items]); // <-- items agregado aquí
+  }, [tipoCambio, setValue, getValues, tipo, cliente, factores]);
+
+  // Only run this effect when tipoCambio changes
+  useEffect(() => {
+    recalcularPreciosPorTipoCambio();
+  }, [tipoCambio, recalcularPreciosPorTipoCambio]);
 
   return (
     <Card className="bg-background max-w m-auto">
