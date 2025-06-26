@@ -48,6 +48,7 @@ interface ItemOrdenFormProps {
   setValue: UseFormReturn<IOrden>["setValue"];
   register: UseFormReturn<IOrden>["register"];
   onDelete: () => void;
+  establecerPrecio: (item: IItemOrden) => void;
   idOrden: string | null;
   sucursal?: IOrden["sucursal"];
 }
@@ -56,7 +57,16 @@ export const ItemOrdenForm = forwardRef<
   HTMLDivElement,
   Omit<ItemOrdenFormProps, "almacenes" | "onLoadAlmacenes">
 >(function ItemOrdenForm(
-  { item, idx, onDelete, sucursal, getValues, setValue, register },
+  {
+    item,
+    idx,
+    onDelete,
+    sucursal,
+    getValues,
+    setValue,
+    register,
+    establecerPrecio,
+  },
   ref
 ) {
   const { listarAlmacenesPorSucursal } = useAlmacenesStore();
@@ -245,6 +255,7 @@ export const ItemOrdenForm = forwardRef<
           <Label>Cantidad</Label>
           <Input
             type="number"
+            step="1"
             {...register(`items.${idx}.cantidad` as const, {
               required: "Cantidad requerida",
               valueAsNumber: true,
@@ -266,7 +277,7 @@ export const ItemOrdenForm = forwardRef<
                 valueAsNumber: true,
                 min: { value: 0, message: "Debe ser mayor o igual a 0" },
               })}
-              defaultValue={item.precio || 0}
+              value={item.precio || 0}
               className="w-full p-2 border border-gray-300 rounded-lg item-precio"
               onChange={handlePrecioChange}
             />
@@ -281,9 +292,9 @@ export const ItemOrdenForm = forwardRef<
                 className="gap-2 p-2 min-w-[48px]"
                 title="Restablecer precio automático"
                 onClick={() => {
-                  const newItems = [...getValues("items")];
-                  setValue("items", newItems);
-                  setManual(false);
+                  if (!item.producto.id) return;
+                  establecerPrecio(item);
+                  setManual(false); // Reset manual flag
                 }}
               >
                 <RefreshCwIcon className="w-4 h-4" />
