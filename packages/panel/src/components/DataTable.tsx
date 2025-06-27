@@ -151,9 +151,36 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       <div className="flex py-4 justify-between align-baseline">
-        <Label className="text-sm">
-          Página: {Number(page)} / {Number(pageCount)}
-        </Label>
+        {/*
+          Se agregó un input numérico para permitir la navegación directa a una página específica.
+          El usuario puede escribir el número de página y navegar directamente.
+        */}
+        <div className="flex items-center space-x-2">
+          <Label className="text-sm">Página:</Label>
+          <Input
+            type="number"
+            min={1}
+            max={pageCount}
+            value={page}
+            onChange={(e) => {
+              let val = Number(e.target.value);
+              if (val > pageCount) val = pageCount;
+              if (val < 1) val = 1;
+              setPage(val);
+            }}
+            onBlur={(e) => {
+              let val = Number(e.target.value);
+              if (!val || val < 1) val = 1;
+              if (val > pageCount) val = pageCount;
+              setPage(val);
+            }}
+            className="w-16 mx-2"
+          />
+          <span className="text-sm">/ {Number(pageCount)}</span>
+        </div>
+        {/*
+          Select para cambiar el límite de elementos por página.
+        */}
         <Select
           value={String(limit)}
           onValueChange={(value) => {

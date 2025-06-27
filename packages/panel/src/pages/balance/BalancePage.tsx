@@ -46,18 +46,18 @@ export default function TransactionPage() {
     reset, // Método para limpiar el estado global del store de transacciones
   } = useTransaccionesStore();
 
+  // Este useEffect se encarga de listar las transacciones del cliente seleccionado.
+  // Se eliminó el setPersona(null) del cleanup para evitar que el cliente se deseleccione al cambiar de cliente.
   useEffect(() => {
     if (!persona) return;
     listarTransacciones(persona.id);
-    return () => {
-      setPersona(null);
-    };
+    // Eliminado el setPersona(null) del cleanup para evitar que se deseleccione el cliente al cambiar
   }, [listarTransacciones, persona, limit, page]);
 
-  // Limpiar el cliente seleccionado y el store de transacciones al desmontar la página de Balance
+  // Este useEffect limpia el estado global del store de transacciones al desmontar la página de Balance.
+  // Se eliminó el setPersona(null) aquí para que el cliente seleccionado solo se limpie al salir de la página.
   useEffect(() => {
     return () => {
-      setPersona(null); // Limpia el cliente seleccionado
       reset(); // Limpia el estado global del store (balance, pagos, reembolsos, transacciones, etc.)
     };
   }, [reset]);

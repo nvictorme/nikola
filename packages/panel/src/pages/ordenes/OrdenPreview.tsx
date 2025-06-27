@@ -5,7 +5,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { IOrden } from "shared/interfaces";
-import { currencyFormat, calcularTotalOrden } from "shared/helpers";
+import {
+  currencyFormat,
+  calcularTotalOrden,
+  formatearFecha,
+} from "shared/helpers";
 import { TipoDescuento, TipoOrden } from "shared/enums";
 
 interface OrdenPreviewProps {
@@ -34,7 +38,8 @@ export const OrdenPreview = ({
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
         <DialogTitle className="sr-only">Orden #{orden.serial}</DialogTitle>
         <DialogDescription className="sr-only">
-          Fecha: {new Date(orden.fechaCreado).toLocaleDateString()}
+          {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
+          Fecha: {formatearFecha(orden.fechaCreado)}
         </DialogDescription>
 
         {/* Scrollable container */}
@@ -46,13 +51,31 @@ export const OrdenPreview = ({
                 <h2 className="text-2xl font-bold mb-1">
                   Orden #{orden.serial}
                 </h2>
+                {/* Mostrando el tipo de orden en negritas */}
                 <span className="text-sm text-gray-500">
-                  Tipo: {orden.tipo}
+                  <span className="font-semibold">Tipo:</span> {orden.tipo}
                 </span>
+                {/* Mostrando el tiempo de validez en negritas solo para crédito y cotización */}
+                {(orden.tipo === TipoOrden.credito ||
+                  orden.tipo === TipoOrden.cotizacion) &&
+                  orden.validez && (
+                    <span className="text-sm text-gray-500 block">
+                      <span className="font-semibold">Tiempo de Validez:</span>{" "}
+                      {orden.validez} día
+                      {orden.validez > 1 ? "s" : ""}
+                    </span>
+                  )}
               </div>
               <div className="text-right">
                 <p className="font-semibold">Fecha de Orden:</p>
-                <p>{new Date(orden.fechaCreado).toLocaleDateString()}</p>
+                {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
+                <p>
+                  {new Date(orden.fechaCreado).toLocaleDateString("es-ES", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
+                </p>
                 {orden.tipoCambio === "BCV" && (
                   <p className="text-sm text-gray-500 mt-1">
                     Tasa BCV: {orden.tasaCambio}
@@ -78,7 +101,8 @@ export const OrdenPreview = ({
                       {orden.cliente?.nombre} {orden.cliente?.apellido}
                     </p>
                   ) : null}
-                  <p className="text-sm">{orden.cliente?.email}</p>
+                  {/* Se ocultó el correo del cliente por requerimiento */}
+                  {/* <p className="text-sm">{orden.cliente?.email}</p> */}
                   <p className="text-sm">{orden.cliente?.telefono}</p>
                 </div>
               </div>
@@ -114,7 +138,8 @@ export const OrdenPreview = ({
                     {orden.vendedor.nombre} {orden.vendedor.apellido}
                   </p>
                 ) : null}
-                <p className="text-sm">{orden.vendedor.email}</p>
+                {/* Se ocultó el correo del vendedor por requerimiento */}
+                {/* <p className="text-sm">{orden.vendedor.email}</p> */}
                 <p className="text-sm">{orden.vendedor.telefono}</p>
               </div>
             </div>

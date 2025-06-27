@@ -60,7 +60,10 @@ export default function TransaccionForm({
       ...(!isAdmin && { metodoPago: MetodoPago.transferencia }),
       archivos: [],
     },
+    mode: "onSubmit",
+    reValidateMode: "onChange",
   });
+  // 'tipo' se usa para condicionar la validación y renderizado de campos
   const tipo = watch("tipo");
 
   const [runFormTour, setRunFormTour] = useState(false);
@@ -109,6 +112,7 @@ export default function TransaccionForm({
     (data: ITransaccion) => {
       crearTransaccion({ ...data, persona: persona! });
       reset();
+      setAccordionValue(""); // Collapse the accordion after submit
     },
     [persona, crearTransaccion, reset]
   );
@@ -232,14 +236,23 @@ export default function TransaccionForm({
                       <Controller
                         name="estatusPago"
                         control={control}
+                        // Validación: Solo es requerido si el tipo es 'pago'
+                        rules={{
+                          required:
+                            tipo === TipoTransaccion.pago
+                              ? "El estatus es requerido"
+                              : false,
+                        }}
                         render={({ field }) => (
                           <Select
+                            // Deshabilita el selector si no es admin o el tipo no es 'pago'
                             disabled={!isAdmin || tipo !== TipoTransaccion.pago}
                             required={!isAdmin}
                             onValueChange={(value) => {
                               field.onChange(value);
                             }}
-                            value={field.value!}
+                            // Asegura que el valor sea string o vacío
+                            value={field.value || ""}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Seleccionar estatus" />
@@ -254,6 +267,12 @@ export default function TransaccionForm({
                           </Select>
                         )}
                       />
+                      {/* Muestra el mensaje de error solo si no se selecciona estatus */}
+                      {errors.estatusPago && (
+                        <span className="text-sm text-red-500 mt-1 block">
+                          {errors.estatusPago.message}
+                        </span>
+                      )}
                     </div>
                     <div>
                       <Label

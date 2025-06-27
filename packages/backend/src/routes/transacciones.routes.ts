@@ -232,7 +232,11 @@ TransaccionesRouter.post(
           )
         );
 
-        await Promise.all(emailPromises);
+        try {
+          await Promise.allSettled(emailPromises);
+        } catch (error: any) {
+          console.error("Error sending emails:", error);
+        }
       }
     } catch (e: any) {
       console.error(e);

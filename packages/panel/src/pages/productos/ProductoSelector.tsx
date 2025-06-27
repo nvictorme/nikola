@@ -74,7 +74,7 @@ export default function ProductSelector({
       {!products.length ? (
         <div className="text-center p-4">No hay productos disponibles.</div>
       ) : (
-        <ScrollArea className="h-[300px] border rounded-md p-4">
+        <ScrollArea className="h-[200px] border rounded-md p-4">
           {filteredProducts.map((product) => (
             <div key={product.id} className="flex items-center space-x-2 py-2">
               <Checkbox
@@ -86,7 +86,8 @@ export default function ProductSelector({
                 htmlFor={product.id}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                {product.sku} - {product.nombre}
+                {/* Solo nombre, sin SKU */}
+                {product.nombre}
               </label>
             </div>
           ))}
@@ -98,19 +99,23 @@ export default function ProductSelector({
       </Button>
 
       <div className="space-y-2">
+        {/*
+          Corrección: Se agregó espacio entre el número y 'seleccionados' para evitar el error de texto pegado.
+        */}
         <h3 className="text-lg font-semibold">
-          {checkedProducts.size} {soloMotores ? "Motores" : "Productos"}
+          {checkedProducts.size} {soloMotores ? "Motores" : "Productos"}{" "}
           seleccionados:
         </h3>
+        {/*
+          Ajuste: En la lista de productos seleccionados solo se muestra el nombre, sin SKU.
+        */}
         <ScrollArea className="h-[200px] border rounded-md p-4">
           {Array.from(checkedProducts.values()).map((product) => (
             <div
               key={product.id}
               className="flex justify-between items-center py-2"
             >
-              <span>
-                {product.sku} - {product.nombre}
-              </span>
+              <span>{product.nombre}</span>
               <Button
                 variant="destructive"
                 size="sm"

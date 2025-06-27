@@ -251,3 +251,18 @@ export const getTrackingUrl = (envio: IEnvio): string => {
       return envio.tracking;
   }
 };
+
+/**
+ * Formatear una fecha a formato dd/mm/yyyy
+ * @param {string} fecha La fecha a formatear
+ * @returns {string} La fecha formateada
+ */
+export const formatearFecha = (fecha: string): string => {
+  const date = new Date(fecha);
+  const options: Intl.DateTimeFormatOptions = {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  };
+  return date.toLocaleDateString("es-ES", options);
+};
