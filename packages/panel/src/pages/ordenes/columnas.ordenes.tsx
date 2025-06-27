@@ -89,7 +89,7 @@ const estatusOrden: Record<EstatusOrden, number> = {
 export const columnasOrdenes: ColumnDef<Orden>[] = [
   {
     accessorKey: "serial",
-    header: "#Orden",
+    header: () => <div className="text-center w-full">#Orden</div>,
     cell: ({ row }) => {
       const orden = row.original as IOrden;
       const { listarHistorial, historial } = useOrdenesStore();
@@ -170,7 +170,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     accessorKey: "fechaCreado",
-    header: "Fecha",
+    header: () => <div className="text-center w-full">Fecha</div>,
     accessorFn: (row) => new Date(row.fechaCreado).toLocaleDateString(),
   },
   {
@@ -232,12 +232,12 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     accessorKey: "tipo",
-    header: "Tipo",
+    header: () => <div className="text-center w-full">Tipo</div>,
     accessorFn: (row) => row.tipo,
   },
   {
     accessorKey: "cliente",
-    header: "Cliente",
+    header: () => <div className="text-center w-full">Cliente</div>,
     accessorFn: (row) => {
       const cliente = row.cliente;
       if (!cliente) return null;
@@ -252,17 +252,17 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     accessorKey: "proveedor",
-    header: "Proveedor",
+    header: () => <div className="text-center w-full">Proveedor</div>,
     accessorFn: (row) => row.proveedor?.marca,
   },
   {
     accessorKey: "total",
-    header: "Total (USD)",
+    header: () => <div className="text-center w-full">Total (USD)</div>,
     accessorFn: (row) => currencyFormat({ value: row.total || 0 }),
   },
   {
     accessorKey: "archivos",
-    header: "Archivos",
+    header: () => <div className="text-center w-full">Archivos</div>,
     cell: ({ row }) => {
       const archivos = row.original.archivos as IArchivo[];
       if (!archivos.length) return null;
@@ -298,7 +298,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     id: "acciones",
-    header: "Acciones",
+    header: () => <div className="text-center w-full">Acciones</div>,
     cell: ({ row }) => {
       const orden = row.original as IOrden;
       const { user } = useAuthStore();
