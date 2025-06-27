@@ -285,6 +285,10 @@ export default function OrdenForm({
     const items = getValues("items");
     if (!items || items.length === 0) return;
     const nuevosItems = items.map((item) => {
+      if (item.precioManual) {
+        // Si el precio es manual, no recalcular
+        return item;
+      }
       let nuevoPrecio = item.precio;
       if (tipo === TipoOrden.reposicion) {
         nuevoPrecio = item.producto.costo || 0;
@@ -327,11 +331,12 @@ export default function OrdenForm({
   }, [tipoCambio, recalcularPreciosPorTipoCambio]);
 
   const establecerPrecio = useCallback(
-    (item: Partial<IItemOrden>) => {
+    (item: Partial<IItemOrden>, idx?: number) => {
       // aplicar precio por tipo de cliente
       // Si es reposición, usar el costo como precio
       const p = item.producto;
       if (!p) return;
+
       if (tipo === TipoOrden.reposicion) {
         item.precio = p.costo || 0;
       } else if (cliente?.tipoCliente === TipoCliente.mayorista) {
@@ -369,8 +374,11 @@ export default function OrdenForm({
 
       // establecer el total del item
       item.total = (item.cantidad || 1) * (item.precio || 0);
+      item.precioManual = false;
+      // actualizar el item en el formulario
+      if (idx !== undefined) setValue(`items.${idx}`, item as IItemOrden);
     },
-    [tipo, cliente, tipoCambio, factores]
+    [tipo, cliente, tipoCambio, factores, setValue]
   );
 
   return (
@@ -704,8 +712,8 @@ export default function OrdenForm({
                                     id: uuidv4(),
                                     producto: p,
                                     cantidad: 1,
+                                    precioManual: false,
                                   };
-
                                   establecerPrecio(item);
                                   return item;
                                 });

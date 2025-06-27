@@ -48,7 +48,7 @@ interface ItemOrdenFormProps {
   setValue: UseFormReturn<IOrden>["setValue"];
   register: UseFormReturn<IOrden>["register"];
   onDelete: () => void;
-  establecerPrecio: (item: IItemOrden) => void;
+  establecerPrecio: (item: IItemOrden, idx: number) => void;
   idOrden: string | null;
   sucursal?: IOrden["sucursal"];
 }
@@ -73,7 +73,6 @@ export const ItemOrdenForm = forwardRef<
   const [almacenes, setAlmacenes] = useState<AlmacenWithStock[]>([]);
   const [isLoadingAlmacenes, setIsLoadingAlmacenes] = useState(false);
   const [errorAlmacenes, setErrorAlmacenes] = useState<string | null>(null);
-  const [manual, setManual] = useState(false);
 
   const cargarAlmacenes = useCallback(async () => {
     if (almacenes.length === 0) {
@@ -124,9 +123,9 @@ export const ItemOrdenForm = forwardRef<
   };
 
   const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setManual(true); // Marcar como manual al cambiar el precio
+    // Si el precio es editado manualmente, se marca como manual
+    setValue(`items.${idx}.precioManual`, true);
     const precio = parseFloat(e.target.value) || 0;
-
     updateItemTotal(item.cantidad, precio);
   };
 
@@ -284,7 +283,7 @@ export const ItemOrdenForm = forwardRef<
             {/* Botón para restablecer el precio automático si el usuario lo editó manualmente.
                 Usa el mismo estilo visual que el botón 'Orden' de OrdenesPage, pero solo con el icono.
                 Se le aumenta el ancho mínimo para mejor presencia visual. */}
-            {manual && (
+            {item.precioManual && (
               <Button
                 type="button"
                 size="default"
@@ -293,8 +292,7 @@ export const ItemOrdenForm = forwardRef<
                 title="Restablecer precio automático"
                 onClick={() => {
                   if (!item.producto.id) return;
-                  establecerPrecio(item);
-                  setManual(false); // Reset manual flag
+                  establecerPrecio(item, idx);
                 }}
               >
                 <RefreshCwIcon className="w-4 h-4" />

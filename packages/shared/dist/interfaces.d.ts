@@ -163,6 +163,7 @@ export interface IItemOrden extends IBase {
     producto: IProducto;
     cantidad: number;
     precio: number;
+    precioManual: boolean;
     total: number;
     notas: string;
     almacen: IAlmacen | null;

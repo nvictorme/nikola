@@ -26,6 +26,9 @@ export class ItemOrden extends Base implements ORMItemOrden {
   })
   precio: number;
 
+  @Column({ nullable: false, default: false })
+  precioManual: boolean;
+
   @Column({
     type: "numeric",
     precision: 10,
