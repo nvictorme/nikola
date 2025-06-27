@@ -5,7 +5,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { IOrden } from "shared/interfaces";
-import { currencyFormat, calcularTotalOrden } from "shared/helpers";
+import {
+  currencyFormat,
+  calcularTotalOrden,
+  formatearFecha,
+} from "shared/helpers";
 import { TipoDescuento, TipoOrden } from "shared/enums";
 
 interface OrdenPreviewProps {
@@ -35,12 +39,7 @@ export const OrdenPreview = ({
         <DialogTitle className="sr-only">Orden #{orden.serial}</DialogTitle>
         <DialogDescription className="sr-only">
           {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
-          Fecha:{" "}
-          {new Date(orden.fechaCreado).toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
-          })}
+          Fecha: {formatearFecha(orden.fechaCreado)}
         </DialogDescription>
 
         {/* Scrollable container */}

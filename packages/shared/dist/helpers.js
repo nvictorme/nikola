@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getTrackingUrl = exports.getEstatusColor = exports.calcularStockDisponible = exports.calcularTotalOrden = exports.replaceUuidWithSlug = exports.getInitials = exports.canSeeBalance = exports.canCreateOrders = exports.isSuperAdmin = exports.currencyFormat = exports.isValidPassword = exports.emulateDownload = void 0;
+exports.formatearFecha = exports.getTrackingUrl = exports.getEstatusColor = exports.calcularStockDisponible = exports.calcularTotalOrden = exports.replaceUuidWithSlug = exports.getInitials = exports.canSeeBalance = exports.canCreateOrders = exports.isSuperAdmin = exports.currencyFormat = exports.isValidPassword = exports.emulateDownload = void 0;
 exports.generateComplexPassword = generateComplexPassword;
 const constants_1 = require("./constants");
 const enums_1 = require("./enums");
@@ -204,3 +204,18 @@ const getTrackingUrl = (envio) => {
     }
 };
 exports.getTrackingUrl = getTrackingUrl;
+/**
+ * Formatear una fecha a formato dd/mm/yyyy
+ * @param {string} fecha La fecha a formatear
+ * @returns {string} La fecha formateada
+ */
+const formatearFecha = (fecha) => {
+    const date = new Date(fecha);
+    const options = {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+    };
+    return date.toLocaleDateString("es-ES", options);
+};
+exports.formatearFecha = formatearFecha;
