@@ -86,8 +86,10 @@ export default function ProductSelector({
                 htmlFor={product.id}
                 className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
               >
-                {/* Solo nombre, sin SKU */}
                 {product.nombre}
+                <span className="italic text-gray-400 text-xs ml-2">
+                  ({product.sku})
+                </span>
               </label>
             </div>
           ))}
@@ -106,16 +108,18 @@ export default function ProductSelector({
           {checkedProducts.size} {soloMotores ? "Motores" : "Productos"}{" "}
           seleccionados:
         </h3>
-        {/*
-          Ajuste: En la lista de productos seleccionados solo se muestra el nombre, sin SKU.
-        */}
         <ScrollArea className="h-[200px] border rounded-md p-4">
           {Array.from(checkedProducts.values()).map((product) => (
             <div
               key={product.id}
               className="flex justify-between items-center py-2"
             >
-              <span>{product.nombre}</span>
+              <span>
+                {product.nombre}
+                <span className="italic text-gray-400 text-xs ml-2">
+                  ({product.sku})
+                </span>
+              </span>
               <Button
                 variant="destructive"
                 size="sm"
