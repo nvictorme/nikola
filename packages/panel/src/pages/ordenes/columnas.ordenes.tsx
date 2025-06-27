@@ -29,6 +29,7 @@ import {
   getTrackingUrl,
   canCreateOrders,
   currencyFormat,
+  formatearFecha,
 } from "shared/helpers";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import {
@@ -174,12 +175,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
     header: () => <div className="text-center w-full">Fecha</div>,
     // Formatear la fecha como día/mes/año usando la configuración regional 'es-ES'
     accessorFn: (row) => {
-      const fecha = new Date(row.fechaCreado);
-      return fecha.toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      });
+      return formatearFecha(row.fechaCreado);
     },
     cell: ({ getValue }) => (
       // Centrar el contenido de la celda Fecha
