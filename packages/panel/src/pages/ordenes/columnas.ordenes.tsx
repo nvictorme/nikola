@@ -29,6 +29,7 @@ import {
   getTrackingUrl,
   canCreateOrders,
   currencyFormat,
+  formatearFecha,
 } from "shared/helpers";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import {
@@ -171,7 +172,7 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   {
     accessorKey: "fechaCreado",
     header: () => <div className="text-center w-full">Fecha</div>,
-    accessorFn: (row) => new Date(row.fechaCreado).toLocaleDateString(),
+    accessorFn: (row) => formatearFecha(row.fechaCreado) || "",
   },
   {
     id: "estatus",
