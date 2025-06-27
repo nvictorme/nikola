@@ -351,8 +351,19 @@ export interface ISucursalSale {
   total: number;
 }
 
+// =============================
+// Se agregó la interfaz IReposicionMes y la propiedad reposicionesMes a IDashboardCharts
+// para soportar el cálculo y visualización del total de montos de órdenes de reposición del mes
+// en el dashboard del panel. Esto permite que el backend y frontend compartan el nuevo dato.
+// =============================
+export interface IReposicionMes {
+  id: string;
+  monto: number;
+}
+
 export interface IDashboardCharts {
   dailySales: IDailySale[];
   salesByCategory: ICategorySale[];
   salesByBranch: ISucursalSale[];
+  reposicionesMes: IReposicionMes[];
 }

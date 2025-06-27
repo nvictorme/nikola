@@ -29,6 +29,7 @@ const initialState: Omit<
     dailySales: [],
     salesByCategory: [],
     salesByBranch: [],
+    reposicionesMes: [],
   },
   deudores: [],
 };
@@ -74,3 +75,8 @@ export const useDashboardStore = create<DashboardStore>()(
     }
   )
 );
+
+// =============================
+// Se actualizó el store para incluir la propiedad reposicionesMes en el estado y tipos,
+// permitiendo que el dashboard consuma y muestre la nueva métrica de reposición mensual.
+// =============================
