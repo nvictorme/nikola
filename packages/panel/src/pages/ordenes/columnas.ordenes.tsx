@@ -29,6 +29,7 @@ import {
   getTrackingUrl,
   canCreateOrders,
   currencyFormat,
+  formatearFecha,
 } from "shared/helpers";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import {
