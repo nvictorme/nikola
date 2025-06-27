@@ -63,4 +63,10 @@ export declare const getEstatusColor: (estatus: EstatusOrden) => string;
  * @returns The tracking URL or the tracking number if no URL mapping exists
  */
 export declare const getTrackingUrl: (envio: IEnvio) => string;
+/**
+ * Formatear una fecha a formato dd/mm/yyyy
+ * @param {string} fecha La fecha a formatear
+ * @returns {string} La fecha formateada
+ */
+export declare const formatearFecha: (fecha: string) => string;
 export {};
