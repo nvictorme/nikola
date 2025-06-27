@@ -175,7 +175,8 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
   },
   {
     id: "estatus",
-    header: "Estatus",
+    // Centrar el encabezado de la columna Estatus
+    header: () => <div className="text-center w-full">Estatus</div>,
     cell: ({ row }) => {
       const orden = row.original as IOrden;
       const { user } = useAuthStore();
@@ -186,8 +187,6 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
       const estatusActualNivel = estatusOrden[orden.estatus];
 
       return canCreate ? (
-        // Usar 'value' en vez de 'defaultValue' para que el Select siempre refleje el estatus actual de la orden,
-        // incluso si cambia dinámicamente por sockets u otras actualizaciones externas.
         <Select
           value={orden.estatus || EstatusOrden.pendiente}
           onValueChange={(value) => {
@@ -225,15 +224,9 @@ export const columnasOrdenes: ColumnDef<Orden>[] = [
           </SelectContent>
         </Select>
       ) : (
-        <div className="flex items-center gap-2">
-          <span
-            className={`px-2 py-1 text-xs rounded-full ${getEstatusColor(
-              orden.estatus
-            )}`}
-          >
-            {orden.estatus}
-          </span>
-        </div>
+        <span className={`font-semibold ${getEstatusColor(orden.estatus)}`}>
+          {orden.estatus || EstatusOrden.pendiente}
+        </span>
       );
     },
   },
