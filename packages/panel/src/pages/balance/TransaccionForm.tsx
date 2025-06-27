@@ -112,6 +112,7 @@ export default function TransaccionForm({
     (data: ITransaccion) => {
       crearTransaccion({ ...data, persona: persona! });
       reset();
+      setAccordionValue(""); // Collapse the accordion after submit
     },
     [persona, crearTransaccion, reset]
   );
