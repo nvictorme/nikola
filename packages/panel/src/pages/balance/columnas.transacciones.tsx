@@ -12,7 +12,7 @@ import { useTransaccionesStore } from "@/store/transacciones.store";
 import { ColumnDef } from "@tanstack/react-table";
 import { EyeIcon, ThumbsDownIcon, ThumbsUpIcon } from "lucide-react";
 import { EstatusPago, TipoTransaccion } from "shared/enums";
-import { currencyFormat, isSuperAdmin } from "shared/helpers";
+import { currencyFormat, formatearFecha, isSuperAdmin } from "shared/helpers";
 import { IArchivo, ITransaccion } from "shared/interfaces";
 
 export type Transaccion = Pick<
@@ -34,7 +34,7 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   {
     accessorKey: "fechaCreado",
     header: "Fecha",
-    accessorFn: (row) => new Date(row.fechaCreado).toLocaleDateString(),
+    accessorFn: (row) => formatearFecha(row.fechaCreado) || "",
   },
   {
     accessorKey: "referencia",
