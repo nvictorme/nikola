@@ -29,6 +29,13 @@ export class Usuario extends Persona implements ORMUsuario {
   @Column()
   password: string;
 
+  @Column({
+    length: 100,
+    unique: true,
+    nullable: false,
+  })
+  email: string;
+
   @Column({ default: false })
   super: boolean;
 

@@ -52,11 +52,7 @@ export default function PersonaForm() {
     >
       <div>
         <Label htmlFor="email">Email</Label>
-        <Input
-          id="email"
-          type="email"
-          {...register("email", { required: "Email es requerido" })}
-        />
+        <Input id="email" type="email" {...register("email")} />
         {errors.email && (
           <span className="text-red-500 text-sm mt-1 block">
             {errors.email.message}
