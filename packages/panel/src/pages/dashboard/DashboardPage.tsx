@@ -43,7 +43,6 @@ import {
 import { IPersona } from "shared/interfaces";
 import { useProductosStore } from "../../store/productos.store";
 import { useAlmacenesStore } from "../../store/almacenes.store";
-import { ApiClient } from "../../api/api.client";
 
 const CHART_COLORS = {
   light: {
@@ -161,8 +160,8 @@ const DashboardPage: React.FC = () => {
   const totalProductos = useProductosStore((state) => state.total);
   const [valorCosto, setValorCosto] = React.useState<number | null>(null);
   const [valorVenta, setValorVenta] = React.useState<number | null>(null);
-  const [calculandoCosto, setCalculandoCosto] = React.useState(false);
-  const [calculandoVenta, setCalculandoVenta] = React.useState(false);
+  const [calculandoCosto] = React.useState(false);
+  const [calculandoVenta] = React.useState(false);
 
   // Definir colors según el tema actual
   const { theme } = useTheme();
@@ -205,69 +204,13 @@ const DashboardPage: React.FC = () => {
 
   // Funciones para calcular cada valoración bajo pedido
   const calcularValorCosto = async () => {
-    setCalculandoCosto(true);
-    // No activar setCalculandoVenta(true)
-    let totalCosto = 0;
-    for (const producto of productos) {
-      let stockTotal = 0;
-      for (const almacen of almacenes) {
-        try {
-          const { data } = await new ApiClient().get(
-            `/productos/${producto.id}/stock/${almacen.id}`,
-            {}
-          );
-          const stock = data?.stock;
-          if (stock) {
-            const actual = stock.actual ?? 0;
-            const transito = stock.transito ?? 0;
-            const reservado = stock.reservado ?? 0;
-            stockTotal += actual + transito - reservado;
-          }
-        } catch (error) {
-          console.error(
-            `Error obteniendo stock de producto ${producto.nombre} en almacen ${almacen.nombre}`,
-            error
-          );
-        }
-      }
-      totalCosto += stockTotal * (producto.costo ?? 0);
-    }
-    setValorCosto(totalCosto);
-    sessionStorage.setItem("valorInventarioCosto", String(totalCosto));
-    setCalculandoCosto(false);
+    // TO DO: Implementar lógica para calcular el valor de inventario por costo en el Backend
+    console.log("Calculando valor de inventario por costo...");
   };
 
   const calcularValorVenta = async () => {
-    setCalculandoVenta(true);
-    // No activar setCalculandoCosto(true)
-    let totalVenta = 0;
-    for (const producto of productos) {
-      let stockTotal = 0;
-      for (const almacen of almacenes) {
-        try {
-          const { data } = await new ApiClient().get(
-            `/productos/${producto.id}/stock/${almacen.id}`,
-            {}
-          );
-          const stock = data?.stock;
-          if (stock) {
-            const actual = stock.actual ?? 0;
-            const transito = stock.transito ?? 0;
-            const reservado = stock.reservado ?? 0;
-            stockTotal += actual + transito - reservado;
-          }
-        } catch (error) {
-          console.error(
-            `Error obteniendo stock de producto ${producto.nombre} en almacen ${almacen.nombre}`,
-            error
-          );
-        }
-      }
-      totalVenta += stockTotal * (producto.precioInstalador ?? 0);
-    }
-    setValorVenta(totalVenta);
-    sessionStorage.setItem("valorInventarioVenta", String(totalVenta));
-    setCalculandoVenta(false);
+    // TO DO: Implementar lógica para calcular el valor de inventario por venta en el Backend
+    console.log("Calculando valor de inventario por venta...");
   };
 
   // =============================
