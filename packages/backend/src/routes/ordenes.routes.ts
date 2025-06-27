@@ -715,6 +715,7 @@ OrdenesRouter.put(
             // Actualizar item existente mientras se preservan su ID
             existingItem.producto = newItem.producto;
             existingItem.cantidad = newItem.cantidad;
+            existingItem.precioManual = newItem.precioManual || false;
             existingItem.precio = newItem.precio;
             existingItem.total = newItem.total;
             existingItem.notas = newItem.notas || "";
@@ -729,6 +730,7 @@ OrdenesRouter.put(
             item.id = newItem.id; // Preservar el ID desde el frontend
             item.producto = newItem.producto;
             item.cantidad = newItem.cantidad;
+            item.precioManual = newItem.precioManual || false;
             item.precio = newItem.precio;
             item.total = newItem.total;
             item.notas = newItem.notas || "";
