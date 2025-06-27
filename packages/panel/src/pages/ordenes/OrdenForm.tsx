@@ -700,7 +700,7 @@ export default function OrdenForm({
                           <PlusIcon className="w-4 h-4" /> Añadir Items
                         </Button>
                       </DialogTrigger>
-                      <DialogContent>
+                      <DialogContent className="max-w-4xl">
                         <DialogHeader>
                           <DialogTitle>Seleccionar Productos</DialogTitle>
                           <DialogDescription>
