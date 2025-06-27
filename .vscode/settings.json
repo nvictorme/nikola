@@ -1,4 +1,7 @@
 {
     "editor.defaultFormatter": "hb432.prettier-eslint-typescript",
-    "editor.formatOnSave": true
+    "editor.formatOnSave": true,
+    "[typescript]": {
+        "editor.defaultFormatter": "hb432.prettier-eslint-typescript"
+    }
 }

@@ -13,7 +13,8 @@ export interface ORMPersona extends IPersona {
 export class Persona extends Base implements ORMPersona {
   @Column({
     length: 100,
-    unique: true,
+    unique: false,
+    nullable: true,
   })
   email: string;
 
