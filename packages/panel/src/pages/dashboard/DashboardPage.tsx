@@ -27,6 +27,10 @@ import {
   BarChart2,
   AlertCircle,
   Package,
+  TrendingUp,
+  DollarSign,
+  Percent,
+  Warehouse,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { currencyFormat } from "shared/helpers";
@@ -43,6 +47,7 @@ import {
 import { IPersona } from "shared/interfaces";
 import { useProductosStore } from "../../store/productos.store";
 import { useAlmacenesStore } from "../../store/almacenes.store";
+import { ApiClient } from "@/api/api.client";
 
 const CHART_COLORS = {
   light: {
@@ -140,6 +145,28 @@ interface DailySale {
   total: number;
 }
 
+// Add interface for inventory valuation data
+interface InventoryValuationData {
+  totalInventoryValue: number;
+  totalInventoryCost: number;
+  totalItems: number;
+  totalMargin: number;
+  breakdownByAlmacen: Array<{
+    nombre: string;
+    valor: number;
+    costo: number;
+    items: number;
+    margen: number;
+  }>;
+  breakdownByProduct: Array<{
+    nombre: string;
+    valor: number;
+    costo: number;
+    cantidad: number;
+    margen: number;
+  }>;
+}
+
 const DashboardPage: React.FC = () => {
   const {
     isLoading,
@@ -149,19 +176,20 @@ const DashboardPage: React.FC = () => {
     charts,
     deudores,
     fetchDashboardData,
-    fetchChartsData, // Descomentar para asegurar actualización de charts
+    fetchChartsData,
     fetchDeudores,
-    // Líneas comentadas: estas funciones se extraían del store pero no se usan en el componente.
   } = useDashboardStore();
 
   const almacenes = useAlmacenesStore((state) => state.almacenes);
   const listarAlmacenes = useAlmacenesStore((state) => state.listarAlmacenes);
   const productos = useProductosStore((state) => state.productos);
   const totalProductos = useProductosStore((state) => state.total);
-  const [valorCosto, setValorCosto] = React.useState<number | null>(null);
-  const [valorVenta, setValorVenta] = React.useState<number | null>(null);
-  const [calculandoCosto] = React.useState(false);
-  const [calculandoVenta] = React.useState(false);
+
+  // Inventory valuation state
+  const [inventoryData, setInventoryData] =
+    React.useState<InventoryValuationData | null>(null);
+  const [isCalculatingInventory, setIsCalculatingInventory] =
+    React.useState(false);
 
   // Definir colors según el tema actual
   const { theme } = useTheme();
@@ -169,10 +197,14 @@ const DashboardPage: React.FC = () => {
 
   // Restaurar valores desde sessionStorage al montar
   React.useEffect(() => {
-    const costoGuardado = sessionStorage.getItem("valorInventarioCosto");
-    const ventaGuardada = sessionStorage.getItem("valorInventarioVenta");
-    if (costoGuardado !== null) setValorCosto(Number(costoGuardado));
-    if (ventaGuardada !== null) setValorVenta(Number(ventaGuardada));
+    const savedData = sessionStorage.getItem("inventoryValuationData");
+    if (savedData) {
+      try {
+        setInventoryData(JSON.parse(savedData));
+      } catch (error) {
+        console.error("Error parsing saved inventory data:", error);
+      }
+    }
   }, []);
 
   React.useEffect(() => {
@@ -202,15 +234,20 @@ const DashboardPage: React.FC = () => {
     }
   }, [fetchDashboardData, fetchChartsData, fetchDeudores]);
 
-  // Funciones para calcular cada valoración bajo pedido
+  // Function to calculate inventory valuation
   const calcularValorCosto = async () => {
-    // TO DO: Implementar lógica para calcular el valor de inventario por costo en el Backend
-    console.log("Calculando valor de inventario por costo...");
-  };
+    try {
+      setIsCalculatingInventory(true);
+      const { data } = await new ApiClient().get("/dashboard/valor-costo", {});
+      setInventoryData(data);
 
-  const calcularValorVenta = async () => {
-    // TO DO: Implementar lógica para calcular el valor de inventario por venta en el Backend
-    console.log("Calculando valor de inventario por venta...");
+      // Store in sessionStorage for persistence
+      sessionStorage.setItem("inventoryValuationData", JSON.stringify(data));
+    } catch (error) {
+      console.error("Error calculating inventory value:", error);
+    } finally {
+      setIsCalculatingInventory(false);
+    }
   };
 
   // =============================
@@ -320,13 +357,6 @@ const DashboardPage: React.FC = () => {
           icon={BanknoteIcon}
           className="bg-blue-500/70 dark:bg-blue-400/70"
         />
-        {/* <MetricCard
-          title="Promedio por Venta"
-          value={currencyFormat({ value: promedioVenta })}
-          icon={BarChart2}
-          className="bg-amber-500/70 dark:bg-amber-400/70"
-        /> */}
-        {/* Nuevo MetricCard: Total Ventas del Día */}
         <MetricCard
           title="Total Ventas del Día"
           value={currencyFormat({ value: totalVentasDia })}
@@ -355,91 +385,184 @@ const DashboardPage: React.FC = () => {
         />
       </div>
 
-      {/* Nueva fila: Valoración de Inventario bajo demanda */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Valoracion Inventario COSTO
-                </p>
-                <p className="text-2xl font-bold">
-                  {calculandoCosto ? (
-                    <span className="flex items-center text-lg">
-                      <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mr-2" />
-                      <span className="text-base">Calculando...</span>
-                    </span>
-                  ) : valorCosto !== null ? (
-                    currencyFormat({ value: valorCosto })
-                  ) : (
-                    "--"
-                  )}
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "p-2 rounded-full bg-green-500/70 dark:bg-green-400/70"
-                )}
-              >
-                {" "}
-                <BanknoteIcon className="h-5 w-5 text-white" />{" "}
-              </div>
+      {/* Inventory Valuation Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold">Valoración de Inventario</h2>
+          <button
+            onClick={calcularValorCosto}
+            disabled={isCalculatingInventory}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            {isCalculatingInventory ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
+                Calculando...
+              </>
+            ) : (
+              <>
+                <TrendingUp className="h-4 w-4" />
+                Calcular Valoración
+              </>
+            )}
+          </button>
+        </div>
+
+        {inventoryData && (
+          <>
+            {/* Summary Cards */}
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              <MetricCard
+                title="Valor Total Inventario"
+                value={currencyFormat({
+                  value: inventoryData.totalInventoryValue,
+                })}
+                icon={DollarSign}
+                className="bg-green-500/70 dark:bg-green-400/70"
+              />
+              <MetricCard
+                title="Costo Total Inventario"
+                value={currencyFormat({
+                  value: inventoryData.totalInventoryCost,
+                })}
+                icon={BanknoteIcon}
+                className="bg-orange-500/70 dark:bg-orange-400/70"
+              />
+              <MetricCard
+                title="Margen Total"
+                value={`${inventoryData.totalMargin.toFixed(1)}%`}
+                icon={Percent}
+                className="bg-purple-500/70 dark:bg-purple-400/70"
+              />
+              <MetricCard
+                title="Total Items"
+                value={inventoryData.totalItems}
+                icon={Package}
+                className="bg-blue-500/70 dark:bg-blue-400/70"
+              />
             </div>
-            {/* Botón calcular: deshabilitado si ya hay valor calculado o si el otro cálculo está en proceso */}
-            <button
-              className="mt-4 px-4 py-2 bg-green-600 text-white rounded disabled:opacity-50"
-              onClick={calcularValorCosto}
-              disabled={
-                calculandoCosto || calculandoVenta || valorCosto !== null
-              }
-            >
-              Calcular
-            </button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Valoracion Inventario VENTA
-                </p>
-                <p className="text-2xl font-bold">
-                  {calculandoVenta ? (
-                    <span className="flex items-center text-lg">
-                      <span className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-900 mr-2" />
-                      <span className="text-base">Calculando...</span>
-                    </span>
-                  ) : valorVenta !== null ? (
-                    currencyFormat({ value: valorVenta })
-                  ) : (
-                    "--"
-                  )}
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "p-2 rounded-full bg-yellow-500/70 dark:bg-yellow-400/70"
-                )}
-              >
-                {" "}
-                <BarChart2 className="h-5 w-5 text-white" />{" "}
-              </div>
+
+            {/* Breakdown Charts */}
+            <div className="grid gap-6 lg:grid-cols-2">
+              {/* Breakdown by Almacen */}
+              <Card className="overflow-hidden">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Warehouse className="h-5 w-5" />
+                    Valoración por Almacén
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Distribución del valor del inventario por almacén
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {inventoryData.breakdownByAlmacen.map((almacen) => (
+                      <div key={almacen.nombre} className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium">{almacen.nombre}</span>
+                          <span className="text-sm text-muted-foreground">
+                            {almacen.items} items
+                          </span>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex justify-between text-sm">
+                            <span>
+                              Valor: {currencyFormat({ value: almacen.valor })}
+                            </span>
+                            <span>
+                              Costo: {currencyFormat({ value: almacen.costo })}
+                            </span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-blue-600 h-2 rounded-full"
+                              style={{
+                                width: `${
+                                  (almacen.valor /
+                                    inventoryData.totalInventoryValue) *
+                                  100
+                                }%`,
+                              }}
+                            />
+                          </div>
+                          <div className="flex justify-between text-xs text-muted-foreground">
+                            <span>Margen: {almacen.margen.toFixed(1)}%</span>
+                            <span>
+                              {(
+                                (almacen.valor /
+                                  inventoryData.totalInventoryValue) *
+                                100
+                              ).toFixed(1)}
+                              % del total
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Top Products Table */}
+              <Card className="overflow-hidden">
+                <CardHeader className="space-y-1">
+                  <CardTitle className="text-xl flex items-center gap-2">
+                    <Package className="h-5 w-5" />
+                    Productos con Mayor Valor
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground">
+                    Top 10 productos por valor de inventario
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-auto max-h-[400px]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Producto</TableHead>
+                          <TableHead className="text-right">Valor</TableHead>
+                          <TableHead className="text-right">Cantidad</TableHead>
+                          <TableHead className="text-right">Margen</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {inventoryData.breakdownByProduct
+                          .sort((a, b) => b.valor - a.valor)
+                          .slice(0, 10)
+                          .map((product) => (
+                            <TableRow key={product.nombre}>
+                              <TableCell className="font-medium max-w-[200px] truncate">
+                                {product.nombre}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {currencyFormat({ value: product.valor })}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                {product.cantidad}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <span
+                                  className={cn(
+                                    "px-2 py-1 rounded text-xs font-medium",
+                                    product.margen >= 0
+                                      ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                                      : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                                  )}
+                                >
+                                  {product.margen.toFixed(1)}%
+                                </span>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            {/* Botón calcular: deshabilitado si ya hay valor calculado o si el otro cálculo está en proceso */}
-            <button
-              className="mt-4 px-4 py-2 bg-yellow-600 text-white rounded disabled:opacity-50"
-              onClick={calcularValorVenta}
-              disabled={
-                calculandoVenta || calculandoCosto || valorVenta !== null
-              }
-            >
-              Calcular
-            </button>
-          </CardContent>
-        </Card>
-        <div />
+          </>
+        )}
       </div>
 
       {/* Modificación aquí: grilla de 2 columnas para los cuadros de información */}

@@ -285,8 +285,13 @@ export interface ISucursalSale {
     quantity: number;
     total: number;
 }
+export interface IReposicionMes {
+    id: string;
+    monto: number;
+}
 export interface IDashboardCharts {
     dailySales: IDailySale[];
     salesByCategory: ICategorySale[];
     salesByBranch: ISucursalSale[];
+    reposicionesMes: IReposicionMes[];
 }

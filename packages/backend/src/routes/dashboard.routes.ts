@@ -8,6 +8,8 @@ import { eachDayOfInterval } from "date-fns/eachDayOfInterval";
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import { Persona } from "../orm/entity/persona";
 import { MoreThan } from "typeorm";
+import { Stock } from "../orm/entity/stock";
+import { calcularStockDisponible } from "shared/helpers";
 const DashboardRouter = Router();
 
 DashboardRouter.get("/", async (req: Request, res: Response) => {
@@ -31,7 +33,9 @@ DashboardRouter.get("/", async (req: Request, res: Response) => {
       tipos: [TipoOrden.venta, TipoOrden.credito],
     })
     // Filtrar solo órdenes con estatus Confirmado o Entregado
-    .andWhere("orden.estatus IN (:...estatus)", { estatus: [EstatusOrden.confirmado, EstatusOrden.entregado] })
+    .andWhere("orden.estatus IN (:...estatus)", {
+      estatus: [EstatusOrden.confirmado, EstatusOrden.entregado],
+    })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,
@@ -168,7 +172,10 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
       total: Number(branch.total),
       quantity: Number(branch.quantity),
     })),
-    reposicionesMes: reposicionesMes.map((r) => ({ id: r.orden_id || r.id, monto: Number(r.orden_total || r.total) })),
+    reposicionesMes: reposicionesMes.map((r) => ({
+      id: r.orden_id || r.id,
+      monto: Number(r.orden_total || r.total),
+    })),
   });
 });
 
@@ -186,6 +193,151 @@ DashboardRouter.get("/deudores", async (req: Request, res: Response) => {
   return res.status(200).json({
     deudores,
   });
+});
+
+DashboardRouter.get("/valor-costo", async (req: Request, res: Response) => {
+  try {
+    const user = req.user as Usuario;
+    const isAdmin = isSuperAdmin(user);
+
+    // Base query to get inventory value across all almacenes
+    const queryBuilder = AppDataSource.getRepository(Stock)
+      .createQueryBuilder("stock")
+      .leftJoinAndSelect("stock.producto", "producto")
+      .leftJoinAndSelect("stock.almacen", "almacen")
+      .select([
+        "producto.id",
+        "producto.nombre",
+        "producto.costo",
+        "producto.precioInstalador",
+        "stock.actual",
+        "stock.reservado",
+        "stock.transito",
+        "stock.rma",
+        "almacen.id",
+        "almacen.nombre",
+      ])
+      .where("(stock.actual + stock.transito - stock.reservado) > 0"); // Only products with available stock
+
+    // If not admin, filter by user's almacenes
+    if (!isAdmin) {
+      const almacenesIds = user.sucursales
+        .map((sucursal) => sucursal.almacenes)
+        .flat()
+        .map((almacen) => almacen.id);
+
+      if (almacenesIds.length === 0) {
+        return res.status(200).json({
+          totalInventoryValue: 0,
+          totalInventoryCost: 0,
+          totalItems: 0,
+          breakdownByAlmacen: [],
+          breakdownByProduct: [],
+        });
+      }
+
+      queryBuilder.andWhere("almacen.id IN (:...almacenesIds)", {
+        almacenesIds,
+      });
+    }
+
+    const inventoryData = await queryBuilder.getMany();
+
+    // Calculate total inventory value and cost
+    let totalInventoryValue = 0;
+    let totalInventoryCost = 0;
+    let totalItems = 0;
+    const breakdownByAlmacen: {
+      [key: string]: {
+        nombre: string;
+        valor: number;
+        costo: number;
+        items: number;
+        margen: number;
+      };
+    } = {};
+    const breakdownByProduct: {
+      [key: string]: {
+        nombre: string;
+        valor: number;
+        costo: number;
+        cantidad: number;
+        margen: number;
+      };
+    } = {};
+
+    inventoryData.forEach((stock) => {
+      const availableStock = calcularStockDisponible(stock);
+      const productCost = (stock.producto.costo || 0) * availableStock;
+      const productValue =
+        (stock.producto.precioInstalador || 0) * availableStock;
+
+      totalInventoryValue += productValue;
+      totalInventoryCost += productCost;
+      totalItems += availableStock;
+
+      // Breakdown by almacen
+      const almacenId = stock.almacen.id;
+      if (!breakdownByAlmacen[almacenId]) {
+        breakdownByAlmacen[almacenId] = {
+          nombre: stock.almacen.nombre,
+          valor: 0,
+          costo: 0,
+          items: 0,
+          margen: 0,
+        };
+      }
+      breakdownByAlmacen[almacenId].valor += productValue;
+      breakdownByAlmacen[almacenId].costo += productCost;
+      breakdownByAlmacen[almacenId].items += availableStock;
+
+      // Breakdown by product
+      const productoId = stock.producto.id;
+      if (!breakdownByProduct[productoId]) {
+        breakdownByProduct[productoId] = {
+          nombre: stock.producto.nombre,
+          valor: 0,
+          costo: 0,
+          cantidad: 0,
+          margen: 0,
+        };
+      }
+      breakdownByProduct[productoId].valor += productValue;
+      breakdownByProduct[productoId].costo += productCost;
+      breakdownByProduct[productoId].cantidad += availableStock;
+    });
+
+    // Calculate margins for breakdowns
+    Object.values(breakdownByAlmacen).forEach((almacen) => {
+      almacen.margen =
+        almacen.costo > 0
+          ? ((almacen.valor - almacen.costo) / almacen.costo) * 100
+          : 0;
+    });
+
+    Object.values(breakdownByProduct).forEach((product) => {
+      product.margen =
+        product.costo > 0
+          ? ((product.valor - product.costo) / product.costo) * 100
+          : 0;
+    });
+
+    return res.status(200).json({
+      totalInventoryValue,
+      totalInventoryCost,
+      totalItems,
+      totalMargin:
+        totalInventoryCost > 0
+          ? ((totalInventoryValue - totalInventoryCost) / totalInventoryCost) *
+            100
+          : 0,
+      breakdownByAlmacen: Object.values(breakdownByAlmacen),
+      breakdownByProduct: Object.values(breakdownByProduct),
+    });
+  } catch (error: any) {
+    console.error("Error calculating inventory value:", error);
+    return res.status(500).json({ error: error.message });
+  }
 });
 
 export { DashboardRouter };
