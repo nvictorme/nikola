@@ -43,6 +43,7 @@ import {
 import { IPersona } from "shared/interfaces";
 import { useProductosStore } from "../../store/productos.store";
 import { useAlmacenesStore } from "../../store/almacenes.store";
+import { ApiClient } from "@/api/api.client";
 
 const CHART_COLORS = {
   light: {
@@ -206,6 +207,11 @@ const DashboardPage: React.FC = () => {
   const calcularValorCosto = async () => {
     // TO DO: Implementar lógica para calcular el valor de inventario por costo en el Backend
     console.log("Calculando valor de inventario por costo...");
+    const start = Date.now();
+    const { data } = await new ApiClient().get("/dashboard/valor-costo", {});
+    const end = Date.now();
+    console.log(data);
+    console.log(`Tiempo de ejecución: ${end - start}ms`);
   };
 
   const calcularValorVenta = async () => {
