@@ -80,6 +80,10 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     .andWhere("orden.tipo IN (:...tipos)", {
       tipos: [TipoOrden.venta, TipoOrden.credito],
     })
+    // Filtrar solo órdenes con estatus Confirmado o Entregado
+    .andWhere("orden.estatus IN (:...estatus)", {
+      estatus: [EstatusOrden.confirmado, EstatusOrden.entregado],
+    })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,
@@ -102,6 +106,10 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     })
     .andWhere("orden.tipo IN (:...tipos)", {
       tipos: [TipoOrden.venta, TipoOrden.credito],
+    })
+    // Filtrar solo órdenes con estatus Confirmado o Entregado
+    .andWhere("orden.estatus IN (:...estatus)", {
+      estatus: [EstatusOrden.confirmado, EstatusOrden.entregado],
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
@@ -136,6 +144,10 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
     })
     .andWhere("orden.tipo IN (:...tipos)", {
       tipos: [TipoOrden.venta, TipoOrden.credito],
+    })
+    // Filtrar solo órdenes con estatus Confirmado o Entregado
+    .andWhere("orden.estatus IN (:...estatus)", {
+      estatus: [EstatusOrden.confirmado, EstatusOrden.entregado],
     })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
