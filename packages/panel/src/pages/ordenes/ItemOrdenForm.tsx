@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useEffect, useCallback, useState, useRef, forwardRef } from "react";
 import { useAlmacenesStore } from "@/store/almacenes.store";
-import { Trash2Icon } from "lucide-react";
+import { Trash2Icon, RefreshCwIcon } from "lucide-react";
 
 export interface AlmacenWithStock extends IAlmacen {
   stock: {
@@ -48,6 +48,7 @@ interface ItemOrdenFormProps {
   setValue: UseFormReturn<IOrden>["setValue"];
   register: UseFormReturn<IOrden>["register"];
   onDelete: () => void;
+  establecerPrecio: (item: IItemOrden, idx: number) => void;
   idOrden: string | null;
   sucursal?: IOrden["sucursal"];
 }
@@ -56,7 +57,16 @@ export const ItemOrdenForm = forwardRef<
   HTMLDivElement,
   Omit<ItemOrdenFormProps, "almacenes" | "onLoadAlmacenes">
 >(function ItemOrdenForm(
-  { item, idx, onDelete, sucursal, getValues, setValue, register },
+  {
+    item,
+    idx,
+    onDelete,
+    sucursal,
+    getValues,
+    setValue,
+    register,
+    establecerPrecio,
+  },
   ref
 ) {
   const { listarAlmacenesPorSucursal } = useAlmacenesStore();
@@ -96,9 +106,12 @@ export const ItemOrdenForm = forwardRef<
   const updateItemTotal = useCallback(
     (cantidad: number, precio: number) => {
       const newItems = [...getValues("items")];
-      newItems[idx].cantidad = cantidad;
-      newItems[idx].precio = precio;
-      newItems[idx].total = cantidad * precio;
+      newItems[idx] = {
+        ...newItems[idx],
+        cantidad,
+        precio,
+        total: cantidad * precio,
+      };
       setValue("items", newItems);
     },
     [getValues, setValue, idx]
@@ -110,6 +123,8 @@ export const ItemOrdenForm = forwardRef<
   };
 
   const handlePrecioChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Si el precio es editado manualmente, se marca como manual
+    setValue(`items.${idx}.precioManual`, true);
     const precio = parseFloat(e.target.value) || 0;
     updateItemTotal(item.cantidad, precio);
   };
@@ -239,6 +254,7 @@ export const ItemOrdenForm = forwardRef<
           <Label>Cantidad</Label>
           <Input
             type="number"
+            step="1"
             {...register(`items.${idx}.cantidad` as const, {
               required: "Cantidad requerida",
               valueAsNumber: true,
@@ -251,17 +267,38 @@ export const ItemOrdenForm = forwardRef<
         </div>
         <div>
           <Label>Precio</Label>
-          <Input
-            type="number"
-            {...register(`items.${idx}.precio` as const, {
-              required: "Precio requerido",
-              valueAsNumber: true,
-              min: { value: 0, message: "Debe ser mayor o igual a 0" },
-            })}
-            defaultValue={item.precio}
-            className="w-full p-2 border border-gray-300 rounded-lg item-precio"
-            onChange={handlePrecioChange}
-          />
+          <div className="flex gap-2 items-center">
+            <Input
+              type="number"
+              step="0.01"
+              {...register(`items.${idx}.precio` as const, {
+                required: "Precio requerido",
+                valueAsNumber: true,
+                min: { value: 0, message: "Debe ser mayor o igual a 0" },
+              })}
+              value={item.precio || 0}
+              className="w-full p-2 border border-gray-300 rounded-lg item-precio"
+              onChange={handlePrecioChange}
+            />
+            {/* Botón para restablecer el precio automático si el usuario lo editó manualmente.
+                Usa el mismo estilo visual que el botón 'Orden' de OrdenesPage, pero solo con el icono.
+                Se le aumenta el ancho mínimo para mejor presencia visual. */}
+            {item.precioManual && (
+              <Button
+                type="button"
+                size="default"
+                variant="default"
+                className="gap-2 p-2 min-w-[48px]"
+                title="Restablecer precio automático"
+                onClick={() => {
+                  if (!item.producto.id) return;
+                  establecerPrecio(item, idx);
+                }}
+              >
+                <RefreshCwIcon className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
       </div>
 

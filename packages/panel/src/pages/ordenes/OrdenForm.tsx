@@ -278,6 +278,109 @@ export default function OrdenForm({
     );
   }, [cliente, sucursal, items, total, tipo, getValues]);
 
+  // Actualizar precios de los items cuando cambia el tipo de cambio, tipo de orden, cliente o factores
+  // Se agregó 'items' como dependencia para evitar advertencias de React y asegurar que los precios se recalculen correctamente si los items cambian
+  // Extract price recalculation logic into a useCallback
+  const recalcularPreciosPorTipoCambio = useCallback(() => {
+    const items = getValues("items");
+    if (!items || items.length === 0) return;
+    const nuevosItems = items.map((item) => {
+      if (item.precioManual) {
+        // Si el precio es manual, no recalcular
+        return item;
+      }
+      let nuevoPrecio = item.precio;
+      if (tipo === TipoOrden.reposicion) {
+        nuevoPrecio = item.producto.costo || 0;
+      } else if (cliente?.tipoCliente === TipoCliente.mayorista) {
+        nuevoPrecio = item.producto.precioMayorista || 0;
+      } else if (cliente?.tipoCliente === TipoCliente.instalador) {
+        nuevoPrecio = item.producto.precioInstalador || 0;
+      } else {
+        nuevoPrecio = item.producto.precioGeneral || 0;
+      }
+      if (
+        item.producto.enOferta &&
+        item.producto.precioOferta &&
+        item.producto.inicioOferta &&
+        (!item.producto.finOferta
+          ? new Date() >= new Date(item.producto.inicioOferta)
+          : new Date() >= new Date(item.producto.inicioOferta) &&
+            new Date() <= new Date(item.producto.finOferta))
+      ) {
+        nuevoPrecio = item.producto.precioOferta;
+      }
+      if (tipoCambio === TipoCambio.usd) {
+        nuevoPrecio = nuevoPrecio * factores[TipoCambio.usd];
+      } else if (tipoCambio === TipoCambio.bcv) {
+        nuevoPrecio = nuevoPrecio * factores[TipoCambio.bcv];
+      }
+      nuevoPrecio = Math.round(nuevoPrecio * 100) / 100;
+      return {
+        ...item,
+        precio: nuevoPrecio,
+        total: (item.cantidad || 1) * nuevoPrecio,
+      };
+    });
+    setValue("items", nuevosItems);
+  }, [tipoCambio, setValue, getValues, tipo, cliente, factores]);
+
+  // Only run this effect when tipoCambio changes
+  useEffect(() => {
+    recalcularPreciosPorTipoCambio();
+  }, [tipoCambio, recalcularPreciosPorTipoCambio]);
+
+  const establecerPrecio = useCallback(
+    (item: Partial<IItemOrden>, idx?: number) => {
+      // aplicar precio por tipo de cliente
+      // Si es reposición, usar el costo como precio
+      const p = item.producto;
+      if (!p) return;
+
+      if (tipo === TipoOrden.reposicion) {
+        item.precio = p.costo || 0;
+      } else if (cliente?.tipoCliente === TipoCliente.mayorista) {
+        item.precio = p.precioMayorista || 0;
+      } else if (cliente?.tipoCliente === TipoCliente.instalador) {
+        item.precio = p.precioInstalador || 0;
+      } else {
+        item.precio = p.precioGeneral || 0;
+      }
+
+      // si el producto esta en oferta, y la fecha actual
+      // esta entre la fecha de inicio y fin de la oferta, usar el precio de oferta
+      // si la fecha de fin de oferta es null, se considera que la oferta es permanente
+      if (
+        p.enOferta &&
+        p.precioOferta &&
+        p.inicioOferta &&
+        (!p.finOferta
+          ? new Date() >= new Date(p.inicioOferta)
+          : new Date() >= new Date(p.inicioOferta) &&
+            new Date() <= new Date(p.finOferta))
+      ) {
+        item.precio = p.precioOferta;
+      }
+
+      // aplicar el factor por tipo de cambio
+      if (tipoCambio === TipoCambio.usd) {
+        item.precio = item.precio * factores[TipoCambio.usd];
+      } else if (tipoCambio === TipoCambio.bcv) {
+        item.precio = item.precio * factores[TipoCambio.bcv];
+      }
+
+      // redondear el precio a 2 decimales
+      item.precio = Math.round(item.precio * 100) / 100;
+
+      // establecer el total del item
+      item.total = (item.cantidad || 1) * (item.precio || 0);
+      item.precioManual = false;
+      // actualizar el item en el formulario
+      if (idx !== undefined) setValue(`items.${idx}`, item as IItemOrden);
+    },
+    [tipo, cliente, tipoCambio, factores, setValue]
+  );
+
   return (
     <Card className="bg-background max-w m-auto">
       <Joyride
@@ -609,66 +712,9 @@ export default function OrdenForm({
                                     id: uuidv4(),
                                     producto: p,
                                     cantidad: 1,
+                                    precioManual: false,
                                   };
-
-                                  // DO NOT REMOVE THIS CODE
-                                  // // aplicar el factor por tipo de cliente
-                                  // item.precio =
-                                  //   item.precio *
-                                  //   factores[
-                                  //     cliente?.tipoCliente ||
-                                  //       TipoCliente.general
-                                  //   ];
-
-                                  // aplicar precio por tipo de cliente
-                                  // Si es reposición, usar el costo como precio
-                                  if (tipo === TipoOrden.reposicion) {
-                                    item.precio = p.costo || 0;
-                                  } else if (
-                                    cliente?.tipoCliente ===
-                                    TipoCliente.mayorista
-                                  ) {
-                                    item.precio = p.precioMayorista || 0;
-                                  } else if (
-                                    cliente?.tipoCliente ===
-                                    TipoCliente.instalador
-                                  ) {
-                                    item.precio = p.precioInstalador || 0;
-                                  } else {
-                                    item.precio = p.precioGeneral || 0;
-                                  }
-
-                                  // si el producto esta en oferta, y la fecha actual
-                                  // esta entre la fecha de inicio y fin de la oferta, usar el precio de oferta
-                                  // si la fecha de fin de oferta es null, se considera que la oferta es permanente
-                                  if (
-                                    p.enOferta &&
-                                    p.precioOferta &&
-                                    p.inicioOferta &&
-                                    (!p.finOferta
-                                      ? new Date() >= new Date(p.inicioOferta)
-                                      : new Date() >=
-                                          new Date(p.inicioOferta) &&
-                                        new Date() <= new Date(p.finOferta))
-                                  ) {
-                                    item.precio = p.precioOferta;
-                                  }
-
-                                  // aplicar el factor por tipo de cambio
-                                  if (tipoCambio === TipoCambio.usd) {
-                                    item.precio =
-                                      item.precio * factores[TipoCambio.usd];
-                                  } else if (tipoCambio === TipoCambio.bcv) {
-                                    item.precio =
-                                      item.precio * factores[TipoCambio.bcv];
-                                  }
-
-                                  // redondear el precio a 2 decimales
-                                  item.precio =
-                                    Math.round(item.precio * 100) / 100;
-
-                                  item.total =
-                                    (item.cantidad || 1) * item.precio;
+                                  establecerPrecio(item);
                                   return item;
                                 });
 
@@ -752,6 +798,7 @@ export default function OrdenForm({
                           );
                           field.onChange(newItems);
                         }}
+                        establecerPrecio={establecerPrecio}
                         idOrden={idOrden || null}
                         sucursal={sucursal}
                       />
