@@ -33,12 +33,12 @@ export type Transaccion = Pick<
 export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   {
     accessorKey: "fechaCreado",
-    header: "Fecha",
+    header: () => <div className="text-center w-full">Fecha</div>,
     accessorFn: (row) => formatearFecha(row.fechaCreado) || "",
   },
   {
     accessorKey: "referencia",
-    header: "Referencia",
+    header: () => <div className="text-center w-full">Referencia</div>,
     accessorFn: (row) =>
       `T-${row.referencia < 10 ? "00" : row.referencia < 100 ? "0" : ""}${
         row.referencia
@@ -46,7 +46,7 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "descripcion",
-    header: "Descripción",
+    header: () => <div className="text-center w-full">Descripción</div>,
     cell: ({ row }) => {
       const transaccion = row.original as Transaccion;
       return <div className="text-xs">{transaccion.descripcion}</div>;
@@ -54,11 +54,11 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "tipo",
-    header: "Tipo",
+    header: () => <div className="text-center w-full">Tipo</div>,
   },
   {
     accessorKey: "estatusPago",
-    header: "Estatus",
+    header: () => <div className="text-center w-full">Estatus</div>,
     cell: ({ row }) => {
       const { user } = useAuthStore();
       const isAdmin = isSuperAdmin(user);
@@ -109,11 +109,11 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "metodoPago",
-    header: "Método",
+    header: () => <div className="text-center w-full">Método</div>,
   },
   {
     accessorKey: "archivos",
-    header: "Comprobantes",
+    header: () => <div className="text-center w-full">Comprobantes</div>,
     cell: ({ row }) => {
       const archivos = row.original.archivos as IArchivo[];
       if (!archivos.length) return null;
@@ -149,12 +149,12 @@ export const columnasTransacciones: ColumnDef<Transaccion>[] = [
   },
   {
     accessorKey: "monto",
-    header: "Monto",
+    header: () => <div className="text-center w-full">Monto</div>,
     accessorFn: (row) => currencyFormat({ value: row.monto }),
   },
   {
     accessorKey: "balance",
-    header: "Balance",
+    header: () => <div className="text-center w-full">Balance</div>,
     cell: ({ row }) => {
       const tipo = row.original.tipo;
       const estatus = row.original.estatusPago;
