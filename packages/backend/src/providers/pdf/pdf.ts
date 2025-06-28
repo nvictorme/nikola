@@ -210,20 +210,76 @@ export class PDFProvider {
       // Colors
       const primaryColor = rgb(0.2, 0.2, 0.2);
       const secondaryColor = rgb(0.4, 0.4, 0.4);
-      const accentColor = rgb(0.1, 0.4, 0.7);
+      const accentColor = rgb(1, 0.4, 0); // Orange for accent
 
-      let yPosition = height - 72; // Start 1 inch from top
+      // --- HEADER ---
+      // Logo (left)
+      const logoPath = path.join(__dirname, "templates", "acdc-logo.png");
+      let yPosition = height - 60; // Top margin
+      let logoHeight = 55;
+      let logoWidth = 120;
+      try {
+        const logoBytes = await fs.readFile(logoPath);
+        const logoImage = await pdfDoc.embedPng(logoBytes);
+        const scaled = logoImage.scaleToFit(logoWidth, logoHeight);
+        page.drawImage(logoImage, {
+          x: 60,
+          y: yPosition - scaled.height + 10,
+          width: scaled.width,
+          height: scaled.height,
+        });
+      } catch (e) {
+        console.error("Could not load logo image:", e);
+      }
 
-      // Header
-      page.drawText("NIKOLA", {
-        x: 72,
-        y: yPosition,
-        size: 24,
+      // Company info (right)
+      const infoX = 200;
+      const infoY = height - 35;
+      let infoLine = 0;
+      const infoLineHeight = 15;
+      page.drawText("ACDC SOLUCIONES ELÉCTRICAS, C.A.", {
+        x: infoX,
+        y: infoY - infoLine * infoLineHeight,
+        size: 12,
         font: helveticaBold,
-        color: accentColor,
+        color: primaryColor,
+      });
+      infoLine++;
+      page.drawText("RIF: J-50684131-2", {
+        x: infoX,
+        y: infoY - infoLine * infoLineHeight,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      infoLine++;
+      page.drawText("Urb Lago Jardin, Manzana 5, Guacara, Carabobo.", {
+        x: infoX,
+        y: infoY - infoLine * infoLineHeight,
+        size: 10,
+        font: helveticaFont,
+        color: primaryColor,
+      });
+      infoLine++;
+      page.drawText("TLF: 0412-2143534 / 0412-7582630", {
+        x: infoX,
+        y: infoY - infoLine * infoLineHeight,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      infoLine++;
+      page.drawText("CORREO: acdcsolucioneselectricas.ca@gmail.com", {
+        x: infoX,
+        y: infoY - infoLine * infoLineHeight,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
       });
 
-      yPosition -= 40;
+      // --- END HEADER ---
+
+      yPosition = height - 100;
 
       // Order title
       page.drawText(`${orden.tipo} #${orden.serial}`, {
@@ -253,6 +309,17 @@ export class PDFProvider {
         color: secondaryColor,
       });
 
+      // BCV rate if applicable
+      if (orden.tipoCambio === "BCV") {
+        page.drawText(`Tasa BCV: ${orden.tasaCambio}`, {
+          x: 250,
+          y: yPosition,
+          size: 12,
+          font: helveticaFont,
+          color: secondaryColor,
+        });
+      }
+
       // Order type and validity (if applicable)
       if (
         orden.tipo === TipoOrden.credito ||
@@ -262,8 +329,8 @@ export class PDFProvider {
           page.drawText(
             `Validez: ${orden.validez} día${orden.validez > 1 ? "s" : ""}`,
             {
-              x: 250,
-              y: yPosition,
+              x: 72,
+              y: yPosition - 20,
               size: 12,
               font: helveticaFont,
               color: secondaryColor,
@@ -272,22 +339,23 @@ export class PDFProvider {
         }
       }
 
-      yPosition -= 50;
+      yPosition -= 60;
 
-      // Client and Seller Information
+      // Client and Seller Information - Aligned
       const clientSectionX = 72;
       const sellerSectionX = 350;
+      const sectionStartY = yPosition;
 
       // Client section
       page.drawText("CLIENTE", {
         x: clientSectionX,
-        y: yPosition,
+        y: sectionStartY,
         size: 14,
         font: helveticaBold,
         color: primaryColor,
       });
 
-      yPosition -= 20;
+      let clientY = sectionStartY - 20;
 
       const clientName = orden.cliente?.empresa
         ? orden.cliente.empresa
@@ -295,49 +363,45 @@ export class PDFProvider {
 
       page.drawText(clientName, {
         x: clientSectionX,
-        y: yPosition,
+        y: clientY,
         size: 12,
         font: helveticaFont,
         color: primaryColor,
       });
 
-      yPosition -= 15;
+      clientY -= 15;
 
       if (orden.cliente?.empresa) {
         page.drawText(`${orden.cliente?.nombre} ${orden.cliente?.apellido}`, {
           x: clientSectionX,
-          y: yPosition,
+          y: clientY,
           size: 10,
           font: helveticaFont,
           color: secondaryColor,
         });
-        yPosition -= 15;
+        clientY -= 15;
       }
 
       if (orden.cliente?.telefono) {
         page.drawText(`Tel: ${orden.cliente.telefono}`, {
           x: clientSectionX,
-          y: yPosition,
+          y: clientY,
           size: 10,
           font: helveticaFont,
           color: secondaryColor,
         });
-        yPosition -= 15;
       }
 
-      // Reset Y position for seller section
-      yPosition = height - 162;
-
-      // Seller section
+      // Seller section - aligned with client section
       page.drawText("VENDEDOR", {
         x: sellerSectionX,
-        y: yPosition,
+        y: sectionStartY,
         size: 14,
         font: helveticaBold,
         color: primaryColor,
       });
 
-      yPosition -= 20;
+      let sellerY = sectionStartY - 20;
 
       const sellerName = orden.vendedor.empresa
         ? orden.vendedor.empresa
@@ -345,29 +409,29 @@ export class PDFProvider {
 
       page.drawText(sellerName, {
         x: sellerSectionX,
-        y: yPosition,
+        y: sellerY,
         size: 12,
         font: helveticaFont,
         color: primaryColor,
       });
 
-      yPosition -= 15;
+      sellerY -= 15;
 
       if (orden.vendedor.empresa) {
         page.drawText(`${orden.vendedor.nombre} ${orden.vendedor.apellido}`, {
           x: sellerSectionX,
-          y: yPosition,
+          y: sellerY,
           size: 10,
           font: helveticaFont,
           color: secondaryColor,
         });
-        yPosition -= 15;
+        sellerY -= 15;
       }
 
       if (orden.vendedor.telefono) {
         page.drawText(`Tel: ${orden.vendedor.telefono}`, {
           x: sellerSectionX,
-          y: yPosition,
+          y: sellerY,
           size: 10,
           font: helveticaFont,
           color: secondaryColor,
@@ -375,28 +439,11 @@ export class PDFProvider {
       }
 
       // Reset Y position for items table
-      yPosition = height - 280;
+      yPosition = sectionStartY - 120;
 
-      // Items table header
-      page.drawText("PRODUCTOS", {
-        x: 72,
-        y: yPosition,
-        size: 14,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-
-      yPosition -= 25;
-
-      // Table headers
-      const tableHeaders = [
-        "Producto",
-        "SKU",
-        "Cantidad",
-        "Precio Unit.",
-        "Total",
-      ];
-      const columnWidths = [200, 80, 60, 80, 80];
+      // Table headers (without PRODUCTOS title)
+      const tableHeaders = ["Producto", "Cantidad", "Precio Unit.", "Total"];
+      const columnWidths = [280, 60, 80, 80];
       let currentX = 72;
 
       tableHeaders.forEach((header, index) => {
@@ -442,16 +489,6 @@ export class PDFProvider {
         });
         currentX += columnWidths[0];
 
-        // SKU
-        page.drawText(item.producto.sku, {
-          x: currentX,
-          y: yPosition,
-          size: 10,
-          font: helveticaFont,
-          color: secondaryColor,
-        });
-        currentX += columnWidths[1];
-
         // Quantity
         page.drawText(item.cantidad.toString(), {
           x: currentX,
@@ -460,7 +497,7 @@ export class PDFProvider {
           font: helveticaFont,
           color: primaryColor,
         });
-        currentX += columnWidths[2];
+        currentX += columnWidths[1];
 
         // Unit price
         page.drawText(currencyFormat({ value: item.precio }), {
@@ -470,7 +507,7 @@ export class PDFProvider {
           font: helveticaFont,
           color: primaryColor,
         });
-        currentX += columnWidths[3];
+        currentX += columnWidths[2];
 
         // Total
         page.drawText(currencyFormat({ value: item.precio * item.cantidad }), {
@@ -482,6 +519,17 @@ export class PDFProvider {
         });
 
         yPosition -= 15;
+
+        // SKU below product name
+        page.drawText(`SKU: ${item.producto.sku}`, {
+          x: 72,
+          y: yPosition,
+          size: 8,
+          font: helveticaFont,
+          color: secondaryColor,
+        });
+
+        yPosition -= 12;
 
         // Item notes if any
         if (item.notas) {
@@ -688,23 +736,6 @@ export class PDFProvider {
           yPosition -= 15;
         });
       }
-
-      // Status at the bottom
-      const statusY = 120;
-      page.drawText("Estado:", {
-        x: 72,
-        y: statusY,
-        size: 12,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-      page.drawText(orden.estatus, {
-        x: 120,
-        y: statusY,
-        size: 12,
-        font: helveticaFont,
-        color: secondaryColor,
-      });
 
       // Save the PDF
       console.log("Saving order PDF...");
