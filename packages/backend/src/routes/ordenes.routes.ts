@@ -450,7 +450,7 @@ OrdenesRouter.post(
         await Promise.allSettled(emailPromises);
       } catch (emailError) {
         console.error(JSON.stringify(emailError, null, 2));
-      };
+      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
@@ -534,7 +534,7 @@ OrdenesRouter.put(
       ) {
         // Si la orden es cotización y está rechazada, no permitir conversión
         return res.status(400).json({
-          error: "No se puede convertir una cotización rechazada en orden."
+          error: "No se puede convertir una cotización rechazada en orden.",
         });
       }
       await repo.update(ordenId, { tipo: TipoOrden.venta as TipoOrden });
@@ -798,9 +798,7 @@ OrdenesRouter.put(
       }
       await AppDataSource.getRepository(Orden).update(ordenId, { estatus });
       // Fetch the updated order with all relations
-      const updatedOrden = await AppDataSource.getRepository(
-        Orden
-      ).findOne({
+      const updatedOrden = await AppDataSource.getRepository(Orden).findOne({
         where: { id: ordenId },
         relations: [
           "sucursal",
@@ -815,8 +813,8 @@ OrdenesRouter.put(
         return res.status(404).json({ error: "Orden no encontrada" });
       }
       if (
-          updatedOrden.tipo === TipoOrden.credito &&
-          updatedOrden.estatus === EstatusOrden.confirmado
+        updatedOrden.tipo === TipoOrden.credito &&
+        updatedOrden.estatus === EstatusOrden.confirmado
       ) {
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
@@ -906,7 +904,9 @@ OrdenesRouter.put(
                 const almacen = item.almacen;
                 if (almacen) {
                   const producto = item.producto;
-                  const stock = await AppDataSource.getRepository(Stock).findOne({
+                  const stock = await AppDataSource.getRepository(
+                    Stock
+                  ).findOne({
                     where: {
                       almacen: { id: almacen.id },
                       producto: { id: producto.id },
@@ -937,13 +937,15 @@ OrdenesRouter.put(
                   const producto = item.producto;
                   // Actualizar el costo del producto solo si el estatus es recibido
                   // Esto asegura que el costo refleje el valor real pagado al recibir la mercancía
-                  if (producto && typeof item.precio === 'number') {
+                  if (producto && typeof item.precio === "number") {
                     await AppDataSource.getRepository(Producto).update(
                       { id: producto.id },
                       { costo: item.precio }
                     );
                   }
-                  const stock = await AppDataSource.getRepository(Stock).findOne({
+                  const stock = await AppDataSource.getRepository(
+                    Stock
+                  ).findOne({
                     where: {
                       almacen: { id: almacen.id },
                       producto: { id: producto.id },
@@ -1044,6 +1046,68 @@ OrdenesRouter.delete(
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
+    }
+  }
+);
+
+// GET - Generate PDF for order
+OrdenesRouter.get(
+  "/:ordenId/pdf",
+  verificarPrivilegio({
+    entidad: Orden.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { ordenId } = req.params;
+      console.log("Received request for order PDF with ordenId:", ordenId);
+
+      // Get the order with all relations
+      const orden = await AppDataSource.getRepository(Orden).findOne({
+        where: { id: ordenId },
+        relations: [
+          "sucursal",
+          "vendedor",
+          "cliente",
+          "proveedor",
+          "items",
+          "items.producto",
+          "items.almacen",
+        ],
+      });
+
+      if (!orden) {
+        return res.status(404).json({ error: "Orden no encontrada" });
+      }
+
+      const { PDFProvider } = await import("../providers/pdf/pdf");
+      const pdfProvider = new PDFProvider();
+
+      const pdfBuffer = await pdfProvider.generateOrderPDF(orden);
+      console.log("Order PDF generated successfully");
+
+      // Set response headers for download
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=orden-${orden.serial}.pdf`
+      );
+      res.status(200).send(pdfBuffer);
+    } catch (error: unknown) {
+      console.error("Error generating order PDF:", error);
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        console.error("Error message:", errorMessage);
+        console.error("Error stack:", error.stack);
+
+        res.status(500).json({
+          error: "Failed to generate order PDF",
+          details: errorMessage,
+        });
+      } else {
+        res.status(500).json({ error: "An unknown error occurred" });
+      }
     }
   }
 );

@@ -4,6 +4,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { IOrden } from "shared/interfaces";
 import {
   currencyFormat,
@@ -11,6 +12,10 @@ import {
   formatearFecha,
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden } from "shared/enums";
+import { FileText, Download } from "lucide-react";
+import { useState } from "react";
+import { ApiClient } from "@/api/api.client";
+import { useToast } from "@/hooks/use-toast";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -23,6 +28,9 @@ export const OrdenPreview = ({
   open,
   onOpenChange,
 }: OrdenPreviewProps) => {
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const { toast } = useToast();
+
   if (!orden) return null;
 
   const totalConCredito = calcularTotalOrden({
@@ -33,6 +41,53 @@ export const OrdenPreview = ({
     credito: orden.credito,
   });
 
+  const handleGeneratePDF = async () => {
+    if (!orden.id) {
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF: ID de orden no válido",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingPDF(true);
+    try {
+      const apiClient = new ApiClient();
+      const response = await apiClient.getBinary(
+        `/ordenes/${orden.id}/pdf`,
+        {}
+      );
+
+      // Create blob from response
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `orden-${orden.serial}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast({
+        title: "PDF Generado",
+        description: `El PDF de la orden #${orden.serial} se ha descargado exitosamente`,
+      });
+    } catch (error) {
+      console.error("Error generating PDF:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo generar el PDF. Inténtalo de nuevo.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
@@ -41,6 +96,27 @@ export const OrdenPreview = ({
           {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
           Fecha: {formatearFecha(orden.fechaCreado)}
         </DialogDescription>
+
+        {/* PDF Generation Button */}
+        <div className="sticky top-0 z-10 bg-background border-b p-4">
+          <Button
+            onClick={handleGeneratePDF}
+            disabled={isGeneratingPDF}
+            className="w-full sm:w-auto"
+          >
+            {isGeneratingPDF ? (
+              <>
+                <FileText className="mr-2 h-4 w-4 animate-spin" />
+                Generando PDF...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Descargar PDF
+              </>
+            )}
+          </Button>
+        </div>
 
         {/* Scrollable container */}
         <div className="overflow-y-auto p-8">
