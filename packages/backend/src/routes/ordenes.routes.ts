@@ -579,7 +579,7 @@ OrdenesRouter.put(
         )
       );
 
-      await Promise.all(emailPromises);
+      await Promise.allSettled(emailPromises);
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
