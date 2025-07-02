@@ -910,6 +910,36 @@ export class PDFProvider {
         font: helveticaBold,
         color: primaryColor,
       });
+
+      // Total Items (to the left of TOTAL USD)
+      const totalItems = orden.items.reduce(
+        (sum, item) => sum + item.cantidad,
+        0
+      );
+      const totalPiezasText = "TOTAL Piezas:";
+      const totalPiezasWidth = helveticaBold.widthOfTextAtSize(
+        totalPiezasText,
+        10
+      );
+      page.drawText(totalPiezasText, {
+        x: totalsX - 100, // To the left of TOTAL USD
+        y: totalsY,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      const totalItemsText = totalItems.toString();
+      const totalItemsWidth = helveticaFont.widthOfTextAtSize(
+        totalItemsText,
+        10
+      );
+      page.drawText(totalItemsText, {
+        x: totalsX - 100 + (totalPiezasWidth - totalItemsWidth) / 2, // Centered under "TOTAL Piezas:"
+        y: totalsY - lineHeight,
+        size: 10,
+        font: helveticaFont,
+        color: primaryColor,
+      });
       const totalUSDText = currencyFormat({ value: totalConCredito });
       const totalUSDWidth = helveticaFont.widthOfTextAtSize(totalUSDText, 10);
       page.drawText(totalUSDText, {
