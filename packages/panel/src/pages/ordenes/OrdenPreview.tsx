@@ -14,8 +14,8 @@ import {
 import { TipoDescuento, TipoOrden } from "shared/enums";
 import { FileText, Download } from "lucide-react";
 import { useState } from "react";
-import { ApiClient } from "@/api/api.client";
 import { useToast } from "@/hooks/use-toast";
+import { handleGeneratePDF } from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -41,51 +41,8 @@ export const OrdenPreview = ({
     credito: orden.credito,
   });
 
-  const handleGeneratePDF = async () => {
-    if (!orden.id) {
-      toast({
-        title: "Error",
-        description: "No se pudo generar el PDF: ID de orden no válido",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingPDF(true);
-    try {
-      const apiClient = new ApiClient();
-      const response = await apiClient.getBinary(
-        `/ordenes/${orden.id}/pdf`,
-        {}
-      );
-
-      // Create blob from response
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-
-      // Create download link
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `orden-${orden.serial}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast({
-        title: "PDF Generado",
-        description: `El PDF de la orden #${orden.serial} se ha descargado exitosamente`,
-      });
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo generar el PDF. Inténtalo de nuevo.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingPDF(false);
-    }
+  const handleGeneratePDFWithOrden = async () => {
+    await handleGeneratePDF(orden, toast, setIsGeneratingPDF);
   };
 
   return (
@@ -100,7 +57,7 @@ export const OrdenPreview = ({
         {/* PDF Generation Button */}
         <div className="sticky top-0 z-10 bg-background border-b p-4">
           <Button
-            onClick={handleGeneratePDF}
+            onClick={handleGeneratePDFWithOrden}
             disabled={isGeneratingPDF}
             className="w-full sm:w-auto"
           >

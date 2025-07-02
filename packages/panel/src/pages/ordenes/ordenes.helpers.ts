@@ -1,5 +1,7 @@
 import { EstatusOrden, TipoOrden } from "shared/enums";
 import { IOrden } from "shared/interfaces";
+import { ApiClient } from "@/api/api.client";
+import { toast as toastFn } from "@/hooks/use-toast";
 
 // Helper to get allowed statuses by order type
 export function getAllowedStatuses(orden: IOrden): EstatusOrden[] {
@@ -94,3 +96,51 @@ export function isStatusDisabled({
   // --- Fin reglas especiales ---
   return false;
 }
+
+export const handleGeneratePDF = async (
+  orden: IOrden,
+  toast: typeof toastFn,
+  setIsGeneratingPDF: (value: boolean) => void
+) => {
+  if (!orden.id) {
+    toast({
+      title: "Error",
+      description: "No se pudo generar el PDF: ID de orden no válido",
+      variant: "destructive",
+    });
+    return;
+  }
+
+  setIsGeneratingPDF(true);
+  try {
+    const apiClient = new ApiClient();
+    const response = await apiClient.getBinary(`/ordenes/${orden.id}/pdf`, {});
+
+    // Create blob from response
+    const blob = new Blob([response.data], { type: "application/pdf" });
+    const url = window.URL.createObjectURL(blob);
+
+    // Create download link
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orden-${orden.serial}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    toast({
+      title: "PDF Generado",
+      description: `El PDF de la orden #${orden.serial} se ha descargado exitosamente`,
+    });
+  } catch (error) {
+    console.error("Error generating PDF:", error);
+    toast({
+      title: "Error",
+      description: "No se pudo generar el PDF. Inténtalo de nuevo.",
+      variant: "destructive",
+    });
+  } finally {
+    setIsGeneratingPDF(false);
+  }
+};
