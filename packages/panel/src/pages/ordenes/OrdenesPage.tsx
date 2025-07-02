@@ -237,11 +237,11 @@ const OrdenesPage: React.FC = () => {
         >
           {/* Iframe de elcamb.io, siempre ocupa 263px pero solo se muestra completo al expandirse */}
           <iframe
-            src="https://elcamb.io/?embed=true"
-            className="w-full h-[263px] rounded-lg border-0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            style={{ pointerEvents: "auto" }}
-          />
+            src="https://elcamb.io?embed=true"
+            width="100%"
+            height="263"
+            style={{ border: "2px solid #21C55E", borderRadius: "8px" }}
+          ></iframe>
         </div>
       </div>
     </div>
