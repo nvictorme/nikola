@@ -112,7 +112,7 @@ export const OrdenPreview = ({
             ) : (
               <>
                 <Download className="mr-2 h-4 w-4" />
-                Descargar PDF
+                Orden PDF
               </>
             )}
           </Button>
