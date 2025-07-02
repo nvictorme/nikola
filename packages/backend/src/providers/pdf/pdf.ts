@@ -826,8 +826,10 @@ export class PDFProvider {
         font: helveticaBold,
         color: primaryColor,
       });
-      page.drawText(currencyFormat({ value: orden.subtotal }), {
-        x: totalsX + 80,
+      const subtotalText = currencyFormat({ value: orden.subtotal });
+      const subtotalWidth = helveticaFont.widthOfTextAtSize(subtotalText, 10);
+      page.drawText(subtotalText, {
+        x: totalsX + 150 - subtotalWidth, // Right-aligned within the totals section (moved right)
         y: totalsY, //-10
         size: 10,
         font: helveticaFont,
@@ -855,8 +857,15 @@ export class PDFProvider {
             ? (orden.subtotal * orden.descuento) / 100
             : orden.descuento;
 
-        page.drawText(`-${currencyFormat({ value: discountAmount })}`, {
-          x: totalsX + 80,
+        const discountAmountText = `-${currencyFormat({
+          value: discountAmount,
+        })}`;
+        const discountAmountWidth = helveticaFont.widthOfTextAtSize(
+          discountAmountText,
+          10
+        );
+        page.drawText(discountAmountText, {
+          x: totalsX + 150 - discountAmountWidth, // Right-aligned within the totals section (moved right)
           y: totalsY,
           size: 10,
           font: helveticaFont,
@@ -887,7 +896,7 @@ export class PDFProvider {
       // Total separator line
       page.drawLine({
         start: { x: totalsX, y: totalsY + 3 },
-        end: { x: totalsX + 120, y: totalsY + 3 },
+        end: { x: totalsX + 150, y: totalsY + 3 },
         thickness: 1,
         color: primaryColor,
       });
@@ -901,8 +910,10 @@ export class PDFProvider {
         font: helveticaBold,
         color: primaryColor,
       });
-      page.drawText(currencyFormat({ value: totalConCredito }), {
-        x: totalsX + 80,
+      const totalUSDText = currencyFormat({ value: totalConCredito });
+      const totalUSDWidth = helveticaFont.widthOfTextAtSize(totalUSDText, 10);
+      page.drawText(totalUSDText, {
+        x: totalsX + 150 - totalUSDWidth, // Right-aligned within the totals section (moved right)
         y: totalsY,
         size: 10,
         font: helveticaFont,
@@ -919,20 +930,19 @@ export class PDFProvider {
           font: helveticaBold,
           color: secondaryColor,
         });
-        page.drawText(
-          currencyFormat({
-            value: Math.round(totalConCredito * orden.tasaCambio * 100) / 100,
-            currency: "VES",
-            locale: "es-VE",
-          }),
-          {
-            x: totalsX + 80,
-            y: totalsY,
-            size: 10,
-            font: helveticaFont,
-            color: secondaryColor,
-          }
-        );
+        const totalVESText = currencyFormat({
+          value: Math.round(totalConCredito * orden.tasaCambio * 100) / 100,
+          currency: "VES",
+          locale: "es-VE",
+        });
+        const totalVESWidth = helveticaFont.widthOfTextAtSize(totalVESText, 10);
+        page.drawText(totalVESText, {
+          x: totalsX + 150 - totalVESWidth, // Right-aligned within the totals section (moved right)
+          y: totalsY,
+          size: 10,
+          font: helveticaFont,
+          color: secondaryColor,
+        });
       }
 
       // Notes section if any
