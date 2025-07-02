@@ -28,6 +28,8 @@ import { Envio } from "../orm/entity/envio";
 import { HistorialOrden } from "../orm/entity/historial";
 import { emitSocketEvent } from "../providers/sockets";
 import { Persona } from "../orm/entity/persona";
+import { PDFProvider } from "../providers/pdf/pdf";
+
 const OrdenesRouter: Router = Router();
 
 // Get - Todas las ordenes
@@ -1081,7 +1083,6 @@ OrdenesRouter.get(
         return res.status(404).json({ error: "Orden no encontrada" });
       }
 
-      const { PDFProvider } = await import("../providers/pdf/pdf");
       const pdfProvider = new PDFProvider();
 
       const pdfBuffer = await pdfProvider.generateOrderPDF(orden);
