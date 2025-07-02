@@ -744,10 +744,9 @@ export class PDFProvider {
         );
         const unitPriceColumnStart =
           40 + columnWidths[0] + columnWidths[1] + columnWidths[2]; // Start of Precio column
-        const unitPriceColumnCenter =
-          unitPriceColumnStart + columnWidths[3] / 2;
+        const unitPriceColumnEnd = unitPriceColumnStart + columnWidths[3]; // End of Precio column
         page.drawText(unitPriceText, {
-          x: unitPriceColumnCenter - unitPriceWidth / 2, // Center the text
+          x: unitPriceColumnEnd - unitPriceWidth + 7, // Right-aligned (moved right)
           y: yPosition,
           size: 10,
           font: helveticaFont,
@@ -766,9 +765,9 @@ export class PDFProvider {
           columnWidths[1] +
           columnWidths[2] +
           columnWidths[3]; // Start of Total column
-        const totalColumnCenter = totalColumnStart + columnWidths[4] / 2;
+        const totalColumnEnd = totalColumnStart + columnWidths[4]; // End of Total column
         page.drawText(totalText, {
-          x: totalColumnCenter - totalWidth / 2, // Center the text
+          x: totalColumnEnd - totalWidth - 32, // Right-aligned (moved right)
           y: yPosition,
           size: 10,
           font: helveticaFont,
