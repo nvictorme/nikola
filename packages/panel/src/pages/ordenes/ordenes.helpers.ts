@@ -97,49 +97,87 @@ export function isStatusDisabled({
   return false;
 }
 
+// Validation function - Single responsibility: validate input data
+export const validateOrderForPDF = (
+  orden: IOrden
+): { isValid: boolean; error?: string } => {
+  if (!orden.id) {
+    return {
+      isValid: false,
+      error: "No se pudo generar el PDF: ID de orden no válido",
+    };
+  }
+  return { isValid: true };
+};
+
+// API function - Single responsibility: fetch PDF from API
+export const fetchOrderPDF = async (orderId: string): Promise<Blob> => {
+  const apiClient = new ApiClient();
+  const response = await apiClient.getBinary(`/ordenes/${orderId}/pdf`, {});
+  return new Blob([response.data], { type: "application/pdf" });
+};
+
+// Download function - Single responsibility: handle file download
+export const downloadPDF = (blob: Blob, filename: string): void => {
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.URL.revokeObjectURL(url);
+};
+
+// UI notification function - Single responsibility: handle user notifications
+export const notifyPDFGeneration = (
+  toast: typeof toastFn,
+  isSuccess: boolean,
+  orderSerial?: string,
+  errorMessage?: string
+): void => {
+  if (isSuccess) {
+    toast({
+      title: "PDF Generado",
+      description: `El PDF de la orden #${orderSerial} se ha descargado exitosamente`,
+    });
+  } else {
+    toast({
+      title: "Error",
+      description:
+        errorMessage || "No se pudo generar el PDF. Inténtalo de nuevo.",
+      variant: "destructive",
+    });
+  }
+};
+
+// Main orchestrator function - Single responsibility: coordinate the PDF generation process
 export const handleGeneratePDF = async (
   orden: IOrden,
   toast: typeof toastFn,
   setIsGeneratingPDF: (value: boolean) => void
 ) => {
-  if (!orden.id) {
-    toast({
-      title: "Error",
-      description: "No se pudo generar el PDF: ID de orden no válido",
-      variant: "destructive",
-    });
+  // Validate input
+  const validation = validateOrderForPDF(orden);
+  if (!validation.isValid) {
+    notifyPDFGeneration(toast, false, undefined, validation.error);
     return;
   }
 
   setIsGeneratingPDF(true);
+
   try {
-    const apiClient = new ApiClient();
-    const response = await apiClient.getBinary(`/ordenes/${orden.id}/pdf`, {});
+    // Fetch PDF from API
+    const pdfBlob = await fetchOrderPDF(orden.id!.toString());
 
-    // Create blob from response
-    const blob = new Blob([response.data], { type: "application/pdf" });
-    const url = window.URL.createObjectURL(blob);
+    // Download the file
+    downloadPDF(pdfBlob, `orden-${orden.serial}.pdf`);
 
-    // Create download link
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `orden-${orden.serial}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    window.URL.revokeObjectURL(url);
-
-    toast({
-      title: "PDF Generado",
-      description: `El PDF de la orden #${orden.serial} se ha descargado exitosamente`,
-    });
+    // Notify success
+    notifyPDFGeneration(toast, true, orden.serial.toString());
   } catch (error) {
     console.error("Error generating PDF:", error);
-    toast({
-      title: "Error",
-      description: "No se pudo generar el PDF. Inténtalo de nuevo.",
-      variant: "destructive",
-    });
+    notifyPDFGeneration(toast, false);
   } finally {
     setIsGeneratingPDF(false);
   }
