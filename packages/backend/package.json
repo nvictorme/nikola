@@ -6,7 +6,8 @@
   "main": "dist/server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "xcopy src\\providers\\pdf\\templates dist\\providers\\pdf\\templates /E /I /Y",
     "build:dev": "tsc --watch",
     "serve:dev": "node --no-deprecation --watch dist/server.js",
     "dev": "concurrently \"npm run build:dev\" \"npm run serve:dev\"",
@@ -83,6 +84,7 @@
     "@types/qrcode": "^1.5.5",
     "@types/swagger-ui-express": "^4.1.6",
     "concurrently": "9.1.2",
+    "copyfiles": "^2.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   }
