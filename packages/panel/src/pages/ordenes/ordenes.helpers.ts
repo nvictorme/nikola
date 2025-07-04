@@ -2,6 +2,8 @@ import { EstatusOrden, TipoOrden } from "shared/enums";
 import { IOrden } from "shared/interfaces";
 import { ApiClient } from "@/api/api.client";
 import { toast as toastFn } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 
 // Helper to get allowed statuses by order type
 export function getAllowedStatuses(orden: IOrden): EstatusOrden[] {
@@ -152,19 +154,12 @@ export const notifyPDFGeneration = (
 };
 
 // Main orchestrator function - Single responsibility: coordinate the PDF generation process
-export const handleGeneratePDF = async (
-  orden: IOrden,
-  toast: typeof toastFn,
-  setIsGeneratingPDF: (value: boolean) => void
-) => {
+export const handleGeneratePDF = async (orden: IOrden) => {
   // Validate input
   const validation = validateOrderForPDF(orden);
   if (!validation.isValid) {
-    notifyPDFGeneration(toast, false, undefined, validation.error);
-    return;
+    throw new Error(validation.error);
   }
-
-  setIsGeneratingPDF(true);
 
   try {
     // Fetch PDF from API
@@ -173,12 +168,34 @@ export const handleGeneratePDF = async (
     // Download the file
     downloadPDF(pdfBlob, `orden-${orden.serial}.pdf`);
 
-    // Notify success
-    notifyPDFGeneration(toast, true, orden.serial.toString());
+    // Return success info for the hook to handle
+    return { success: true, orderSerial: orden.serial.toString() };
   } catch (error) {
     console.error("Error generating PDF:", error);
-    notifyPDFGeneration(toast, false);
-  } finally {
-    setIsGeneratingPDF(false);
+    throw error;
   }
+};
+
+// Custom hook that handles PDF generation with toast notifications and loading state
+export const useGeneratePDF = () => {
+  const { toast } = useToast();
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+
+  const generatePDF = async (orden: IOrden) => {
+    try {
+      setIsGeneratingPDF(true);
+      const result = await handleGeneratePDF(orden);
+      notifyPDFGeneration(toast, true, result.orderSerial);
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "No se pudo generar el PDF. Inténtalo de nuevo.";
+      notifyPDFGeneration(toast, false, undefined, errorMessage);
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  return { generatePDF, isGeneratingPDF };
 };

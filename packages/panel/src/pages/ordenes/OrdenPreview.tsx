@@ -13,9 +13,7 @@ import {
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden } from "shared/enums";
 import { FileText, Download } from "lucide-react";
-import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { handleGeneratePDF } from "./ordenes.helpers";
+import { useGeneratePDF } from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -28,8 +26,7 @@ export const OrdenPreview = ({
   open,
   onOpenChange,
 }: OrdenPreviewProps) => {
-  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const { toast } = useToast();
+  const { generatePDF, isGeneratingPDF } = useGeneratePDF();
 
   if (!orden) return null;
 
@@ -42,7 +39,7 @@ export const OrdenPreview = ({
   });
 
   const handleGeneratePDFWithOrden = async () => {
-    await handleGeneratePDF(orden, toast, setIsGeneratingPDF);
+    await generatePDF(orden);
   };
 
   return (
