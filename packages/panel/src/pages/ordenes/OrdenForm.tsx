@@ -207,6 +207,20 @@ export default function OrdenForm({
   const onSubmit = handleSubmit(async (data: IOrden) => {
     setIsSubmitting(true);
     try {
+      // Validar que los items existan antes de enviar
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        toast({
+          title: "Error al guardar la orden",
+          description: "La orden debe tener al menos un item",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (orden) {
         await actualizarOrden({
           ...orden,
@@ -444,6 +458,18 @@ export default function OrdenForm({
                             onSelect={(persona) => {
                               field.onChange(persona);
                               setClienteDialogOpen(false);
+                            }}
+                            onPersonaUpdated={(updatedPersona) => {
+                              // Si el cliente actualizado es el mismo que está seleccionado, actualizarlo
+                              if (field.value?.id === updatedPersona.id) {
+                                // Preservar los items actuales antes de actualizar el cliente
+                                const currentItems = getValues("items");
+                                field.onChange(updatedPersona);
+                                // Restaurar los items si se perdieron
+                                if (currentItems && currentItems.length > 0) {
+                                  setValue("items", currentItems);
+                                }
+                              }
                             }}
                           />
                         </DialogDescription>

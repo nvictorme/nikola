@@ -294,6 +294,17 @@ OrdenesRouter.post(
       if (!data)
         return res.status(400).json({ error: "Datos de orden requeridos" });
 
+      // Validar que items existe y no está vacío
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "La orden debe tener al menos un item" });
+      }
+
       const newOrden = new Orden();
 
       // Basic order details
@@ -450,7 +461,7 @@ OrdenesRouter.post(
         await Promise.allSettled(emailPromises);
       } catch (emailError) {
         console.error(JSON.stringify(emailError, null, 2));
-      };
+      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
@@ -534,7 +545,7 @@ OrdenesRouter.put(
       ) {
         // Si la orden es cotización y está rechazada, no permitir conversión
         return res.status(400).json({
-          error: "No se puede convertir una cotización rechazada en orden."
+          error: "No se puede convertir una cotización rechazada en orden.",
         });
       }
       await repo.update(ordenId, { tipo: TipoOrden.venta as TipoOrden });
@@ -616,6 +627,17 @@ OrdenesRouter.put(
         return res.status(400).json({
           error: `Ya no se puede editar la orden #${orden.serial}, ya que se encuentra en estatus ${orden.estatus}`,
         });
+      }
+
+      // Validar que items existe y no está vacío
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "La orden debe tener al menos un item" });
       }
 
       // Calculate order totals
@@ -798,9 +820,7 @@ OrdenesRouter.put(
       }
       await AppDataSource.getRepository(Orden).update(ordenId, { estatus });
       // Fetch the updated order with all relations
-      const updatedOrden = await AppDataSource.getRepository(
-        Orden
-      ).findOne({
+      const updatedOrden = await AppDataSource.getRepository(Orden).findOne({
         where: { id: ordenId },
         relations: [
           "sucursal",
@@ -815,8 +835,8 @@ OrdenesRouter.put(
         return res.status(404).json({ error: "Orden no encontrada" });
       }
       if (
-          updatedOrden.tipo === TipoOrden.credito &&
-          updatedOrden.estatus === EstatusOrden.confirmado
+        updatedOrden.tipo === TipoOrden.credito &&
+        updatedOrden.estatus === EstatusOrden.confirmado
       ) {
         // Insertar transacción de tipo factura
         const transaccion = new Transaccion();
@@ -906,7 +926,9 @@ OrdenesRouter.put(
                 const almacen = item.almacen;
                 if (almacen) {
                   const producto = item.producto;
-                  const stock = await AppDataSource.getRepository(Stock).findOne({
+                  const stock = await AppDataSource.getRepository(
+                    Stock
+                  ).findOne({
                     where: {
                       almacen: { id: almacen.id },
                       producto: { id: producto.id },
@@ -937,13 +959,15 @@ OrdenesRouter.put(
                   const producto = item.producto;
                   // Actualizar el costo del producto solo si el estatus es recibido
                   // Esto asegura que el costo refleje el valor real pagado al recibir la mercancía
-                  if (producto && typeof item.precio === 'number') {
+                  if (producto && typeof item.precio === "number") {
                     await AppDataSource.getRepository(Producto).update(
                       { id: producto.id },
                       { costo: item.precio }
                     );
                   }
-                  const stock = await AppDataSource.getRepository(Stock).findOne({
+                  const stock = await AppDataSource.getRepository(
+                    Stock
+                  ).findOne({
                     where: {
                       almacen: { id: almacen.id },
                       producto: { id: producto.id },

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, X } from "lucide-react";
+import { Search, X, Edit } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { IPersona } from "shared/interfaces";
@@ -10,11 +10,16 @@ import { usePersonasStore } from "@/store/personas.store";
 import { getInitials } from "shared/helpers";
 import CreateButton from "@/components/CreateButton";
 import PersonaForm from "./PersonaForm";
+
 interface PersonaSelectorProps {
   onSelect: (persona: IPersona | null) => void;
+  onPersonaUpdated?: (persona: IPersona) => void;
 }
 
-export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
+export default function PersonaSelector({
+  onSelect,
+  onPersonaUpdated,
+}: PersonaSelectorProps) {
   const [selectedPersona, setSelectedPersona] = useState<IPersona | null>(null);
 
   const {
@@ -48,6 +53,19 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
     showSheet();
   };
 
+  const handleEditPersona = (persona: IPersona, event: React.MouseEvent) => {
+    event.stopPropagation(); // Evitar que se seleccione el cliente al hacer clic en editar
+    setPersona(persona);
+    showSheet();
+  };
+
+  const handleEditSelectedPersona = () => {
+    if (selectedPersona) {
+      setPersona(selectedPersona);
+      showSheet();
+    }
+  };
+
   return (
     <div className="w-full max-w-2xl mx-auto p-4 space-y-4">
       {selectedPersona ? (
@@ -55,9 +73,23 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
           <CardHeader>
             <CardTitle className="flex justify-between items-center">
               Cliente seleccionado
-              <Button variant="ghost" size="sm" onClick={handleClearSelection}>
-                <X className="h-4 w-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleEditSelectedPersona}
+                  title="Editar cliente"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleClearSelection}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -74,7 +106,7 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                   )}
                 </AvatarFallback>
               </Avatar>
-              <div>
+              <div className="flex-1">
                 <p className="font-semibold">
                   {selectedPersona.nombre} {selectedPersona.apellido}
                 </p>
@@ -84,6 +116,11 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                 <p className="text-sm text-muted-foreground">
                   {selectedPersona.nif}
                 </p>
+                {selectedPersona.empresa && (
+                  <p className="text-sm text-muted-foreground">
+                    {selectedPersona.empresa}
+                  </p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -111,7 +148,7 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
               {personas.map((persona) => (
                 <div
                   key={persona.id}
-                  className="flex items-center space-x-4 py-2 px-2 hover:bg-accent rounded-md cursor-pointer"
+                  className="flex items-center space-x-4 py-2 px-2 hover:bg-accent rounded-md cursor-pointer group"
                   onClick={() => handleSelect(persona)}
                 >
                   <Avatar>
@@ -123,7 +160,7 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                       {getInitials(persona.nombre, persona.apellido)}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
+                  <div className="flex-1">
                     <p className="font-semibold">
                       {persona.nombre} {persona.apellido}
                     </p>
@@ -134,6 +171,11 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                     <p className="text-sm text-muted-foreground">
                       {persona.nif}
                     </p>
+                    {persona.empresa && (
+                      <p className="text-sm text-muted-foreground">
+                        {persona.empresa}
+                      </p>
+                    )}
                     {/* Mostrar si el cliente tiene crédito habilitado o no, con estilos personalizados y tamaño de fuente más pequeño */}
                     <p className="text-sm">
                       <span className="font-semibold">Crédito:</span>{" "}
@@ -151,6 +193,15 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
                       </span>
                     </p>
                   </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => handleEditPersona(persona, e)}
+                    title="Editar cliente"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </ScrollArea>
@@ -166,7 +217,7 @@ export default function PersonaSelector({ onSelect }: PersonaSelectorProps) {
               }}
               onOpen={onOpenSheet}
             >
-              <PersonaForm />
+              <PersonaForm onPersonaUpdated={onPersonaUpdated} />
             </CreateButton>
           </div>
         </>
