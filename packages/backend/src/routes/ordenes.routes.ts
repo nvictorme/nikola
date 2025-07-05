@@ -296,6 +296,17 @@ OrdenesRouter.post(
       if (!data)
         return res.status(400).json({ error: "Datos de orden requeridos" });
 
+      // Validar que items existe y no está vacío
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "La orden debe tener al menos un item" });
+      }
+
       const newOrden = new Orden();
 
       // Basic order details
@@ -618,6 +629,17 @@ OrdenesRouter.put(
         return res.status(400).json({
           error: `Ya no se puede editar la orden #${orden.serial}, ya que se encuentra en estatus ${orden.estatus}`,
         });
+      }
+
+      // Validar que items existe y no está vacío
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "La orden debe tener al menos un item" });
       }
 
       // Calculate order totals

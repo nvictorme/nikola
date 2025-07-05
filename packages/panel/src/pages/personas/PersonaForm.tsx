@@ -15,7 +15,11 @@ import { IPersona } from "shared/interfaces";
 import { TipoCliente } from "shared/enums";
 import { usePersonasStore } from "@/store/personas.store";
 
-export default function PersonaForm() {
+interface PersonaFormProps {
+  onPersonaUpdated?: (persona: IPersona) => void;
+}
+
+export default function PersonaForm({ onPersonaUpdated }: PersonaFormProps) {
   const { persona, crearPersona, actualizarPersona, hideSheet } =
     usePersonasStore();
 
@@ -36,13 +40,20 @@ export default function PersonaForm() {
   const creditoHabilitado = watch("creditoHabilitado");
   const hasExistingCredit = persona?.creditoHabilitado;
 
-  const onSubmit = (data: IPersona) => {
-    if (persona) {
-      actualizarPersona(data);
-    } else {
-      crearPersona(data);
+  const onSubmit = async (data: IPersona) => {
+    try {
+      if (persona) {
+        await actualizarPersona(data);
+        if (onPersonaUpdated) {
+          onPersonaUpdated(data);
+        }
+      } else {
+        await crearPersona(data);
+      }
+      hideSheet();
+    } catch (error) {
+      console.error("Error al guardar persona:", error);
     }
-    hideSheet();
   };
 
   return (
