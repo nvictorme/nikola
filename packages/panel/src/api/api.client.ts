@@ -64,4 +64,15 @@ export class ApiClient {
   request(config: AxiosRequestConfig) {
     return this.axiosInstance.request(config);
   }
+
+  // Method for binary responses (like PDFs)
+  getBinary<T>(url: string, params: T) {
+    const config: AxiosRequestConfig = {
+      url: `${API_BASE_URL}${url}`,
+      method: "GET",
+      params,
+      responseType: "arraybuffer",
+    };
+    return this.request(config);
+  }
 }

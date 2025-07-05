@@ -4,6 +4,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { IOrden } from "shared/interfaces";
 import {
   currencyFormat,
@@ -11,6 +12,8 @@ import {
   formatearFecha,
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden } from "shared/enums";
+import { FileText, Download } from "lucide-react";
+import { useGeneratePDF } from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -23,6 +26,8 @@ export const OrdenPreview = ({
   open,
   onOpenChange,
 }: OrdenPreviewProps) => {
+  const { generatePDF, isGeneratingPDF } = useGeneratePDF();
+
   if (!orden) return null;
 
   const totalConCredito = calcularTotalOrden({
@@ -33,6 +38,10 @@ export const OrdenPreview = ({
     credito: orden.credito,
   });
 
+  const handleGeneratePDFWithOrden = async () => {
+    await generatePDF(orden);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
@@ -41,6 +50,27 @@ export const OrdenPreview = ({
           {/* Modificado: Formato de fecha cambiado a día, mes, año (es-ES) */}
           Fecha: {formatearFecha(orden.fechaCreado)}
         </DialogDescription>
+
+        {/* PDF Generation Button */}
+        <div className="sticky top-0 z-10 bg-background border-b p-4">
+          <Button
+            onClick={handleGeneratePDFWithOrden}
+            disabled={isGeneratingPDF}
+            className="w-full sm:w-auto"
+          >
+            {isGeneratingPDF ? (
+              <>
+                <FileText className="mr-2 h-4 w-4 animate-spin" />
+                Generando PDF...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Orden PDF
+              </>
+            )}
+          </Button>
+        </div>
 
         {/* Scrollable container */}
         <div className="overflow-y-auto p-8">
