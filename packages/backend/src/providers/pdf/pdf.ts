@@ -262,6 +262,143 @@ export class PDFProvider {
     }
   }
 
+  private drawPageTotals(
+    page: any,
+    helveticaFont: any,
+    helveticaBold: any,
+    primaryColor: any,
+    secondaryColor: any,
+    pageItems: any[],
+    tipoCambio: TipoCambio,
+    tasaCambio: number,
+    width: number,
+    leftMargin: number
+  ) {
+    const ivaActual = 0.16; // 16% IVA
+
+    // Calcular totales de la página
+    const subtotal = pageItems.reduce((sum, item) => {
+      const unitPrice =
+        tipoCambio === TipoCambio.bcv
+          ? Math.round(item.precio * tasaCambio * 100) / 100
+          : item.precio;
+      return sum + item.cantidad * unitPrice;
+    }, 0);
+    const ivaAmount = Math.round(subtotal * ivaActual * 100) / 100;
+    const totalToPay = subtotal + ivaAmount;
+
+    // Sección de totales abajo a la derecha
+    const totalsX = width - 197;
+    let totalsY = 60;
+
+    // Sub-total
+    page.drawText("Sub-total:", {
+      x: totalsX,
+      y: totalsY,
+      size: 10,
+      font: helveticaBold,
+      color: primaryColor,
+    });
+    const subtotalText = subtotal.toLocaleString("es-VE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const subtotalWidth = helveticaFont.widthOfTextAtSize(subtotalText, 10);
+    page.drawText(subtotalText, {
+      x: totalsX + 150 - subtotalWidth,
+      y: totalsY,
+      size: 10,
+      font: helveticaFont,
+      color: primaryColor,
+    });
+    totalsY -= 20;
+
+    // IVA (16%)
+    page.drawText("IVA (16%):", {
+      x: totalsX,
+      y: totalsY,
+      size: 10,
+      font: helveticaBold,
+      color: primaryColor,
+    });
+    const ivaText = ivaAmount.toLocaleString("es-VE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const ivaWidth = helveticaFont.widthOfTextAtSize(ivaText, 10);
+    page.drawText(ivaText, {
+      x: totalsX + 150 - ivaWidth,
+      y: totalsY,
+      size: 10,
+      font: helveticaFont,
+      color: primaryColor,
+    });
+    totalsY -= 20;
+
+    // Total a Pagar
+    page.drawText("Total a Pagar:", {
+      x: totalsX,
+      y: totalsY,
+      size: 10,
+      font: helveticaBold,
+      color: primaryColor,
+    });
+    const totalText = totalToPay.toLocaleString("es-VE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    const totalWidth = helveticaFont.widthOfTextAtSize(totalText, 10);
+    page.drawText(totalText, {
+      x: totalsX + 150 - totalWidth,
+      y: totalsY,
+      size: 10,
+      font: helveticaFont,
+      color: primaryColor,
+    });
+
+    // Mensaje de retención (izquierda, a la altura del Sub-total)
+    const retentionY = 40;
+    page.drawText(
+      "En caso de ser Agente de Retención, la Retención debe ser por el 100% del IVA",
+      {
+        x: leftMargin,
+        y: retentionY,
+        size: 9,
+        font: helveticaFont,
+        color: secondaryColor,
+      }
+    );
+
+    // Mensaje de tasa de cambio y fecha
+    const exchangeRateY = retentionY - 20;
+    const currentDate = new Date().toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+    if (tipoCambio === TipoCambio.bcv) {
+      page.drawText(
+        `Tasa BCV utilizada: ${tasaCambio} - Fecha: ${currentDate}`,
+        {
+          x: leftMargin,
+          y: exchangeRateY,
+          size: 9,
+          font: helveticaFont,
+          color: secondaryColor,
+        }
+      );
+    } else {
+      page.drawText(`Tasa USD utilizada: 1.00 - Fecha: ${currentDate}`, {
+        x: leftMargin,
+        y: exchangeRateY,
+        size: 9,
+        font: helveticaFont,
+        color: secondaryColor,
+      });
+    }
+  }
+
   private getTemplatePath(garantia: string): string {
     const templateMap = {
       ["1 año"]: "cert_1_ano.pdf",
@@ -1101,7 +1238,7 @@ export class PDFProvider {
       let yPosition = height - 120;
 
       // Tabla de productos
-      const columnWidths = [60, 340, 100, 120]; // Cantidad, Descripción, Precio Unitario, Total
+      const columnWidths = [50, 350, 100, 120]; // Cantidad, Descripción, Precio Unitario, Total
       const columnTitles = [
         "Cantidad",
         "Descripción",
@@ -1125,14 +1262,14 @@ export class PDFProvider {
           const unitarioX = currentX + columnWidths[i] / 2 - unitarioWidth / 2;
           page.drawText(precioText, {
             x: precioX,
-            y: yPosition,
+            y: yPosition + 5,
             size: 9,
             font: helveticaBold,
             color: primaryColor,
           });
           page.drawText(unitarioText, {
             x: unitarioX,
-            y: yPosition - 11,
+            y: yPosition - 6,
             size: 9,
             font: helveticaBold,
             color: primaryColor,
@@ -1152,10 +1289,28 @@ export class PDFProvider {
 
       // Items
       let pageItemCount = 0;
+      let currentPageItems: typeof orden.items = [];
+      let pageNumber = 0;
+
       for (let index = 0; index < orden.items.length; index++) {
         const item = orden.items[index];
+
         // Nueva página si se excede el máximo
         if (pageItemCount >= maxItemsPerPage) {
+          // Dibujar totales de la página actual antes de crear nueva página
+          this.drawPageTotals(
+            page,
+            helveticaFont,
+            helveticaBold,
+            primaryColor,
+            secondaryColor,
+            currentPageItems,
+            orden.tipoCambio,
+            orden.tasaCambio,
+            width,
+            leftMargin
+          );
+
           page = pdfDoc.addPage([pageWidth, pageHeight]);
           await this.drawHeader(
             page,
@@ -1166,6 +1321,9 @@ export class PDFProvider {
           );
           yPosition = height - 120;
           pageItemCount = 0;
+          currentPageItems = [];
+          pageNumber++;
+
           // Redibujar encabezados
           currentX = leftMargin;
           for (let i = 0; i < columnTitles.length; i++) {
@@ -1185,14 +1343,14 @@ export class PDFProvider {
                 currentX + columnWidths[i] / 2 - unitarioWidth / 2;
               page.drawText(precioText, {
                 x: precioX,
-                y: yPosition,
+                y: yPosition + 5,
                 size: 9,
                 font: helveticaBold,
                 color: primaryColor,
               });
               page.drawText(unitarioText, {
                 x: unitarioX,
-                y: yPosition - 11,
+                y: yPosition - 6,
                 size: 9,
                 font: helveticaBold,
                 color: primaryColor,
@@ -1210,10 +1368,18 @@ export class PDFProvider {
           }
           yPosition -= 24;
         }
+
+        // Agregar el item a la página actual
+        currentPageItems.push(item);
         currentX = leftMargin;
         // Cantidad
-        page.drawText(item.cantidad.toString(), {
-          x: currentX,
+        const cantidadText = item.cantidad.toString();
+        const cantidadWidth = helveticaFont.widthOfTextAtSize(cantidadText, 9);
+        const headerText = "Cantidad";
+        const headerWidth = helveticaBold.widthOfTextAtSize(headerText, 9);
+        const headerCenter = currentX + headerWidth / 2;
+        page.drawText(cantidadText, {
+          x: headerCenter - cantidadWidth / 2,
           y: yPosition,
           size: 9,
           font: helveticaFont,
@@ -1232,7 +1398,7 @@ export class PDFProvider {
         // Precio Unitario (precio * tasa de cambio BCV)
         const unitPrice =
           orden.tipoCambio === TipoCambio.bcv
-            ? item.precio * orden.tasaCambio
+            ? Math.round(item.precio * orden.tasaCambio * 100) / 100
             : item.precio;
         const unitPriceText = unitPrice.toLocaleString("es-VE", {
           minimumFractionDigits: 2,
@@ -1243,7 +1409,7 @@ export class PDFProvider {
           9
         );
         page.drawText(unitPriceText, {
-          x: currentX + columnWidths[2] - unitPriceWidth - 31,
+          x: currentX + columnWidths[2] - unitPriceWidth - 34,
           y: yPosition,
           size: 9,
           font: helveticaFont,
@@ -1257,109 +1423,36 @@ export class PDFProvider {
           maximumFractionDigits: 2,
         });
         const totalWidth = helveticaFont.widthOfTextAtSize(totalText, 9);
+        const totalHeaderText = "Total";
+        const totalHeaderWidth = helveticaBold.widthOfTextAtSize(
+          totalHeaderText,
+          9
+        );
+        const totalHeaderCenter = currentX + totalHeaderWidth / 2;
         page.drawText(totalText, {
-          x: currentX + 5,
+          x: totalHeaderCenter - totalWidth / 2,
           y: yPosition,
           size: 9,
           font: helveticaFont,
           color: primaryColor,
         });
         currentX += columnWidths[3];
-        yPosition -= 20;
+        yPosition -= 17;
         pageItemCount++;
       }
 
-      // Totales
-      const subtotal = orden.items.reduce((sum, item) => {
-        const unitPrice =
-          orden.tipoCambio === TipoCambio.bcv
-            ? item.precio * orden.tasaCambio
-            : item.precio;
-        return sum + item.cantidad * unitPrice;
-      }, 0);
-      const ivaAmount = subtotal * ivaActual;
-      const totalToPay = subtotal + ivaAmount;
-
-      // Sección de totales abajo a la derecha
-      const totalsX = width - 250;
-      let totalsY = 80;
-      // Sub-total
-      page.drawText("Sub-total:", {
-        x: totalsX,
-        y: totalsY,
-        size: 10,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-      const subtotalText = currencyFormat({
-        value: subtotal,
-        currency: orden.tipoCambio === TipoCambio.bcv ? "VES" : "USD",
-        locale: orden.tipoCambio === TipoCambio.bcv ? "es-VE" : "en-US",
-      });
-      const subtotalWidth = helveticaFont.widthOfTextAtSize(subtotalText, 10);
-      page.drawText(subtotalText, {
-        x: totalsX + 150 - subtotalWidth,
-        y: totalsY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-      totalsY -= 20;
-      // IVA (16%)
-      page.drawText("IVA (16%):", {
-        x: totalsX,
-        y: totalsY,
-        size: 10,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-      const ivaText = currencyFormat({
-        value: ivaAmount,
-        currency: orden.tipoCambio === TipoCambio.bcv ? "VES" : "USD",
-        locale: orden.tipoCambio === TipoCambio.bcv ? "es-VE" : "en-US",
-      });
-      const ivaWidth = helveticaFont.widthOfTextAtSize(ivaText, 10);
-      page.drawText(ivaText, {
-        x: totalsX + 150 - ivaWidth,
-        y: totalsY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-      totalsY -= 20;
-      // Total a Pagar
-      page.drawText("Total a Pagar:", {
-        x: totalsX,
-        y: totalsY,
-        size: 10,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-      const totalText = currencyFormat({
-        value: totalToPay,
-        currency: orden.tipoCambio === TipoCambio.bcv ? "VES" : "USD",
-        locale: orden.tipoCambio === TipoCambio.bcv ? "es-VE" : "en-US",
-      });
-      const totalWidth = helveticaFont.widthOfTextAtSize(totalText, 10);
-      page.drawText(totalText, {
-        x: totalsX + 150 - totalWidth,
-        y: totalsY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-
-      // Mensaje de retención (izquierda, a la altura del Sub-total)
-      const retentionY = 80;
-      page.drawText(
-        "En caso de ser Agente de Retención, la Retención debe ser por el 100% del IVA",
-        {
-          x: leftMargin,
-          y: retentionY,
-          size: 9,
-          font: helveticaFont,
-          color: secondaryColor,
-        }
+      // Dibujar totales de la página final
+      this.drawPageTotals(
+        page,
+        helveticaFont,
+        helveticaBold,
+        primaryColor,
+        secondaryColor,
+        currentPageItems,
+        orden.tipoCambio,
+        orden.tasaCambio,
+        width,
+        leftMargin
       );
 
       // Guardar PDF
