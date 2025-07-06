@@ -15,6 +15,8 @@ import ReportesPage from "@/pages/reportes/ReportesPage";
 import RolesPage from "@/pages/roles/RolesPage";
 import SucursalesPage from "@/pages/sucursales/SucursalesPage";
 import UsuariosPage from "@/pages/usuarios/UsuariosPage";
+import MovimientosPage from "@/pages/movimientos/MovimientosPage";
+
 import {
   Home,
   Package,
@@ -67,6 +69,12 @@ export const routes = {
     title: "Ordenes",
     icon: ShoppingCart,
     element: OrdenesPage,
+  },
+  movimientos: {
+    path: "/movimientos",
+    title: "Movimientos",
+    icon: Warehouse,
+    element: MovimientosPage,
   },
   personas: {
     path: "/clientes",

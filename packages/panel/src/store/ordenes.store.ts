@@ -201,6 +201,7 @@ export const useOrdenesStore = create<OrdenesStore>()(
           await new ApiClient().post(`/ordenes/${ordenId}/envios`, { envio });
           await get().listarOrdenes();
           toast.success("Envío agregado correctamente");
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
           console.error(error);
           const message = error.response?.data?.message || error.message;
