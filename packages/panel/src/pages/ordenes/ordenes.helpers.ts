@@ -119,6 +119,16 @@ export const fetchOrderPDF = async (orderId: string): Promise<Blob> => {
   return new Blob([response.data], { type: "application/pdf" });
 };
 
+// API function - Single responsibility: fetch Proforma PDF from API
+export const fetchProformaPDF = async (orderId: string): Promise<Blob> => {
+  const apiClient = new ApiClient();
+  const response = await apiClient.getBinary(
+    `/ordenes/${orderId}/proforma`,
+    {}
+  );
+  return new Blob([response.data], { type: "application/pdf" });
+};
+
 // Download function - Single responsibility: handle file download
 export const downloadPDF = (blob: Blob, filename: string): void => {
   const url = window.URL.createObjectURL(blob);
@@ -136,18 +146,19 @@ export const notifyPDFGeneration = (
   toast: typeof toastFn,
   isSuccess: boolean,
   orderSerial?: string,
-  errorMessage?: string
+  errorMessage?: string,
+  pdfType: string = "PDF"
 ): void => {
   if (isSuccess) {
     toast({
-      title: "PDF Generado",
-      description: `El PDF de la orden #${orderSerial} se ha descargado exitosamente`,
+      title: `${pdfType} Generado`,
+      description: `El ${pdfType} de la orden #${orderSerial} se ha descargado exitosamente`,
     });
   } else {
     toast({
       title: "Error",
       description:
-        errorMessage || "No se pudo generar el PDF. Inténtalo de nuevo.",
+        errorMessage || `No se pudo generar el ${pdfType}. Inténtalo de nuevo.`,
       variant: "destructive",
     });
   }
@@ -176,6 +187,29 @@ export const handleGeneratePDF = async (orden: IOrden) => {
   }
 };
 
+// Main orchestrator function - Single responsibility: coordinate the Proforma PDF generation process
+export const handleGenerateProformaPDF = async (orden: IOrden) => {
+  // Validate input
+  const validation = validateOrderForPDF(orden);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
+  try {
+    // Fetch PDF from API
+    const pdfBlob = await fetchProformaPDF(orden.id!.toString());
+
+    // Download the file
+    downloadPDF(pdfBlob, `factura-proforma-${orden.serial}.pdf`);
+
+    // Return success info for the hook to handle
+    return { success: true, orderSerial: orden.serial.toString() };
+  } catch (error) {
+    console.error("Error generating Proforma PDF:", error);
+    throw error;
+  }
+};
+
 // Custom hook that handles PDF generation with toast notifications and loading state
 export const useGeneratePDF = () => {
   const { toast } = useToast();
@@ -198,4 +232,28 @@ export const useGeneratePDF = () => {
   };
 
   return { generatePDF, isGeneratingPDF };
+};
+
+// Custom hook that handles Proforma PDF generation with toast notifications and loading state
+export const useGenerateProformaPDF = () => {
+  const { toast } = useToast();
+  const [isGeneratingProformaPDF, setIsGeneratingProformaPDF] = useState(false);
+
+  const generateProformaPDF = async (orden: IOrden) => {
+    try {
+      setIsGeneratingProformaPDF(true);
+      const result = await handleGenerateProformaPDF(orden);
+      notifyPDFGeneration(toast, true, result.orderSerial, "Factura Proforma");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "No se pudo generar la Factura Proforma. Inténtalo de nuevo.";
+      notifyPDFGeneration(toast, false, undefined, errorMessage);
+    } finally {
+      setIsGeneratingProformaPDF(false);
+    }
+  };
+
+  return { generateProformaPDF, isGeneratingProformaPDF };
 };
