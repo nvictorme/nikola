@@ -1135,4 +1135,65 @@ OrdenesRouter.get(
   }
 );
 
+// GET - Generate Proforma PDF for order
+OrdenesRouter.get(
+  "/:ordenId/proforma",
+  verificarPrivilegio({
+    entidad: Orden.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { ordenId } = req.params;
+      console.log("Received request for proforma PDF with ordenId:", ordenId);
+
+      // Get the order with all relations
+      const orden = await AppDataSource.getRepository(Orden).findOne({
+        where: { id: ordenId },
+        relations: [
+          "sucursal",
+          "vendedor",
+          "cliente",
+          "proveedor",
+          "items",
+          "items.producto",
+          "items.almacen",
+        ],
+      });
+
+      if (!orden) {
+        return res.status(404).json({ error: "Orden no encontrada" });
+      }
+
+      const pdfProvider = new PDFProvider();
+
+      const pdfBuffer = await pdfProvider.generateProformaPDF(orden);
+      console.log("Proforma PDF generated successfully");
+
+      // Set response headers for download
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=factura-proforma-${orden.serial}.pdf`
+      );
+      res.status(200).send(pdfBuffer);
+    } catch (error: unknown) {
+      console.error("Error generating proforma PDF:", error);
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        console.error("Error message:", errorMessage);
+        console.error("Error stack:", error.stack);
+
+        res.status(500).json({
+          error: "Failed to generate proforma PDF",
+          details: errorMessage,
+        });
+      } else {
+        res.status(500).json({ error: "An unknown error occurred" });
+      }
+    }
+  }
+);
+
 export { OrdenesRouter };

@@ -11,9 +11,9 @@ import {
   calcularTotalOrden,
   formatearFecha,
 } from "shared/helpers";
-import { TipoDescuento, TipoOrden } from "shared/enums";
-import { FileText, Download } from "lucide-react";
-import { useGeneratePDF } from "./ordenes.helpers";
+import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
+import { FileText, Download, Receipt } from "lucide-react";
+import { useGeneratePDF, useGenerateProformaPDF } from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -27,6 +27,8 @@ export const OrdenPreview = ({
   onOpenChange,
 }: OrdenPreviewProps) => {
   const { generatePDF, isGeneratingPDF } = useGeneratePDF();
+  const { generateProformaPDF, isGeneratingProformaPDF } =
+    useGenerateProformaPDF();
 
   if (!orden) return null;
 
@@ -42,6 +44,10 @@ export const OrdenPreview = ({
     await generatePDF(orden);
   };
 
+  const handleGenerateProformaPDFWithOrden = async () => {
+    await generateProformaPDF(orden);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
@@ -51,25 +57,48 @@ export const OrdenPreview = ({
           Fecha: {formatearFecha(orden.fechaCreado)}
         </DialogDescription>
 
-        {/* PDF Generation Button */}
+        {/* PDF Generation Buttons */}
         <div className="sticky top-0 z-10 bg-background border-b p-4">
-          <Button
-            onClick={handleGeneratePDFWithOrden}
-            disabled={isGeneratingPDF}
-            className="w-full sm:w-auto"
-          >
-            {isGeneratingPDF ? (
-              <>
-                <FileText className="mr-2 h-4 w-4 animate-spin" />
-                Generando PDF...
-              </>
-            ) : (
-              <>
-                <Download className="mr-2 h-4 w-4" />
-                Orden PDF
-              </>
+          <div className="relative flex items-center">
+            <Button
+              onClick={handleGeneratePDFWithOrden}
+              disabled={isGeneratingPDF}
+              className="w-full sm:w-auto"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <FileText className="mr-2 h-4 w-4 animate-spin" />
+                  Generando PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Orden PDF
+                </>
+              )}
+            </Button>
+            {orden.tipoCambio === TipoCambio.bcv && (
+              <div className="absolute left-1/2 transform -translate-x-1/2">
+                <Button
+                  onClick={handleGenerateProformaPDFWithOrden}
+                  disabled={isGeneratingProformaPDF}
+                  className="w-full sm:w-auto"
+                >
+                  {isGeneratingProformaPDF ? (
+                    <>
+                      <Receipt className="mr-2 h-4 w-4 animate-spin" />
+                      Generando Proforma...
+                    </>
+                  ) : (
+                    <>
+                      <Receipt className="mr-2 h-4 w-4" />
+                      Factura Proforma
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
-          </Button>
+          </div>
         </div>
 
         {/* Scrollable container */}
@@ -106,7 +135,7 @@ export const OrdenPreview = ({
                     year: "numeric",
                   })}
                 </p>
-                {orden.tipoCambio === "BCV" && (
+                {orden.tipoCambio === TipoCambio.bcv && (
                   <p className="text-sm text-gray-500 mt-1">
                     Tasa BCV: {orden.tasaCambio}
                   </p>
@@ -284,7 +313,7 @@ export const OrdenPreview = ({
                   {currencyFormat({ value: totalConCredito })}
                 </span>
               </div>
-              {orden.tipoCambio === "BCV" && (
+              {orden.tipoCambio === TipoCambio.bcv && (
                 <div className="flex justify-between pt-1">
                   <span className="text-sm text-gray-500">Total en VES:</span>
                   <span className="text-sm text-gray-500">
