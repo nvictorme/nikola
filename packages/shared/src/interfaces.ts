@@ -269,6 +269,7 @@ export interface IMovimiento extends IBase {
   notas: string;
   estatus: EstatusMovimiento;
   historial: IMovimientoHistorial[];
+  usuario: IUsuario;
 }
 
 export interface IMovimientoHistorial extends IBase {
