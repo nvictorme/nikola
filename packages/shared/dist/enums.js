@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TipoReporte = exports.TipoOrden = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoCambio = exports.TipoCliente = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
+exports.TipoReporte = exports.TipoOrden = exports.QRCodeOutput = exports.Transportistas = exports.TipoTransaccion = exports.TipoDocumento = exports.MetodoPago = exports.EstatusPago = exports.EstatusFactura = exports.EstatusArchivo = exports.SocketEstatusMensaje = exports.SocketTipoMensaje = exports.SocketEventos = exports.UnidadesPeso = exports.UnidadesLongitud = exports.TipoCambio = exports.TipoCliente = exports.TipoDescuento = exports.Acciones = exports.EstatusInvitacion = exports.EstatusMovimiento = exports.EstatusOrden = exports.EntidadesProtegidas = exports.RolesBase = exports.NivelResultado = exports.RouteRuleCheck = void 0;
 var RouteRuleCheck;
 (function (RouteRuleCheck) {
     RouteRuleCheck["isAdmin"] = "isAdmin";
@@ -59,6 +59,14 @@ var EstatusOrden;
     EstatusOrden["cancelado"] = "Cancelado";
     EstatusOrden["cerrado"] = "Cerrado";
 })(EstatusOrden || (exports.EstatusOrden = EstatusOrden = {}));
+var EstatusMovimiento;
+(function (EstatusMovimiento) {
+    EstatusMovimiento["pendiente"] = "Pendiente";
+    EstatusMovimiento["aprobado"] = "Aprobado";
+    EstatusMovimiento["transito"] = "Transito";
+    EstatusMovimiento["recibido"] = "Recibido";
+    EstatusMovimiento["anulado"] = "Anulado";
+})(EstatusMovimiento || (exports.EstatusMovimiento = EstatusMovimiento = {}));
 var EstatusInvitacion;
 (function (EstatusInvitacion) {
     EstatusInvitacion["pendiente"] = "Pendiente";

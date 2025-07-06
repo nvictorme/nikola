@@ -56,6 +56,14 @@ export enum EstatusOrden {
   cerrado = "Cerrado",
 }
 
+export enum EstatusMovimiento {
+  pendiente = "Pendiente",
+  aprobado = "Aprobado",
+  transito = "Transito",
+  recibido = "Recibido",
+  anulado = "Anulado",
+}
+
 export enum EstatusInvitacion {
   pendiente = "Pendiente",
   aceptada = "Aceptada",

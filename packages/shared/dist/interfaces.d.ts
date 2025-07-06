@@ -1,4 +1,4 @@
-import { RolesBase, TipoDescuento, EstatusInvitacion, UnidadesLongitud, Acciones, UnidadesPeso, EstatusOrden, EstatusArchivo, TipoTransaccion, EstatusPago, MetodoPago, Transportistas, TipoOrden, TipoReporte, SocketTipoMensaje, TipoCliente, TipoCambio } from "./enums";
+import { RolesBase, TipoDescuento, EstatusInvitacion, UnidadesLongitud, Acciones, UnidadesPeso, EstatusOrden, EstatusArchivo, TipoTransaccion, EstatusPago, MetodoPago, Transportistas, TipoOrden, TipoReporte, SocketTipoMensaje, TipoCliente, TipoCambio, EstatusMovimiento } from "./enums";
 export interface IFactores {
     [TipoCliente.instalador]: number;
     [TipoCliente.mayorista]: number;
@@ -198,6 +198,26 @@ export interface IOrdenHistorial extends IBase {
     estatus: EstatusOrden;
     usuario: IUsuario;
     envio: IEnvio;
+    notas: string;
+}
+export interface IItemMovimiento extends IBase {
+    producto: IProducto;
+    cantidad: number;
+    notas: string;
+}
+export interface IMovimiento extends IBase {
+    serial: number;
+    origen: IAlmacen;
+    destino: IAlmacen;
+    items: IItemMovimiento[];
+    notas: string;
+    estatus: EstatusMovimiento;
+    historial: IMovimientoHistorial[];
+}
+export interface IMovimientoHistorial extends IBase {
+    movimiento: IMovimiento;
+    estatus: EstatusMovimiento;
+    usuario: IUsuario;
     notas: string;
 }
 export interface IHistorialPrecio extends IBase {

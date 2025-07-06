@@ -16,6 +16,7 @@ import {
   SocketTipoMensaje,
   TipoCliente,
   TipoCambio,
+  EstatusMovimiento,
 } from "./enums";
 
 export interface IFactores {
@@ -251,6 +252,29 @@ export interface IOrdenHistorial extends IBase {
   estatus: EstatusOrden;
   usuario: IUsuario;
   envio: IEnvio;
+  notas: string;
+}
+
+export interface IItemMovimiento extends IBase {
+  producto: IProducto;
+  cantidad: number;
+  notas: string;
+}
+
+export interface IMovimiento extends IBase {
+  serial: number;
+  origen: IAlmacen;
+  destino: IAlmacen;
+  items: IItemMovimiento[];
+  notas: string;
+  estatus: EstatusMovimiento;
+  historial: IMovimientoHistorial[];
+}
+
+export interface IMovimientoHistorial extends IBase {
+  movimiento: IMovimiento;
+  estatus: EstatusMovimiento;
+  usuario: IUsuario;
   notas: string;
 }
 
