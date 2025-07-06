@@ -288,7 +288,7 @@ export class PDFProvider {
     const totalToPay = subtotal + ivaAmount;
 
     // Sección de totales abajo a la derecha
-    const totalsX = width - 197;
+    const totalsX = width - 181;
     let totalsY = 60;
 
     // Sub-total
@@ -305,7 +305,7 @@ export class PDFProvider {
     });
     const subtotalWidth = helveticaFont.widthOfTextAtSize(subtotalText, 10);
     page.drawText(subtotalText, {
-      x: totalsX + 150 - subtotalWidth,
+      x: totalsX + 140 - subtotalWidth,
       y: totalsY,
       size: 10,
       font: helveticaFont,
@@ -327,7 +327,7 @@ export class PDFProvider {
     });
     const ivaWidth = helveticaFont.widthOfTextAtSize(ivaText, 10);
     page.drawText(ivaText, {
-      x: totalsX + 150 - ivaWidth,
+      x: totalsX + 140 - ivaWidth,
       y: totalsY,
       size: 10,
       font: helveticaFont,
@@ -349,7 +349,7 @@ export class PDFProvider {
     });
     const totalWidth = helveticaFont.widthOfTextAtSize(totalText, 10);
     page.drawText(totalText, {
-      x: totalsX + 150 - totalWidth,
+      x: totalsX + 140 - totalWidth,
       y: totalsY,
       size: 10,
       font: helveticaFont,
@@ -1274,6 +1274,21 @@ export class PDFProvider {
             font: helveticaBold,
             color: primaryColor,
           });
+        } else if (columnTitles[i] === "Descripción") {
+          // Centrar "Descripción"
+          const descripcionWidth = helveticaBold.widthOfTextAtSize(
+            columnTitles[i],
+            9
+          );
+          const descripcionX =
+            currentX + columnWidths[i] / 2 - descripcionWidth / 2;
+          page.drawText(columnTitles[i], {
+            x: descripcionX,
+            y: yPosition,
+            size: 9,
+            font: helveticaBold,
+            color: primaryColor,
+          });
         } else {
           page.drawText(columnTitles[i], {
             x: currentX,
@@ -1355,6 +1370,21 @@ export class PDFProvider {
                 font: helveticaBold,
                 color: primaryColor,
               });
+            } else if (columnTitles[i] === "Descripción") {
+              // Centrar "Descripción"
+              const descripcionWidth = helveticaBold.widthOfTextAtSize(
+                columnTitles[i],
+                9
+              );
+              const descripcionX =
+                currentX + columnWidths[i] / 2 - descripcionWidth / 2;
+              page.drawText(columnTitles[i], {
+                x: descripcionX,
+                y: yPosition,
+                size: 9,
+                font: helveticaBold,
+                color: primaryColor,
+              });
             } else {
               page.drawText(columnTitles[i], {
                 x: currentX,
@@ -1423,14 +1453,8 @@ export class PDFProvider {
           maximumFractionDigits: 2,
         });
         const totalWidth = helveticaFont.widthOfTextAtSize(totalText, 9);
-        const totalHeaderText = "Total";
-        const totalHeaderWidth = helveticaBold.widthOfTextAtSize(
-          totalHeaderText,
-          9
-        );
-        const totalHeaderCenter = currentX + totalHeaderWidth / 2;
         page.drawText(totalText, {
-          x: totalHeaderCenter - totalWidth / 2,
+          x: currentX + columnWidths[3] - totalWidth - 90,
           y: yPosition,
           size: 9,
           font: helveticaFont,
