@@ -11,21 +11,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
 
-import { Plus, Search, Filter, RefreshCw } from "lucide-react";
+import { Search, RefreshCw, PlusCircleIcon } from "lucide-react";
 import { EstatusMovimiento } from "shared/enums";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useToast } from "@/hooks/use-toast";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MovimientoForm } from "./MovimientoForm";
 import { IMovimiento } from "shared/interfaces";
+import { getEstatusMovimientoColor } from "shared/helpers";
 
 export default function MovimientosPage() {
   const {
@@ -38,7 +34,6 @@ export default function MovimientosPage() {
     filters,
     getMovimientos,
     setFilters,
-    clearFilters,
     updateMovimientoStatus,
     deleteMovimiento,
     clearError,
@@ -50,7 +45,7 @@ export default function MovimientosPage() {
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(filters.term);
   const [selectedEstatus, setSelectedEstatus] = useState(
-    filters.estatus || "todos"
+    filters.estatus || "Todos"
   );
   const [showForm, setShowForm] = useState(false);
   const [selectedMovimiento, setSelectedMovimiento] = useState<string | null>(
@@ -70,7 +65,7 @@ export default function MovimientosPage() {
   useEffect(() => {
     if (debouncedSearchTerm !== filters.term) {
       setFilters({ term: debouncedSearchTerm });
-      const filterEstatus = selectedEstatus === "todos" ? "" : selectedEstatus;
+      const filterEstatus = selectedEstatus === "Todos" ? "" : selectedEstatus;
       getMovimientos({ term: debouncedSearchTerm, estatus: filterEstatus });
     }
   }, [
@@ -94,13 +89,13 @@ export default function MovimientosPage() {
 
   const handleStatusChange = (estatus: string) => {
     setSelectedEstatus(estatus);
-    const filterEstatus = estatus === "todos" ? "" : estatus;
+    const filterEstatus = estatus === "Todos" ? "" : estatus;
     setFilters({ estatus: filterEstatus });
     getMovimientos({ term: searchTerm, estatus: filterEstatus });
   };
 
   const handleRefresh = () => {
-    const filterEstatus = selectedEstatus === "todos" ? "" : selectedEstatus;
+    const filterEstatus = selectedEstatus === "Todos" ? "" : selectedEstatus;
     getMovimientos({ term: searchTerm, estatus: filterEstatus });
   };
 
@@ -154,18 +149,7 @@ export default function MovimientosPage() {
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Movimientos</h1>
-          <p className="text-muted-foreground">
-            Gestiona el movimiento de productos entre almacenes
-          </p>
-        </div>
-        <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-2 h-4 w-4" />
-          Nuevo Movimiento
-        </Button>
-      </div>
+      {/* Eliminar el botón Movimiento de la cabecera superior */}
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
@@ -223,72 +207,105 @@ export default function MovimientosPage() {
 
       {/* Filters */}
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros</CardTitle>
-          <CardDescription>
-            Filtra los movimientos por término de búsqueda y estatus
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <div className="relative flex-1">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por serial, almacén, usuario..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8"
-              />
+        <CardContent className="pt-5">
+          <div className="w-full flex flex-col md:flex-row md:items-end md:gap-4">
+            {/* Campo Buscar */}
+            <div className="flex flex-col flex-1">
+              <Label
+                htmlFor="search-movimientos"
+                className="text-left block mb-2"
+              >
+                Buscar
+              </Label>
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  id="search-movimientos"
+                  placeholder="Buscar por serial, almacén, usuario..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-8"
+                />
+              </div>
             </div>
-            <Select value={selectedEstatus} onValueChange={handleStatusChange}>
-              <SelectTrigger className="w-full md:w-[180px]">
-                <SelectValue placeholder="Filtrar por estatus" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los estatus</SelectItem>
-                <SelectItem value={EstatusMovimiento.pendiente}>
-                  Pendiente
-                </SelectItem>
-                <SelectItem value={EstatusMovimiento.aprobado}>
-                  Aprobado
-                </SelectItem>
-                <SelectItem value={EstatusMovimiento.transito}>
-                  En Tránsito
-                </SelectItem>
-                <SelectItem value={EstatusMovimiento.recibido}>
-                  Recibido
-                </SelectItem>
-                <SelectItem value={EstatusMovimiento.anulado}>
-                  Anulado
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={clearFilters}>
-              <Filter className="mr-2 h-4 w-4" />
-              Limpiar
-            </Button>
-            <Button
-              variant="outline"
-              onClick={handleRefresh}
-              disabled={loading}
-            >
-              <RefreshCw
-                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
-              />
-              Actualizar
-            </Button>
+            {/* Botones */}
+            <div className="flex gap-4 md:ml-auto mt-4 md:mt-0 items-end">
+              {/* Select de Estatus a la izquierda */}
+              <div className="w-full md:w-[180px] flex flex-col">
+                <Label
+                  htmlFor="estatus-movimientos"
+                  className="text-left block mb-2"
+                >
+                  Estatus
+                </Label>
+                <Select
+                  value={selectedEstatus}
+                  onValueChange={handleStatusChange}
+                >
+                  <SelectTrigger
+                    id="estatus-movimientos"
+                    className={
+                      selectedEstatus !== "Todos" && selectedEstatus
+                        ? getEstatusMovimientoColor(
+                            selectedEstatus as unknown as EstatusMovimiento
+                          )
+                        : ""
+                    }
+                  >
+                    <SelectValue placeholder="Filtrar por estatus" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Todos">Todos</SelectItem>
+                    <SelectItem value={EstatusMovimiento.pendiente}>
+                      Pendiente
+                    </SelectItem>
+                    <SelectItem value={EstatusMovimiento.aprobado}>
+                      Aprobado
+                    </SelectItem>
+                    <SelectItem value={EstatusMovimiento.transito}>
+                      En Tránsito
+                    </SelectItem>
+                    <SelectItem value={EstatusMovimiento.recibido}>
+                      Recibido
+                    </SelectItem>
+                    <SelectItem value={EstatusMovimiento.anulado}>
+                      Anulado
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {/* Botón Actualizar */}
+              <Button
+                variant="outline"
+                onClick={handleRefresh}
+                disabled={loading}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Actualizar
+              </Button>
+              {/* Botón Movimiento al lado de Actualizar */}
+              <Button
+                onClick={() => setShowForm(true)}
+                className="gap-2"
+                disabled={showForm}
+              >
+                <PlusCircleIcon size={16} /> Movimiento
+              </Button>
+              {/* Ocultar el botón Limpiar */}
+              {/* <Button variant="outline" onClick={clearFilters}>
+                <Filter className="mr-2 h-4 w-4" />
+                Limpiar
+              </Button> */}
+            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Data Table */}
       <Card>
-        <CardHeader>
-          <CardTitle>Movimientos</CardTitle>
-          <CardDescription>
-            Lista de todos los movimientos de productos entre almacenes
-          </CardDescription>
-        </CardHeader>
+        <CardHeader />
         <CardContent>
           <DataTable
             columns={columnasMovimientos}
@@ -299,6 +316,7 @@ export default function MovimientosPage() {
             setPage={setPage}
             setLimit={setLimit}
             limit={limit}
+            hideFilter={true}
           />
         </CardContent>
       </Card>

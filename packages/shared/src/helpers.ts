@@ -1,6 +1,7 @@
 import { passwordValidationPattern } from "./constants";
 import {
   EstatusOrden,
+  EstatusMovimiento,
   RolesBase,
   TipoDescuento,
   Transportistas,
@@ -220,6 +221,25 @@ export const getEstatusColor = (estatus: EstatusOrden): string => {
     case EstatusOrden.entregado:
       return "bg-green-100 text-green-800 border border-green-200";
     case EstatusOrden.cancelado:
+      return "bg-red-100 text-red-800 border border-red-200";
+    default:
+      return "bg-slate-100 text-slate-800 border border-slate-200";
+  }
+};
+
+export const getEstatusMovimientoColor = (
+  estatus: EstatusMovimiento
+): string => {
+  switch (estatus) {
+    case EstatusMovimiento.pendiente:
+      return "bg-yellow-100 text-yellow-800 border border-yellow-200";
+    case EstatusMovimiento.aprobado:
+      return "bg-blue-100 text-blue-800 border border-blue-200";
+    case EstatusMovimiento.transito:
+      return "bg-violet-100 text-violet-800 border border-violet-200";
+    case EstatusMovimiento.recibido:
+      return "bg-green-100 text-green-800 border border-green-200";
+    case EstatusMovimiento.anulado:
       return "bg-red-100 text-red-800 border border-red-200";
     default:
       return "bg-slate-100 text-slate-800 border border-slate-200";

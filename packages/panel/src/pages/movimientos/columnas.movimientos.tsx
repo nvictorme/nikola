@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatearFecha } from "shared/helpers";
+import { formatearFecha, getEstatusMovimientoColor } from "shared/helpers";
 
 export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
   {
@@ -76,25 +76,9 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
     header: "Estatus",
     cell: ({ row }) => {
       const estatus = row.getValue("estatus") as EstatusMovimiento;
-
-      const getStatusColor = (status: EstatusMovimiento) => {
-        switch (status) {
-          case EstatusMovimiento.pendiente:
-            return "bg-yellow-100 text-yellow-800";
-          case EstatusMovimiento.aprobado:
-            return "bg-blue-100 text-blue-800";
-          case EstatusMovimiento.transito:
-            return "bg-orange-100 text-orange-800";
-          case EstatusMovimiento.recibido:
-            return "bg-green-100 text-green-800";
-          case EstatusMovimiento.anulado:
-            return "bg-red-100 text-red-800";
-          default:
-            return "bg-gray-100 text-gray-800";
-        }
-      };
-
-      return <Badge className={getStatusColor(estatus)}>{estatus}</Badge>;
+      return (
+        <Badge className={getEstatusMovimientoColor(estatus)}>{estatus}</Badge>
+      );
     },
   },
   {
