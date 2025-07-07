@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { ApiClient } from "@/api/api.client";
-import { IMovimiento, IItemMovimiento, IAlmacen } from "shared/interfaces";
+import { IMovimiento, IAlmacen, IProducto } from "shared/interfaces";
 import { EstatusMovimiento } from "shared/enums";
 
 const apiClient = new ApiClient();
@@ -41,7 +41,11 @@ interface MovimientosActions {
   createMovimiento: (movimiento: {
     origen: IAlmacen;
     destino: IAlmacen;
-    items: IItemMovimiento[];
+    items: {
+      producto: IProducto;
+      cantidad: number;
+      notas: string;
+    }[];
     notas?: string;
   }) => Promise<IMovimiento>;
   updateMovimientoStatus: (

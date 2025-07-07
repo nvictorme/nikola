@@ -164,7 +164,8 @@ MovimientosRouter.post(
       // Guardar items del movimiento
       const savedItems = await AppDataSource.getRepository(ItemMovimiento).save(
         data.items.map((item) => ({
-          ...item,
+          producto: item.producto,
+          cantidad: item.cantidad,
           notas: item.notas || "",
         })),
         { chunk: 100 }

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,12 @@ import { useProductosStore } from "@/store/productos.store";
 import { IItemMovimiento, IAlmacen, IProducto } from "shared/interfaces";
 import { useToast } from "@/hooks/use-toast";
 
+interface CreateItemMovimiento {
+  producto: IProducto;
+  cantidad: number;
+  notas: string;
+}
+
 interface MovimientoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,12 +55,12 @@ export function MovimientoForm({
   const [loading, setLoading] = useState(false);
 
   // Cargar datos necesarios
-  useState(() => {
+  useEffect(() => {
     if (open) {
       listarAlmacenes();
       listarProductos();
     }
-  });
+  }, [open, listarAlmacenes, listarProductos]);
 
   const handleAddItem = () => {
     const newItem: IItemMovimiento = {
@@ -118,10 +124,18 @@ export function MovimientoForm({
 
     try {
       setLoading(true);
+
+      // Clean items to remove date fields that should be handled by the backend
+      const cleanItems: CreateItemMovimiento[] = items.map((item) => ({
+        producto: item.producto,
+        cantidad: item.cantidad,
+        notas: item.notas || "",
+      }));
+
       await createMovimiento({
         origen,
         destino,
-        items,
+        items: cleanItems,
         notas,
       });
 

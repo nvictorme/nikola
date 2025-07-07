@@ -24,6 +24,24 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
     },
   },
   {
+    accessorKey: "fechaCreado",
+    header: "Fecha",
+    cell: ({ row }) => {
+      const fecha = row.getValue("fechaCreado") as string;
+      return <span className="font-medium">{formatearFecha(fecha)}</span>;
+    },
+  },
+  {
+    accessorKey: "estatus",
+    header: "Estatus",
+    cell: ({ row }) => {
+      const estatus = row.getValue("estatus") as EstatusMovimiento;
+      return (
+        <Badge className={getEstatusMovimientoColor(estatus)}>{estatus}</Badge>
+      );
+    },
+  },
+  {
     accessorKey: "origen",
     header: "Almacén Origen",
     cell: ({ row }) => {
@@ -72,16 +90,6 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
     },
   },
   {
-    accessorKey: "estatus",
-    header: "Estatus",
-    cell: ({ row }) => {
-      const estatus = row.getValue("estatus") as EstatusMovimiento;
-      return (
-        <Badge className={getEstatusMovimientoColor(estatus)}>{estatus}</Badge>
-      );
-    },
-  },
-  {
     accessorKey: "usuario",
     header: "Creado por",
     cell: ({ row }) => {
@@ -94,14 +102,6 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
           <span className="text-sm text-muted-foreground">{usuario.email}</span>
         </div>
       );
-    },
-  },
-  {
-    accessorKey: "fechaCreado",
-    header: "Fecha",
-    cell: ({ row }) => {
-      const fecha = row.getValue("fechaCreado") as string;
-      return <span className="font-medium">{formatearFecha(fecha)}</span>;
     },
   },
   {
