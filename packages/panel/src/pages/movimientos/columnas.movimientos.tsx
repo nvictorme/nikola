@@ -1,7 +1,6 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { IMovimiento } from "shared/interfaces";
 import { EstatusMovimiento } from "shared/enums";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import {
@@ -12,7 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatearFecha, getEstatusMovimientoColor } from "shared/helpers";
+import { formatearFecha } from "shared/helpers";
+import { StatusCell } from "./StatusCell";
 
 export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
   {
@@ -35,10 +35,8 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
     accessorKey: "estatus",
     header: "Estatus",
     cell: ({ row }) => {
-      const estatus = row.getValue("estatus") as EstatusMovimiento;
-      return (
-        <Badge className={getEstatusMovimientoColor(estatus)}>{estatus}</Badge>
-      );
+      const movimiento = row.original;
+      return <StatusCell movimiento={movimiento} />;
     },
   },
   {
