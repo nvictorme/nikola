@@ -17,10 +17,10 @@ import { StatusCell } from "./StatusCell";
 export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
   {
     accessorKey: "serial",
-    header: "Serial",
+    header: "#Serial",
     cell: ({ row }) => {
       const serial = row.getValue("serial") as number;
-      return <div className="font-medium">#{serial}</div>;
+      return <div className="font-medium">{serial}</div>;
     },
   },
   {
@@ -28,7 +28,7 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
     header: "Fecha",
     cell: ({ row }) => {
       const fecha = row.getValue("fechaCreado") as string;
-      return <span className="font-medium">{formatearFecha(fecha)}</span>;
+      return <span>{formatearFecha(fecha)}</span>;
     },
   },
   {
@@ -46,10 +46,7 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
       const origen = row.original.origen;
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{origen.nombre}</span>
-          <span className="text-sm text-muted-foreground">
-            {origen.direccion?.ciudad || "Sin ciudad"}
-          </span>
+          <span>{origen.nombre}</span>
         </div>
       );
     },
@@ -61,10 +58,7 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
       const destino = row.original.destino;
       return (
         <div className="flex flex-col">
-          <span className="font-medium">{destino.nombre}</span>
-          <span className="text-sm text-muted-foreground">
-            {destino.direccion?.ciudad || "Sin ciudad"}
-          </span>
+          <span>{destino.nombre}</span>
         </div>
       );
     },
@@ -89,15 +83,14 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
   },
   {
     accessorKey: "usuario",
-    header: "Creado por",
+    header: "Responsable",
     cell: ({ row }) => {
       const usuario = row.original.usuario;
       return (
         <div className="flex flex-col">
-          <span className="font-medium">
+          <span>
             {usuario.nombre} {usuario.apellido}
           </span>
-          <span className="text-sm text-muted-foreground">{usuario.email}</span>
         </div>
       );
     },

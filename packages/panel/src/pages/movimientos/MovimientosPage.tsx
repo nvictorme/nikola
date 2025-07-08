@@ -304,22 +304,17 @@ export default function MovimientosPage() {
       </Card>
 
       {/* Data Table */}
-      <Card>
-        <CardHeader />
-        <CardContent>
-          <DataTable
-            columns={columnasMovimientos}
-            data={movimientos as IMovimiento[]}
-            loading={loading}
-            page={page}
-            pageCount={pageCount}
-            setPage={setPage}
-            setLimit={setLimit}
-            limit={limit}
-            hideFilter={true}
-          />
-        </CardContent>
-      </Card>
+      <DataTable
+        columns={columnasMovimientos}
+        data={movimientos as IMovimiento[]}
+        loading={loading}
+        page={page}
+        pageCount={pageCount}
+        setPage={setPage}
+        setLimit={setLimit}
+        limit={limit}
+        hideFilter={true}
+      />
 
       {/* Form Dialog */}
       {showForm && (
