@@ -54,6 +54,19 @@ interface MovimientosActions {
     notas?: string
   ) => Promise<void>;
   deleteMovimiento: (id: string) => Promise<void>;
+  updateMovimiento: (
+    id: string,
+    movimiento: {
+      origen: IAlmacen;
+      destino: IAlmacen;
+      items: {
+        producto: IProducto;
+        cantidad: number;
+        notas: string;
+      }[];
+      notas?: string;
+    }
+  ) => Promise<IMovimiento>;
 
   // State management
   setLoading: (loading: boolean) => void;
@@ -176,6 +189,35 @@ export const useMovimientosStore = create<
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error ? error.message : "Error al crear movimiento";
+      set({
+        error: errorMessage,
+        loading: false,
+      });
+      throw new Error(errorMessage);
+    }
+  },
+
+  updateMovimiento: async (id, movimientoData) => {
+    try {
+      set({ loading: true, error: null });
+      const response = await apiClient.put(`/movimientos/${id}`, {
+        movimiento: movimientoData,
+      });
+      const updatedMovimiento = response.data.movimiento;
+      set((state) => ({
+        movimientos: state.movimientos.map((m) =>
+          m.id === id ? updatedMovimiento : m
+        ),
+        loading: false,
+      }));
+      // Refresca la lista completa
+      await get().getMovimientos();
+      return updatedMovimiento;
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Error al actualizar movimiento";
       set({
         error: errorMessage,
         loading: false,

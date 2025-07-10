@@ -1,81 +1,79 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { IMovimiento } from "shared/interfaces";
 import { EstatusMovimiento } from "shared/enums";
+import { Eye, PencilIcon, DeleteIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { formatearFecha } from "shared/helpers";
 import { StatusCell } from "./StatusCell";
+import { MovimientoPreview } from "./MovimientoPreview";
 
-export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
+export const columnasMovimientos = ({
+  onEdit,
+  onPreview,
+}: {
+  onEdit: (movimiento: IMovimiento) => void;
+  onPreview: (movimiento: IMovimiento) => void;
+}): ColumnDef<IMovimiento>[] => [
   {
     accessorKey: "serial",
-    header: "#Serial",
+    header: () => <div className="text-center w-full">#Serial</div>,
     cell: ({ row }) => {
       const serial = row.getValue("serial") as number;
-      return <div className="font-medium">{serial}</div>;
+      return <div className="font-medium text-center">{serial}</div>;
     },
   },
   {
     accessorKey: "fechaCreado",
-    header: "Fecha",
+    header: () => <div className="text-center w-full">Fecha</div>,
     cell: ({ row }) => {
       const fecha = row.getValue("fechaCreado") as string;
-      return <span>{formatearFecha(fecha)}</span>;
+      return (
+        <div className="text-center whitespace-nowrap">
+          {formatearFecha(fecha)}
+        </div>
+      );
     },
   },
   {
     accessorKey: "estatus",
-    header: "Estatus",
+    header: () => <div className="text-center w-full">Estatus</div>,
     cell: ({ row }) => {
       const movimiento = row.original;
-      return <StatusCell movimiento={movimiento} />;
+      return (
+        <div className="text-center">
+          <StatusCell movimiento={movimiento} />
+        </div>
+      );
     },
   },
   {
     accessorKey: "origen",
-    header: "Almacén Origen",
+    header: () => <div className="text-center w-full">Almacén Origen</div>,
     cell: ({ row }) => {
       const origen = row.original.origen;
-      return (
-        <div className="flex flex-col">
-          <span>{origen.nombre}</span>
-        </div>
-      );
+      return <div className="text-center">{origen.nombre}</div>;
     },
   },
   {
     accessorKey: "destino",
-    header: "Almacén Destino",
+    header: () => <div className="text-center w-full">Almacén Destino</div>,
     cell: ({ row }) => {
       const destino = row.original.destino;
-      return (
-        <div className="flex flex-col">
-          <span>{destino.nombre}</span>
-        </div>
-      );
+      return <div className="text-center">{destino.nombre}</div>;
     },
   },
   {
     accessorKey: "items",
-    header: "Productos",
+    header: () => <div className="text-center w-full">Productos</div>,
     cell: ({ row }) => {
       const items = row.original.items;
       const totalItems = items.reduce((sum, item) => sum + item.cantidad, 0);
       const uniqueProducts = items.length;
-
       return (
-        <div className="flex flex-col">
-          <span className="font-medium">{uniqueProducts} productos</span>
-          <span className="text-sm text-muted-foreground">
-            {totalItems} unidades total
+        <div className="text-center">
+          <span className="font-medium">{uniqueProducts} Productos</span>
+          <span className="text-sm text-muted-foreground block">
+            {totalItems} Unidades
           </span>
         </div>
       );
@@ -83,97 +81,61 @@ export const columnasMovimientos: ColumnDef<IMovimiento>[] = [
   },
   {
     accessorKey: "usuario",
-    header: "Responsable",
+    header: () => <div className="text-center w-full">Responsable</div>,
     cell: ({ row }) => {
       const usuario = row.original.usuario;
       return (
-        <div className="flex flex-col">
-          <span>
-            {usuario.nombre} {usuario.apellido}
-          </span>
+        <div className="text-center">
+          {usuario.nombre} {usuario.apellido}
         </div>
       );
     },
   },
   {
     id: "actions",
-    header: "Acciones",
+    header: () => <div className="text-center w-32">Acciones</div>,
     cell: ({ row }) => {
       const movimiento = row.original;
-
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Abrir menú</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-            <DropdownMenuItem
+        <div className="w-32 flex gap-2 justify-start">
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Ver detalles"
+            onClick={() => onPreview(movimiento)}
+            className="text-gray-500 hover:text-gray-700"
+          >
+            <Eye size={16} />
+          </Button>
+          <MovimientoPreview
+            movimiento={movimiento}
+            open={false} // Removed useState and setOpen
+            onOpenChange={() => {}} // Removed onOpenChange
+          />
+          <Button
+            variant="link"
+            size="icon"
+            title="Editar"
+            onClick={() => onEdit(movimiento)}
+            className="text-blue-500"
+          >
+            <PencilIcon size={16} />
+          </Button>
+          {movimiento.estatus === EstatusMovimiento.pendiente && (
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Eliminar"
               onClick={() => {
-                // Ver detalles del movimiento
-                console.log("Ver movimiento:", movimiento.id);
+                // Eliminar movimiento
+                console.log("Eliminar movimiento:", movimiento.id);
               }}
+              className="text-red-500 hover:text-red-700"
             >
-              <Eye className="mr-2 h-4 w-4" />
-              Ver detalles
-            </DropdownMenuItem>
-            {movimiento.estatus === EstatusMovimiento.pendiente && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    // Aprobar movimiento
-                    console.log("Aprobar movimiento:", movimiento.id);
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Aprobar
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => {
-                    // Eliminar movimiento
-                    console.log("Eliminar movimiento:", movimiento.id);
-                  }}
-                  className="text-red-600"
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Eliminar
-                </DropdownMenuItem>
-              </>
-            )}
-            {movimiento.estatus === EstatusMovimiento.aprobado && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    // Poner en tránsito
-                    console.log("Poner en tránsito:", movimiento.id);
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Poner en tránsito
-                </DropdownMenuItem>
-              </>
-            )}
-            {movimiento.estatus === EstatusMovimiento.transito && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    // Marcar como recibido
-                    console.log("Marcar como recibido:", movimiento.id);
-                  }}
-                >
-                  <Edit className="mr-2 h-4 w-4" />
-                  Marcar como recibido
-                </DropdownMenuItem>
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DeleteIcon size={16} />
+            </Button>
+          )}
+        </div>
       );
     },
   },

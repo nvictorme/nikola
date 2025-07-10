@@ -215,6 +215,116 @@ MovimientosRouter.post(
   }
 );
 
+// PUT - Actualizar movimiento
+MovimientosRouter.put(
+  "/:movimientoId",
+  verificarPrivilegio({
+    entidad: Movimiento.name,
+    accion: Acciones.actualizar,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { movimientoId } = req.params;
+      const data = req.body.movimiento as Movimiento;
+      const user = req.user as Usuario;
+
+      if (!data)
+        return res
+          .status(400)
+          .json({ error: "Datos de movimiento requeridos" });
+
+      const movimiento = await AppDataSource.getRepository(Movimiento).findOne({
+        where: { id: movimientoId },
+        relations: ["origen", "destino", "usuario", "items", "items.producto"],
+      });
+
+      if (!movimiento) {
+        return res.status(404).json({ error: "Movimiento no encontrado" });
+      }
+
+      // Solo permitir editar movimientos pendientes
+      if (movimiento.estatus !== EstatusMovimiento.pendiente) {
+        return res
+          .status(400)
+          .json({ error: "Solo se pueden editar movimientos pendientes" });
+      }
+
+      // Validar que items existe y no está vacío
+      if (
+        !data.items ||
+        !Array.isArray(data.items) ||
+        data.items.length === 0
+      ) {
+        return res
+          .status(400)
+          .json({ error: "El movimiento debe tener al menos un item" });
+      }
+
+      // Validar que origen y destino son diferentes
+      if (data.origen.id === data.destino.id) {
+        return res
+          .status(400)
+          .json({ error: "El almacén origen y destino no pueden ser iguales" });
+      }
+
+      // Actualizar datos básicos del movimiento
+      await AppDataSource.getRepository(Movimiento).update(movimientoId, {
+        origen: data.origen,
+        destino: data.destino,
+        notas: data.notas,
+      });
+
+      // Eliminar items existentes
+      await AppDataSource.getRepository(ItemMovimiento).delete({
+        movimiento: { id: movimientoId },
+      });
+
+      // Crear nuevos items
+      const savedItems = await AppDataSource.getRepository(ItemMovimiento).save(
+        data.items.map((item) => ({
+          movimiento: { id: movimientoId },
+          producto: item.producto,
+          cantidad: item.cantidad,
+          notas: item.notas || "",
+        })),
+        { chunk: 100 }
+      );
+
+      // Fetch the updated movement with relations
+      const updatedMovimiento = await AppDataSource.getRepository(
+        Movimiento
+      ).findOne({
+        where: { id: movimientoId },
+        relations: ["origen", "destino", "usuario", "items", "items.producto"],
+      });
+
+      if (!updatedMovimiento) {
+        return res.status(404).json({ error: "Movimiento no encontrado" });
+      }
+
+      res.status(200).json({ movimiento: updatedMovimiento });
+
+      // Add a new history record
+      const historial = new MovimientoHistorial();
+      historial.estatus = updatedMovimiento.estatus;
+      historial.usuario = user;
+      historial.movimiento = updatedMovimiento;
+      historial.notas = "Movimiento actualizado";
+      await AppDataSource.getRepository(MovimientoHistorial).save(historial);
+
+      // emit socket event
+      emitSocketEvent(updatedMovimiento.usuario.id, "movimientoActualizado", {
+        movimiento: updatedMovimiento,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (e: any) {
+      console.error(e);
+      return res.status(500).json({ error: e.message });
+    }
+  }
+);
+
 // PUT - Actualizar estatus de movimiento
 MovimientosRouter.put(
   "/:movimientoId/estatus",

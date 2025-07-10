@@ -23,7 +23,12 @@ import { Plus, X, Package } from "lucide-react";
 import { useMovimientosStore } from "@/store/movimientos.store";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { useProductosStore } from "@/store/productos.store";
-import { IItemMovimiento, IAlmacen, IProducto } from "shared/interfaces";
+import {
+  IItemMovimiento,
+  IAlmacen,
+  IProducto,
+  IMovimiento,
+} from "shared/interfaces";
 import { useToast } from "@/hooks/use-toast";
 
 interface CreateItemMovimiento {
@@ -36,14 +41,16 @@ interface MovimientoFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
+  movimiento?: IMovimiento | null;
 }
 
 export function MovimientoForm({
   open,
   onOpenChange,
   onSuccess,
+  movimiento,
 }: MovimientoFormProps) {
-  const { createMovimiento } = useMovimientosStore();
+  const { createMovimiento, updateMovimiento } = useMovimientosStore();
   const { almacenes, listarAlmacenes } = useAlmacenesStore();
   const { productos, listarProductos } = useProductosStore();
   const { toast } = useToast();
@@ -61,6 +68,22 @@ export function MovimientoForm({
       listarProductos();
     }
   }, [open, listarAlmacenes, listarProductos]);
+
+  // Initialize form with movimiento data when editing
+  useEffect(() => {
+    if (movimiento && open) {
+      setOrigen(movimiento.origen);
+      setDestino(movimiento.destino);
+      setItems(movimiento.items || []);
+      setNotas(movimiento.notas || "");
+    } else if (!movimiento && open) {
+      // Reset form for new movement
+      setOrigen(null);
+      setDestino(null);
+      setItems([]);
+      setNotas("");
+    }
+  }, [movimiento, open]);
 
   const handleAddItem = () => {
     const newItem: IItemMovimiento = {
@@ -132,17 +155,28 @@ export function MovimientoForm({
         notas: item.notas || "",
       }));
 
-      await createMovimiento({
+      const movimientoData = {
         origen,
         destino,
         items: cleanItems,
         notas,
-      });
+      };
 
-      toast({
-        title: "Éxito",
-        description: "Movimiento creado correctamente",
-      });
+      if (movimiento) {
+        // Update existing movement
+        await updateMovimiento(movimiento.id, movimientoData);
+        toast({
+          title: "Éxito",
+          description: "Movimiento actualizado correctamente",
+        });
+      } else {
+        // Create new movement
+        await createMovimiento(movimientoData);
+        toast({
+          title: "Éxito",
+          description: "Movimiento creado correctamente",
+        });
+      }
 
       // Reset form
       setOrigen(null);
@@ -154,7 +188,9 @@ export function MovimientoForm({
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo crear el movimiento",
+        description: movimiento
+          ? "No se pudo actualizar el movimiento"
+          : "No se pudo crear el movimiento",
         variant: "destructive",
       });
     } finally {
@@ -166,9 +202,13 @@ export function MovimientoForm({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nuevo Movimiento</DialogTitle>
+          <DialogTitle>
+            {movimiento ? "Editar Movimiento" : "Nuevo Movimiento"}
+          </DialogTitle>
           <DialogDescription>
-            Crea un nuevo movimiento de productos entre almacenes
+            {movimiento
+              ? "Edita el movimiento de productos entre almacenes"
+              : "Crea un nuevo movimiento de productos entre almacenes"}
           </DialogDescription>
         </DialogHeader>
 
@@ -343,7 +383,7 @@ export function MovimientoForm({
               Cancelar
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Creando..." : "Crear Movimiento"}
+              {loading ? "Guardando..." : "Guardar"}
             </Button>
           </div>
         </div>

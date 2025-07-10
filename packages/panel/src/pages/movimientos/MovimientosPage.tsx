@@ -22,6 +22,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MovimientoForm } from "./MovimientoForm";
 import { IMovimiento } from "shared/interfaces";
 import { getEstatusMovimientoColor } from "shared/helpers";
+import { MovimientoPreview } from "./MovimientoPreview";
 
 export default function MovimientosPage() {
   const {
@@ -48,13 +49,15 @@ export default function MovimientosPage() {
     filters.estatus || "Todos"
   );
   const [showForm, setShowForm] = useState(false);
-  const [selectedMovimiento, setSelectedMovimiento] = useState<string | null>(
-    null
-  );
+  const [selectedMovimiento, setSelectedMovimiento] =
+    useState<IMovimiento | null>(null);
   const [actionType, setActionType] = useState<"status" | "delete" | null>(
     null
   );
   const [newStatus, setNewStatus] = useState<EstatusMovimiento | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [previewMovimiento, setPreviewMovimiento] =
+    useState<IMovimiento | null>(null);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -145,6 +148,12 @@ export default function MovimientosPage() {
       sum + m.items.reduce((itemSum, item) => itemSum + item.cantidad, 0),
     0
   );
+
+  // Handler para editar movimiento
+  const handleEditMovimiento = (movimiento: IMovimiento) => {
+    setSelectedMovimiento(movimiento);
+    setShowForm(true);
+  };
 
   return (
     <div className="container mx-auto py-6 space-y-6">
@@ -287,7 +296,10 @@ export default function MovimientosPage() {
               </Button>
               {/* Botón Movimiento al lado de Actualizar */}
               <Button
-                onClick={() => setShowForm(true)}
+                onClick={() => {
+                  setSelectedMovimiento(null); // Limpiar selección para modo creación
+                  setShowForm(true);
+                }}
                 className="gap-2"
                 disabled={showForm}
               >
@@ -305,7 +317,13 @@ export default function MovimientosPage() {
 
       {/* Data Table */}
       <DataTable
-        columns={columnasMovimientos}
+        columns={columnasMovimientos({
+          onEdit: handleEditMovimiento,
+          onPreview: (movimiento: IMovimiento) => {
+            setPreviewMovimiento(movimiento);
+            setShowPreview(true);
+          },
+        })}
         data={movimientos as IMovimiento[]}
         loading={loading}
         page={page}
@@ -316,13 +334,30 @@ export default function MovimientosPage() {
         hideFilter={true}
       />
 
+      {/* Preview Dialog */}
+      {previewMovimiento && (
+        <MovimientoPreview
+          movimiento={previewMovimiento}
+          open={showPreview}
+          onOpenChange={(open) => {
+            setShowPreview(open);
+            if (!open) setPreviewMovimiento(null);
+          }}
+        />
+      )}
+
       {/* Form Dialog */}
       {showForm && (
         <MovimientoForm
+          movimiento={selectedMovimiento}
           open={showForm}
-          onOpenChange={setShowForm}
+          onOpenChange={(open) => {
+            setShowForm(open);
+            if (!open) setSelectedMovimiento(null);
+          }}
           onSuccess={() => {
             setShowForm(false);
+            setSelectedMovimiento(null);
             getMovimientos();
           }}
         />
@@ -342,7 +377,7 @@ export default function MovimientosPage() {
         description={`¿Estás seguro de que quieres cambiar el estatus del movimiento a "${newStatus}"?`}
         onConfirm={() => {
           if (selectedMovimiento && newStatus) {
-            handleStatusUpdate(selectedMovimiento, newStatus);
+            handleStatusUpdate(selectedMovimiento.id, newStatus);
             setActionType(null);
             setSelectedMovimiento(null);
             setNewStatus(null);
@@ -363,7 +398,7 @@ export default function MovimientosPage() {
         description="¿Estás seguro de que quieres eliminar este movimiento? Esta acción no se puede deshacer."
         onConfirm={() => {
           if (selectedMovimiento) {
-            handleDelete(selectedMovimiento);
+            handleDelete(selectedMovimiento.id);
             setActionType(null);
             setSelectedMovimiento(null);
           }
