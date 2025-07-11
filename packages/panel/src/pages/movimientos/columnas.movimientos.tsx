@@ -112,15 +112,17 @@ export const columnasMovimientos = ({
             open={false} // Removed useState and setOpen
             onOpenChange={() => {}} // Removed onOpenChange
           />
-          <Button
-            variant="link"
-            size="icon"
-            title="Editar"
-            onClick={() => onEdit(movimiento)}
-            className="text-blue-500"
-          >
-            <PencilIcon size={16} />
-          </Button>
+          {movimiento.estatus === EstatusMovimiento.pendiente && (
+            <Button
+              variant="link"
+              size="icon"
+              title="Editar"
+              onClick={() => onEdit(movimiento)}
+              className="text-blue-500"
+            >
+              <PencilIcon size={16} />
+            </Button>
+          )}
           {movimiento.estatus === EstatusMovimiento.pendiente && (
             <Button
               variant="ghost"
