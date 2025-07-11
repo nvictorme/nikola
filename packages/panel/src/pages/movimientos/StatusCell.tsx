@@ -51,16 +51,18 @@ const isMovimientoStatusDisabled = ({
 }): boolean => {
   const estatusNivel = estatusOrden[est];
 
+  // Anulado siempre está disponible
+  if (est === EstatusMovimiento.anulado) {
+    return false;
+  }
+
   // No permitir retroceder a estados anteriores
   if (estatusNivel < estatusActualNivel) {
     return true;
   }
 
-  // No permitir saltar más de un nivel (excepto para anular)
-  if (
-    est !== EstatusMovimiento.anulado &&
-    estatusNivel > estatusActualNivel + 1
-  ) {
+  // No permitir saltar más de un nivel
+  if (estatusNivel > estatusActualNivel + 1) {
     return true;
   }
 
