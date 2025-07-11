@@ -5,9 +5,9 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -17,9 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Plus, X, Package } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useMovimientosStore } from "@/store/movimientos.store";
 import { useAlmacenesStore } from "@/store/almacenes.store";
 import { useProductosStore } from "@/store/productos.store";
@@ -30,6 +28,9 @@ import {
   IMovimiento,
 } from "shared/interfaces";
 import { useToast } from "@/hooks/use-toast";
+import ProductSelector from "../productos/ProductoSelector";
+import { ItemMovimientoForm } from "./ItemMovimientoForm";
+import { ApiClient } from "@/api/api.client";
 
 interface CreateItemMovimiento {
   producto: IProducto;
@@ -52,7 +53,7 @@ export function MovimientoForm({
 }: MovimientoFormProps) {
   const { createMovimiento, updateMovimiento } = useMovimientosStore();
   const { almacenes, listarAlmacenes } = useAlmacenesStore();
-  const { productos, listarProductos } = useProductosStore();
+  const { listarProductos } = useProductosStore();
   const { toast } = useToast();
 
   const [origen, setOrigen] = useState<IAlmacen | null>(null);
@@ -60,6 +61,8 @@ export function MovimientoForm({
   const [items, setItems] = useState<IItemMovimiento[]>([]);
   const [notas, setNotas] = useState("");
   const [loading, setLoading] = useState(false);
+  const [productosDialogOpen, setProductosDialogOpen] = useState(false);
+  const [mensajeError, setMensajeError] = useState("");
 
   // Cargar datos necesarios
   useEffect(() => {
@@ -86,17 +89,7 @@ export function MovimientoForm({
   }, [movimiento, open]);
 
   const handleAddItem = () => {
-    const newItem: IItemMovimiento = {
-      id: crypto.randomUUID(),
-      producto: { id: "" } as IProducto,
-      cantidad: 1,
-      notas: "",
-      activo: true,
-      fechaCreado: new Date().toISOString(),
-      fechaActualizado: new Date().toISOString(),
-      fechaEliminado: "",
-    };
-    setItems([...items, newItem]);
+    // El modal se abre automáticamente a través del DialogTrigger
   };
 
   const handleRemoveItem = (index: number) => {
@@ -123,17 +116,32 @@ export function MovimientoForm({
       return;
     }
 
-    if (items.length === 0) {
-      toast({
-        title: "Error",
-        description: "Debes agregar al menos un producto",
-        variant: "destructive",
-      });
+    // Filtrar productos con stock disponible 0
+    const apiClient = new ApiClient();
+    const itemsConStock = await Promise.all(
+      items.map(async (item) => {
+        const { data } = await apiClient.get(
+          `/productos/${item.producto.id}/stock/${origen.id}`,
+          {}
+        );
+        const stockDisponible = data?.stock?.actual ?? 0;
+        return stockDisponible > 0 ? item : null;
+      })
+    );
+    // Type guard para asegurar que no hay nulls
+    const itemsFiltrados = itemsConStock.filter(
+      (item): item is IItemMovimiento => !!item
+    );
+
+    if (itemsFiltrados.length === 0) {
+      setMensajeError("No hay productos con stock disponible para mover.");
+      setItems([]); // Limpiar la lista de productos
+      setTimeout(() => setMensajeError(""), 3000);
       return;
     }
 
     // Validar que todos los items tengan producto y cantidad
-    const invalidItems = items.filter(
+    const invalidItems = itemsFiltrados.filter(
       (item) => !item.producto.id || item.cantidad <= 0
     );
     if (invalidItems.length > 0) {
@@ -149,7 +157,7 @@ export function MovimientoForm({
       setLoading(true);
 
       // Clean items to remove date fields that should be handled by the backend
-      const cleanItems: CreateItemMovimiento[] = items.map((item) => ({
+      const cleanItems: CreateItemMovimiento[] = itemsFiltrados.map((item) => ({
         producto: item.producto,
         cantidad: item.cantidad,
         notas: item.notas || "",
@@ -213,6 +221,12 @@ export function MovimientoForm({
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Mensaje de error informativo */}
+          {mensajeError && (
+            <div className="mb-4 text-sm text-red-600 bg-red-100 rounded p-2">
+              {mensajeError}
+            </div>
+          )}
           {/* Almacenes */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -228,12 +242,14 @@ export function MovimientoForm({
                   <SelectValue placeholder="Seleccionar almacén origen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {almacenes.map((almacen) => (
-                    <SelectItem key={almacen.id} value={almacen.id}>
-                      {almacen.nombre} -{" "}
-                      {almacen.direccion?.ciudad || "Sin ciudad"}
-                    </SelectItem>
-                  ))}
+                  {almacenes
+                    .filter((almacen) => almacen.id !== destino?.id)
+                    .map((almacen) => (
+                      <SelectItem key={almacen.id} value={almacen.id}>
+                        {almacen.nombre} -{" "}
+                        {almacen.direccion?.ciudad || "Sin ciudad"}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -251,119 +267,80 @@ export function MovimientoForm({
                   <SelectValue placeholder="Seleccionar almacén destino" />
                 </SelectTrigger>
                 <SelectContent>
-                  {almacenes.map((almacen) => (
-                    <SelectItem key={almacen.id} value={almacen.id}>
-                      {almacen.nombre} -{" "}
-                      {almacen.direccion?.ciudad || "Sin ciudad"}
-                    </SelectItem>
-                  ))}
+                  {almacenes
+                    .filter((almacen) => almacen.id !== origen?.id)
+                    .map((almacen) => (
+                      <SelectItem key={almacen.id} value={almacen.id}>
+                        {almacen.nombre} -{" "}
+                        {almacen.direccion?.ciudad || "Sin ciudad"}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           {/* Productos */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label>Productos *</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddItem}
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Producto
-              </Button>
+          <div>
+            <div className="space-y-2">
+              <div className="flex justify-center">
+                <Dialog
+                  open={productosDialogOpen}
+                  onOpenChange={setProductosDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      onClick={handleAddItem}
+                    >
+                      <PlusIcon className="w-4 h-4" /> Añadir Items
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl">
+                    <DialogHeader>
+                      <DialogTitle>Seleccionar Productos</DialogTitle>
+                      <DialogDescription>
+                        <ProductSelector
+                          onSelected={(selected) => {
+                            // Convert selected products to movement items
+                            const newItems = selected.map((p) => {
+                              const item: IItemMovimiento = {
+                                id: crypto.randomUUID(),
+                                producto: p,
+                                cantidad: 1,
+                                notas: "",
+                                activo: true,
+                                fechaCreado: new Date().toISOString(),
+                                fechaActualizado: new Date().toISOString(),
+                                fechaEliminado: "",
+                              };
+                              return item;
+                            });
+
+                            setItems([...items, ...newItems]);
+                            setProductosDialogOpen(false);
+                          }}
+                        />
+                      </DialogDescription>
+                    </DialogHeader>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </div>
 
-            {items.map((item, index) => (
-              <Card key={item.id}>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm">
-                      Producto {index + 1}
-                    </CardTitle>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleRemoveItem(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Producto *</Label>
-                      <Select
-                        value={item.producto.id || "placeholder"}
-                        onValueChange={(value) => {
-                          if (value === "placeholder") return;
-                          const selected = productos.find(
-                            (p) => p.id === value
-                          );
-                          handleUpdateItem(
-                            index,
-                            "producto",
-                            selected || ({ id: "" } as IProducto)
-                          );
-                        }}
-                      >
-                        <SelectTrigger>
-                          <SelectValue placeholder="Seleccionar producto" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="placeholder" disabled>
-                            Seleccionar producto
-                          </SelectItem>
-                          {productos.map((producto) => (
-                            <SelectItem key={producto.id} value={producto.id}>
-                              <div className="flex items-center space-x-2">
-                                <Package className="h-4 w-4" />
-                                <span>{producto.nombre}</span>
-                                <Badge variant="secondary">
-                                  {producto.sku}
-                                </Badge>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Cantidad *</Label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={item.cantidad}
-                        onChange={(e) =>
-                          handleUpdateItem(
-                            index,
-                            "cantidad",
-                            parseInt(e.target.value) || 1
-                          )
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label>Notas</Label>
-                    <Textarea
-                      placeholder="Notas adicionales para este producto..."
-                      value={item.notas}
-                      onChange={(e) =>
-                        handleUpdateItem(index, "notas", e.target.value)
-                      }
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            <div className="mt-6">
+              {items.map((item, index) => (
+                <ItemMovimientoForm
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  handleRemoveItem={handleRemoveItem}
+                  handleUpdateItem={handleUpdateItem}
+                  origen={origen}
+                />
+              ))}
+            </div>
           </div>
 
           {/* Notas generales */}
@@ -374,6 +351,8 @@ export function MovimientoForm({
               placeholder="Notas adicionales para el movimiento..."
               value={notas}
               onChange={(e) => setNotas(e.target.value)}
+              className="resize-none h-10 min-h-0"
+              rows={1}
             />
           </div>
 
@@ -382,7 +361,10 @@ export function MovimientoForm({
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSubmit} disabled={loading}>
+            <Button
+              onClick={handleSubmit}
+              disabled={loading || !origen || !destino || items.length === 0}
+            >
               {loading ? "Guardando..." : "Guardar"}
             </Button>
           </div>

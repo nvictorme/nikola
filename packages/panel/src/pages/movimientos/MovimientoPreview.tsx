@@ -107,7 +107,7 @@ export const MovimientoPreview = ({
           </div>
 
           {/* Total de Unidades movidas */}
-          <div className="text-center">
+          <div className="text-center mb-4">
             <span className="font-semibold text-base">
               Unidades Movidas:&nbsp;
             </span>
@@ -121,8 +121,8 @@ export const MovimientoPreview = ({
 
           {/* Notas */}
           {movimiento.notas && (
-            <div className="mb-8">
-              <h3 className="font-semibold text-gray-700 mb-3">Notas:</h3>
+            <div className="mb-4">
+              <h3 className="font-semibold text-gray-700 mb-2">Notas:</h3>
               <p className="text-sm">{movimiento.notas}</p>
             </div>
           )}
