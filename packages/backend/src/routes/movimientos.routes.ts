@@ -418,9 +418,9 @@ MovimientosRouter.put(
       }
 
       if (updatedMovimiento.estatus === EstatusMovimiento.transito) {
-        // Al poner en tránsito, reducir stock del origen y actualizar stocks
+        // Al poner en tránsito, reservar stock del origen y agregar tránsito al destino
         for (const item of updatedMovimiento.items) {
-          // Actualizar stock del almacén origen
+          // Actualizar stock del almacén origen (solo reservar, no reducir actual)
           const stockOrigen = await AppDataSource.getRepository(Stock).findOne({
             where: {
               almacen: { id: updatedMovimiento.origen.id },
@@ -430,7 +430,6 @@ MovimientosRouter.put(
 
           if (stockOrigen) {
             await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
-              actual: stockOrigen.actual - item.cantidad,
               reservado: stockOrigen.reservado + item.cantidad,
             });
           }
@@ -474,6 +473,7 @@ MovimientosRouter.put(
 
           if (stockOrigen) {
             await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
+              actual: stockOrigen.actual - item.cantidad,
               reservado: stockOrigen.reservado - item.cantidad,
             });
           }
@@ -510,11 +510,8 @@ MovimientosRouter.put(
         const estatusAnterior = movimiento.estatus;
 
         for (const item of updatedMovimiento.items) {
-          // Si venía de Transito o Recibido, restaurar stock del origen
-          if (
-            estatusAnterior === EstatusMovimiento.transito ||
-            estatusAnterior === EstatusMovimiento.recibido
-          ) {
+          // Si venía de Transito, restaurar stock del origen reservado
+          if (estatusAnterior === EstatusMovimiento.transito) {
             const stockOrigen = await AppDataSource.getRepository(
               Stock
             ).findOne({
@@ -526,8 +523,24 @@ MovimientosRouter.put(
 
             if (stockOrigen) {
               await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
-                actual: stockOrigen.actual + item.cantidad,
                 reservado: stockOrigen.reservado - item.cantidad,
+              });
+            }
+          }
+
+          // Si venía de Recibido, aumentar stock del origen
+          if (estatusAnterior === EstatusMovimiento.recibido) {
+            const stockOrigen = await AppDataSource.getRepository(
+              Stock
+            ).findOne({
+              where: {
+                almacen: { id: updatedMovimiento.origen.id },
+                producto: { id: item.producto.id },
+              },
+            });
+            if (stockOrigen) {
+              await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
+                actual: stockOrigen.actual + item.cantidad,
               });
             }
           }
