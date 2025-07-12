@@ -165,6 +165,14 @@ DashboardRouter.get("/charts", async (req: Request, res: Response) => {
       userId: user.id,
     })
     .andWhere("orden.tipo = :tipo", { tipo: TipoOrden.reposicion })
+    // Filtrar solo reposiciones con estatus Confirmado, Enviado o Recibido
+    .andWhere("orden.estatus IN (:...estatus)", {
+      estatus: [
+        EstatusOrden.confirmado,
+        EstatusOrden.enviado,
+        EstatusOrden.recibido,
+      ],
+    })
     .andWhere("orden.fechaCreado BETWEEN :start AND :end", {
       start: monthStart,
       end: monthEnd,
