@@ -384,8 +384,9 @@ MovimientosRouter.put(
       }
 
       if (updatedMovimiento.estatus === EstatusMovimiento.transito) {
-        // Al poner en tránsito, reducir stock del origen
+        // Al poner en tránsito, reducir stock del origen y actualizar stocks
         for (const item of updatedMovimiento.items) {
+          // Actualizar stock del almacén origen
           const stockOrigen = await AppDataSource.getRepository(Stock).findOne({
             where: {
               almacen: { id: updatedMovimiento.origen.id },
@@ -396,8 +397,33 @@ MovimientosRouter.put(
           if (stockOrigen) {
             await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
               actual: stockOrigen.actual - item.cantidad,
+              reservado: stockOrigen.reservado + item.cantidad,
             });
           }
+
+          // Actualizar stock del almacén destino
+          let stockDestino = await AppDataSource.getRepository(Stock).findOne({
+            where: {
+              almacen: { id: updatedMovimiento.destino.id },
+              producto: { id: item.producto.id },
+            },
+          });
+
+          if (!stockDestino) {
+            // Crear nuevo registro de stock si no existe
+            stockDestino = new Stock();
+            stockDestino.almacen = updatedMovimiento.destino;
+            stockDestino.producto = item.producto;
+            stockDestino.actual = 0;
+            stockDestino.reservado = 0;
+            stockDestino.transito = 0;
+            stockDestino.rma = 0;
+            await AppDataSource.getRepository(Stock).save(stockDestino);
+          }
+
+          await AppDataSource.getRepository(Stock).update(stockDestino.id, {
+            transito: stockDestino.transito + item.cantidad,
+          });
         }
       }
 
