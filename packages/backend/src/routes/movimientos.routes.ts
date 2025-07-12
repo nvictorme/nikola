@@ -471,6 +471,71 @@ MovimientosRouter.put(
         }
       }
 
+      if (updatedMovimiento.estatus === EstatusMovimiento.anulado) {
+        // Al anular, restaurar stock según el estatus anterior
+        const estatusAnterior = movimiento.estatus;
+
+        for (const item of updatedMovimiento.items) {
+          // Si venía de Transito o Recibido, restaurar stock del origen
+          if (
+            estatusAnterior === EstatusMovimiento.transito ||
+            estatusAnterior === EstatusMovimiento.recibido
+          ) {
+            const stockOrigen = await AppDataSource.getRepository(
+              Stock
+            ).findOne({
+              where: {
+                almacen: { id: updatedMovimiento.origen.id },
+                producto: { id: item.producto.id },
+              },
+            });
+
+            if (stockOrigen) {
+              await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
+                actual: stockOrigen.actual + item.cantidad,
+                reservado: stockOrigen.reservado - item.cantidad,
+              });
+            }
+          }
+
+          // Si venía de Recibido, reducir stock del destino
+          if (estatusAnterior === EstatusMovimiento.recibido) {
+            const stockDestino = await AppDataSource.getRepository(
+              Stock
+            ).findOne({
+              where: {
+                almacen: { id: updatedMovimiento.destino.id },
+                producto: { id: item.producto.id },
+              },
+            });
+
+            if (stockDestino) {
+              await AppDataSource.getRepository(Stock).update(stockDestino.id, {
+                actual: stockDestino.actual - item.cantidad,
+              });
+            }
+          }
+
+          // Si venía de Transito, reducir tránsito del destino
+          if (estatusAnterior === EstatusMovimiento.transito) {
+            const stockDestino = await AppDataSource.getRepository(
+              Stock
+            ).findOne({
+              where: {
+                almacen: { id: updatedMovimiento.destino.id },
+                producto: { id: item.producto.id },
+              },
+            });
+
+            if (stockDestino) {
+              await AppDataSource.getRepository(Stock).update(stockDestino.id, {
+                transito: stockDestino.transito - item.cantidad,
+              });
+            }
+          }
+        }
+      }
+
       res.status(200).json({ message: `Estatus de movimiento actualizado` });
 
       // Add a new history record
