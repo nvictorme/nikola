@@ -9,6 +9,7 @@ import { Usuario } from "../orm/entity/usuario";
 import { Stock } from "../orm/entity/stock";
 import { emitSocketEvent } from "../providers/sockets";
 import { isSuperAdmin } from "shared/helpers";
+import { sendEmail } from "../providers/email";
 
 const MovimientosRouter: Router = Router();
 
@@ -208,6 +209,39 @@ MovimientosRouter.post(
           timestamp: new Date().toISOString(),
         });
       });
+
+      // Email gerentes when a new movement is created
+      const emailPromises = gerentes.map((gerente) =>
+        sendEmail(
+          process.env.NO_REPLY_EMAIL_ADDRESS as string,
+          gerente.email,
+          `Nuevo movimiento #${savedMovimiento.serial} entre ${savedMovimiento.origen.nombre} y ${savedMovimiento.destino.nombre}`,
+          `
+            <p>Se ha creado un nuevo movimiento</p>
+            <p>Responsable: ${savedMovimiento.usuario.nombre} ${
+            savedMovimiento.usuario.apellido
+          }</p>
+            <p>Almacén Origen: ${savedMovimiento.origen.nombre}</p>
+            <p>Almacén Destino: ${savedMovimiento.destino.nombre}</p>
+            <p>Productos: ${savedMovimiento.items.length} productos</p>
+            <p>Total Unidades: ${savedMovimiento.items.reduce(
+              (sum, item) => sum + item.cantidad,
+              0
+            )}</p>
+            <p>Estatus: ${savedMovimiento.estatus}</p>
+            <p>Fecha: ${new Date(savedMovimiento.fechaCreado).toLocaleString(
+              "es-US",
+              { timeZone: "America/New_York" }
+            )} (EST)</p>
+          `
+        )
+      );
+
+      try {
+        await Promise.allSettled(emailPromises);
+      } catch (emailError) {
+        console.error(JSON.stringify(emailError, null, 2));
+      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
@@ -552,6 +586,146 @@ MovimientosRouter.put(
         movimiento: updatedMovimiento,
         timestamp: new Date().toISOString(),
       });
+
+      // Email usuario when movement status changes (excepto si es gerente y el estatus es anulado)
+      // Verificar si el usuario es gerente consultando la base de datos
+      const usuarioCompleto = await AppDataSource.getRepository(
+        Usuario
+      ).findOne({
+        where: { id: updatedMovimiento.usuario.id },
+        relations: ["rol"],
+      });
+
+      const isGerente = usuarioCompleto?.rol?.nombre === RolesBase.gerente;
+      const shouldSendUserEmail = !(
+        isGerente && updatedMovimiento.estatus === EstatusMovimiento.anulado
+      );
+
+      if (shouldSendUserEmail) {
+        const subject = `Movimiento #${updatedMovimiento.serial} actualizado a ${updatedMovimiento.estatus}`;
+        const body = `
+          <p>El movimiento #${updatedMovimiento.serial} ha sido actualizado a ${
+          updatedMovimiento.estatus
+        }</p>
+          <p>Responsable: ${updatedMovimiento.usuario.nombre} ${
+          updatedMovimiento.usuario.apellido
+        }</p>
+          <p>Almacén Origen: ${updatedMovimiento.origen.nombre}</p>
+          <p>Almacén Destino: ${updatedMovimiento.destino.nombre}</p>
+          <p>Productos: ${updatedMovimiento.items.length} productos</p>
+          <p>Total Unidades: ${updatedMovimiento.items.reduce(
+            (sum, item) => sum + item.cantidad,
+            0
+          )}</p>
+          <p>Estatus: ${updatedMovimiento.estatus}</p>
+          <p>Fecha: ${new Date().toLocaleString("es-US", {
+            timeZone: "America/New_York",
+          })} (EST)</p>
+        `;
+
+        try {
+          await sendEmail(
+            process.env.NO_REPLY_EMAIL_ADDRESS as string,
+            updatedMovimiento.usuario.email,
+            subject,
+            body
+          );
+        } catch (emailError) {
+          console.error("Error sending movement status email:", emailError);
+        }
+      }
+
+      // Si es gerente y el estatus es anulado, enviar correo personalizado
+      if (
+        isGerente &&
+        updatedMovimiento.estatus === EstatusMovimiento.anulado
+      ) {
+        const subject = `Movimiento #${updatedMovimiento.serial} ANULADO - Usted es el responsable`;
+        const body = `
+          <p><strong>Usted ha anulado el movimiento #${
+            updatedMovimiento.serial
+          }</strong></p>
+          <p>Movimiento #${updatedMovimiento.serial} ha sido anulado</p>
+          <p>Responsable: ${updatedMovimiento.usuario.nombre} ${
+          updatedMovimiento.usuario.apellido
+        }</p>
+          <p>Almacén Origen: ${updatedMovimiento.origen.nombre}</p>
+          <p>Almacén Destino: ${updatedMovimiento.destino.nombre}</p>
+          <p>Productos: ${updatedMovimiento.items.length} productos</p>
+          <p>Total Unidades: ${updatedMovimiento.items.reduce(
+            (sum, item) => sum + item.cantidad,
+            0
+          )}</p>
+          <p>Estatus Anterior: ${movimiento.estatus}</p>
+          <p>Estatus Actual: ${updatedMovimiento.estatus}</p>
+          <p>Fecha: ${new Date().toLocaleString("es-US", {
+            timeZone: "America/New_York",
+          })} (EST)</p>
+          <p><em>Este movimiento ha sido cancelado y requiere atención de gestión.</em></p>
+        `;
+
+        try {
+          await sendEmail(
+            process.env.NO_REPLY_EMAIL_ADDRESS as string,
+            updatedMovimiento.usuario.email,
+            subject,
+            body
+          );
+        } catch (emailError) {
+          console.error("Error sending gerente responsable email:", emailError);
+        }
+      }
+
+      // Email adicional a gerentes cuando el movimiento se anula
+      if (updatedMovimiento.estatus === EstatusMovimiento.anulado) {
+        const gerentes = await AppDataSource.getRepository(Usuario).find({
+          where: {
+            rol: { nombre: RolesBase.gerente },
+          },
+        });
+
+        // Filtrar gerentes para excluir al responsable (ya recibió su correo personalizado)
+        const gerentesSinResponsable = gerentes.filter(
+          (gerente) => gerente.id !== updatedMovimiento.usuario.id
+        );
+
+        const gerentesEmailPromises = gerentesSinResponsable.map((gerente) => {
+          return sendEmail(
+            process.env.NO_REPLY_EMAIL_ADDRESS as string,
+            gerente.email,
+            `ALERTA: Movimiento #${updatedMovimiento.serial} ANULADO`,
+            `
+              <p><strong>ALERTA: Se ha anulado un movimiento</strong></p>
+              <p>Movimiento #${updatedMovimiento.serial} ha sido anulado</p>
+              <p>Responsable: ${updatedMovimiento.usuario.nombre} ${
+              updatedMovimiento.usuario.apellido
+            }</p>
+              <p>Almacén Origen: ${updatedMovimiento.origen.nombre}</p>
+              <p>Almacén Destino: ${updatedMovimiento.destino.nombre}</p>
+              <p>Productos: ${updatedMovimiento.items.length} productos</p>
+              <p>Total Unidades: ${updatedMovimiento.items.reduce(
+                (sum, item) => sum + item.cantidad,
+                0
+              )}</p>
+              <p>Estatus Anterior: ${movimiento.estatus}</p>
+              <p>Estatus Actual: ${updatedMovimiento.estatus}</p>
+              <p>Fecha: ${new Date().toLocaleString("es-US", {
+                timeZone: "America/New_York",
+              })} (EST)</p>
+              <p><em>Este movimiento ha sido cancelado y requiere atención de gestión.</em></p>
+            `
+          );
+        });
+
+        try {
+          await Promise.allSettled(gerentesEmailPromises);
+        } catch (gerentesEmailError) {
+          console.error(
+            "Error sending gerentes email for anulado status:",
+            gerentesEmailError
+          );
+        }
+      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
