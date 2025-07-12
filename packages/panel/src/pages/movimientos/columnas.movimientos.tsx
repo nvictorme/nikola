@@ -1,19 +1,14 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { IMovimiento } from "shared/interfaces";
-import { EstatusMovimiento } from "shared/enums";
-import { Eye, PencilIcon, DeleteIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { formatearFecha } from "shared/helpers";
 import { StatusCell } from "./StatusCell";
-import { MovimientoPreview } from "./MovimientoPreview";
+import { MovimientoActions } from "./MovimientoActions";
 
 export const columnasMovimientos = ({
   onEdit,
-  onPreview,
   onDelete,
 }: {
   onEdit: (movimiento: IMovimiento) => void;
-  onPreview: (movimiento: IMovimiento) => void;
   onDelete: (movimiento: IMovimiento) => void;
 }): ColumnDef<IMovimiento>[] => [
   {
@@ -105,44 +100,11 @@ export const columnasMovimientos = ({
     cell: ({ row }) => {
       const movimiento = row.original;
       return (
-        <div className="w-32 flex gap-2 justify-start">
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Ver detalles"
-            onClick={() => onPreview(movimiento)}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <Eye size={16} />
-          </Button>
-          <MovimientoPreview
-            movimiento={movimiento}
-            open={false} // Removed useState and setOpen
-            onOpenChange={() => {}} // Removed onOpenChange
-          />
-          {movimiento.estatus === EstatusMovimiento.pendiente && (
-            <Button
-              variant="link"
-              size="icon"
-              title="Editar"
-              onClick={() => onEdit(movimiento)}
-              className="text-blue-500"
-            >
-              <PencilIcon size={16} />
-            </Button>
-          )}
-          {movimiento.estatus === EstatusMovimiento.pendiente && (
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Eliminar"
-              onClick={() => onDelete(movimiento)}
-              className="text-red-500 hover:text-red-700"
-            >
-              <DeleteIcon size={16} />
-            </Button>
-          )}
-        </div>
+        <MovimientoActions
+          movimiento={movimiento}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
       );
     },
   },

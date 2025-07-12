@@ -21,7 +21,6 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { MovimientoForm } from "./MovimientoForm";
 import { IMovimiento } from "shared/interfaces";
 import { getEstatusMovimientoColor } from "shared/helpers";
-import { MovimientoPreview } from "./MovimientoPreview";
 import { MovimientosStore } from "@/store/movimientos.store";
 
 export default function MovimientosPage() {
@@ -54,9 +53,6 @@ export default function MovimientosPage() {
     null
   );
   const [newStatus, setNewStatus] = useState<EstatusMovimiento | null>(null);
-  const [showPreview, setShowPreview] = useState(false);
-  const [previewMovimiento, setPreviewMovimiento] =
-    useState<IMovimiento | null>(null);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
@@ -312,10 +308,6 @@ export default function MovimientosPage() {
       <DataTable
         columns={columnasMovimientos({
           onEdit: handleEditMovimiento,
-          onPreview: (movimiento: IMovimiento) => {
-            setPreviewMovimiento(movimiento);
-            setShowPreview(true);
-          },
           onDelete: handleDeleteMovimiento,
         })}
         data={movimientos as IMovimiento[]}
@@ -329,16 +321,14 @@ export default function MovimientosPage() {
       />
 
       {/* Preview Dialog */}
-      {previewMovimiento && (
-        <MovimientoPreview
-          movimiento={previewMovimiento}
-          open={showPreview}
-          onOpenChange={(open) => {
-            setShowPreview(open);
-            if (!open) setPreviewMovimiento(null);
-          }}
-        />
-      )}
+      {/* <MovimientoPreview
+        movimiento={previewMovimiento}
+        open={showPreview}
+        onOpenChange={(open) => {
+          setShowPreview(open);
+          if (!open) setPreviewMovimiento(null);
+        }}
+      /> */}
 
       {/* Form Dialog */}
       {showForm && (
