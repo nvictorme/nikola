@@ -428,8 +428,23 @@ MovimientosRouter.put(
       }
 
       if (updatedMovimiento.estatus === EstatusMovimiento.recibido) {
-        // Al recibir, agregar stock al destino
+        // Al recibir, agregar stock al destino y liberar reservas
         for (const item of updatedMovimiento.items) {
+          // Actualizar stock del almacén origen (liberar reserva)
+          const stockOrigen = await AppDataSource.getRepository(Stock).findOne({
+            where: {
+              almacen: { id: updatedMovimiento.origen.id },
+              producto: { id: item.producto.id },
+            },
+          });
+
+          if (stockOrigen) {
+            await AppDataSource.getRepository(Stock).update(stockOrigen.id, {
+              reservado: stockOrigen.reservado - item.cantidad,
+            });
+          }
+
+          // Actualizar stock del almacén destino
           let stockDestino = await AppDataSource.getRepository(Stock).findOne({
             where: {
               almacen: { id: updatedMovimiento.destino.id },
@@ -451,6 +466,7 @@ MovimientosRouter.put(
 
           await AppDataSource.getRepository(Stock).update(stockDestino.id, {
             actual: stockDestino.actual + item.cantidad,
+            transito: stockDestino.transito - item.cantidad,
           });
         }
       }
