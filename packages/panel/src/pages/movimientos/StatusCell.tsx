@@ -56,8 +56,13 @@ const isMovimientoStatusDisabled = ({
     return false;
   }
 
-  // No permitir retroceder a estados anteriores
-  if (estatusNivel < estatusActualNivel) {
+  // Si el estatus actual es Anulado, permitir volver a Pendiente
+  if (estatusActualNivel === 0 && est === EstatusMovimiento.pendiente) {
+    return false;
+  }
+
+  // No permitir retroceder a estados anteriores (excepto desde Anulado)
+  if (estatusNivel < estatusActualNivel && estatusActualNivel !== 0) {
     return true;
   }
 
