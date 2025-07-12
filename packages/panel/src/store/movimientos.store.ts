@@ -289,8 +289,24 @@ export const useMovimientosStore = create<
   },
   setPage: (page) => {
     set({ page });
+    // Trigger a new API call when page changes
+    const state = get();
+    get().getMovimientos({
+      page,
+      limit: state.limit,
+      term: state.filters.term,
+      estatus: state.filters.estatus,
+    });
   },
   setLimit: (limit) => {
     set({ limit });
+    // Trigger a new API call when limit changes
+    const state = get();
+    get().getMovimientos({
+      page: 1, // Reset to first page when changing limit
+      limit,
+      term: state.filters.term,
+      estatus: state.filters.estatus,
+    });
   },
 }));
