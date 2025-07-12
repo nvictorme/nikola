@@ -4,8 +4,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { IMovimiento } from "shared/interfaces";
 import { formatearFecha } from "shared/helpers";
+import { FileText, Download } from "lucide-react";
+import { useGenerateMovimientoPDF } from "./movimientos.helpers";
 import React from "react";
 
 interface MovimientoPreviewProps {
@@ -19,7 +22,13 @@ export const MovimientoPreview = ({
   open,
   onOpenChange,
 }: MovimientoPreviewProps) => {
+  const { generatePDF, isGeneratingPDF } = useGenerateMovimientoPDF();
+
   if (!movimiento) return null;
+
+  const handleGeneratePDFWithMovimiento = async () => {
+    await generatePDF(movimiento);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -31,6 +40,30 @@ export const MovimientoPreview = ({
           Fecha: {formatearFecha(movimiento.fechaCreado)}
         </DialogDescription>
 
+        {/* PDF Generation Button */}
+        <div className="sticky top-0 z-10 bg-background border-b p-4">
+          <div className="relative flex items-center">
+            <Button
+              onClick={handleGeneratePDFWithMovimiento}
+              disabled={isGeneratingPDF}
+              className="w-full sm:w-auto"
+            >
+              {isGeneratingPDF ? (
+                <>
+                  <FileText className="mr-2 h-4 w-4 animate-spin" />
+                  Generando PDF...
+                </>
+              ) : (
+                <>
+                  <Download className="mr-2 h-4 w-4" />
+                  Movimiento PDF
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Scrollable container */}
         <div className="overflow-y-auto p-8">
           {/* Header Section */}
           <div className="border-b pb-6 mb-6">

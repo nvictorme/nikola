@@ -10,6 +10,7 @@ import { Stock } from "../orm/entity/stock";
 import { emitSocketEvent } from "../providers/sockets";
 import { isSuperAdmin } from "shared/helpers";
 import { sendEmail } from "../providers/email";
+import { PDFProvider } from "../providers/pdf/pdf";
 
 const MovimientosRouter: Router = Router();
 
@@ -834,6 +835,59 @@ MovimientosRouter.delete(
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
+    }
+  }
+);
+
+// GET - Generate PDF for movimiento
+MovimientosRouter.get(
+  "/:movimientoId/pdf",
+  verificarPrivilegio({
+    entidad: Movimiento.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { movimientoId } = req.params;
+      console.log(
+        "Received request for movimiento PDF with movimientoId:",
+        movimientoId
+      );
+
+      if (!movimientoId) {
+        return res.status(400).json({
+          error: "Movimiento ID is required",
+        });
+      }
+
+      const movimiento = await AppDataSource.getRepository(Movimiento).findOne({
+        where: { id: movimientoId },
+        relations: ["origen", "destino", "usuario", "items", "items.producto"],
+      });
+
+      if (!movimiento) {
+        return res.status(404).json({
+          error: "Movimiento not found",
+        });
+      }
+
+      const pdfProvider = new PDFProvider();
+
+      const pdfBuffer = await pdfProvider.generateMovimientoPDF(movimiento);
+      console.log("Movimiento PDF generated successfully");
+
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=movimiento-${movimiento.serial}.pdf`
+      );
+      res.status(200).send(pdfBuffer);
+    } catch (error) {
+      console.error("Error generating movimiento PDF:", error);
+      return res.status(500).json({
+        error: "Failed to generate movimiento PDF",
+      });
     }
   }
 );
