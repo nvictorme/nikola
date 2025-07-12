@@ -744,9 +744,10 @@ MovimientosRouter.delete(
   async (req: Request, res: Response) => {
     try {
       const { movimientoId } = req.params;
+      const user = req.user as Usuario;
       const movimiento = await AppDataSource.getRepository(Movimiento).findOne({
         where: { id: movimientoId },
-        relations: ["usuario"],
+        relations: ["usuario", "origen", "destino", "items", "items.producto"],
       });
 
       if (!movimiento) {
@@ -767,6 +768,50 @@ MovimientosRouter.delete(
         movimiento,
         timestamp: new Date().toISOString(),
       });
+
+      // Email a gerentes cuando se elimina un movimiento
+      const gerentes = await AppDataSource.getRepository(Usuario).find({
+        where: {
+          rol: { nombre: RolesBase.gerente },
+        },
+      });
+
+      const emailPromises = gerentes.map((gerente) =>
+        sendEmail(
+          process.env.NO_REPLY_EMAIL_ADDRESS as string,
+          gerente.email,
+          `ALERTA: Movimiento #${movimiento.serial} ELIMINADO`,
+          `
+            <p><strong>ALERTA: Se ha eliminado un movimiento</strong></p>
+            <p>Movimiento #${movimiento.serial} ha sido eliminado</p>
+            <p>Responsable: ${movimiento.usuario.nombre} ${
+            movimiento.usuario.apellido
+          }</p>
+            <p>Eliminado por: ${user.nombre} ${user.apellido}</p>
+            <p>Almacén Origen: ${movimiento.origen.nombre}</p>
+            <p>Almacén Destino: ${movimiento.destino.nombre}</p>
+            <p>Productos: ${movimiento.items.length} productos</p>
+            <p>Total Unidades: ${movimiento.items.reduce(
+              (sum, item) => sum + item.cantidad,
+              0
+            )}</p>
+            <p>Estatus: ${movimiento.estatus}</p>
+            <p>Fecha: ${new Date().toLocaleString("es-US", {
+              timeZone: "America/New_York",
+            })} (EST)</p>
+            <p><em>Este movimiento ha sido eliminado permanentemente y requiere atención de gestión.</em></p>
+          `
+        )
+      );
+
+      try {
+        await Promise.allSettled(emailPromises);
+      } catch (emailError) {
+        console.error(
+          "Error sending gerentes email for deleted movement:",
+          emailError
+        );
+      }
     } catch (e: any) {
       console.error(e);
       return res.status(500).json({ error: e.message });
