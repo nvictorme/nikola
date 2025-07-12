@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { ApiClient } from "@/api/api.client";
 import { IMovimiento, IAlmacen, IProducto } from "shared/interfaces";
 import { EstatusMovimiento } from "shared/enums";
@@ -20,60 +21,6 @@ interface MovimientosState {
   };
 }
 
-interface MovimientosActions {
-  // Getters
-  getMovimientos: (params?: {
-    page?: number;
-    limit?: number;
-    term?: string;
-    estatus?: string;
-  }) => Promise<void>;
-  getMovimiento: (id: string) => Promise<void>;
-
-  // Setters
-  setPage: (page: number) => void;
-  setLimit: (limit: number) => void;
-  setSelectedMovimiento: (movimiento: IMovimiento | null) => void;
-  setFilters: (filters: Partial<MovimientosState["filters"]>) => void;
-  clearFilters: () => void;
-
-  // CRUD Operations
-  createMovimiento: (movimiento: {
-    origen: IAlmacen;
-    destino: IAlmacen;
-    items: {
-      producto: IProducto;
-      cantidad: number;
-      notas: string;
-    }[];
-    notas?: string;
-  }) => Promise<IMovimiento>;
-  updateMovimientoStatus: (
-    id: string,
-    estatus: EstatusMovimiento,
-    notas?: string
-  ) => Promise<void>;
-  deleteMovimiento: (id: string) => Promise<void>;
-  updateMovimiento: (
-    id: string,
-    movimiento: {
-      origen: IAlmacen;
-      destino: IAlmacen;
-      items: {
-        producto: IProducto;
-        cantidad: number;
-        notas: string;
-      }[];
-      notas?: string;
-    }
-  ) => Promise<IMovimiento>;
-
-  // State management
-  setLoading: (loading: boolean) => void;
-  setError: (error: string | null) => void;
-  clearError: () => void;
-}
-
 const initialState: MovimientosState = {
   movimientos: [],
   loading: false,
@@ -89,224 +36,286 @@ const initialState: MovimientosState = {
   },
 };
 
-export const useMovimientosStore = create<
-  MovimientosState & MovimientosActions
->((set, get) => ({
-  ...initialState,
-
-  // Getters
-  getMovimientos: async (params = {}) => {
-    try {
-      set({ loading: true, error: null });
-
-      const { page = 1, limit = 10, term, estatus } = params;
-      const queryParams = new URLSearchParams();
-
-      if (page) queryParams.append("page", page.toString());
-      if (limit) queryParams.append("limit", limit.toString());
-      if (term) queryParams.append("term", term);
-      if (estatus) queryParams.append("estatus", estatus);
-
-      const response = await apiClient.get(
-        `/movimientos?${queryParams.toString()}`,
-        {}
-      );
-
-      set({
-        movimientos: response.data.movimientos,
-        total: response.data.total,
-        page: response.data.page,
-        pageCount: response.data.pageCount,
-        loading: false,
-      });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error al cargar movimientos";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
+export interface MovimientosStore extends MovimientosState {
+  getMovimientos: (params?: {
+    page?: number;
+    limit?: number;
+    term?: string;
+    estatus?: string;
+  }) => Promise<void>;
+  getMovimiento: (id: string) => Promise<void>;
+  setSelectedMovimiento: (movimiento: IMovimiento | null) => void;
+  setFilters: (filters: Partial<MovimientosState["filters"]>) => void;
+  clearFilters: () => void;
+  createMovimiento: (movimiento: {
+    origen: IAlmacen;
+    destino: IAlmacen;
+    items: {
+      producto: IProducto;
+      cantidad: number;
+      notas: string;
+    }[];
+    notas?: string;
+  }) => Promise<IMovimiento>;
+  updateMovimiento: (
+    id: string,
+    movimiento: {
+      origen: IAlmacen;
+      destino: IAlmacen;
+      items: {
+        producto: IProducto;
+        cantidad: number;
+        notas: string;
+      }[];
+      notas?: string;
     }
-  },
-
-  getMovimiento: async (id: string) => {
-    try {
-      set({ loading: true, error: null });
-
-      const response = await apiClient.get(`/movimientos/${id}`, {});
-
-      set({
-        selectedMovimiento: response.data,
-        loading: false,
-      });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error al cargar movimiento";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-    }
-  },
-
-  // Setters
-  setSelectedMovimiento: (movimiento) => {
-    set({ selectedMovimiento: movimiento });
-  },
-
-  setFilters: (filters) => {
-    set((state) => ({
-      filters: { ...state.filters, ...filters },
-    }));
-  },
-
-  clearFilters: () => {
-    set({
-      filters: {
-        term: "",
-        estatus: "",
-      },
-    });
-  },
-
-  // CRUD Operations
-  createMovimiento: async (movimientoData) => {
-    try {
-      set({ loading: true, error: null });
-
-      const response = await apiClient.post("/movimientos", {
-        movimiento: movimientoData,
-      });
-
-      const newMovimiento = response.data.movimiento;
-
-      set((state) => ({
-        movimientos: [newMovimiento, ...state.movimientos],
-        loading: false,
-      }));
-
-      return newMovimiento;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error al crear movimiento";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-      throw new Error(errorMessage);
-    }
-  },
-
-  updateMovimiento: async (id, movimientoData) => {
-    try {
-      set({ loading: true, error: null });
-      const response = await apiClient.put(`/movimientos/${id}`, {
-        movimiento: movimientoData,
-      });
-      const updatedMovimiento = response.data.movimiento;
-      set((state) => ({
-        movimientos: state.movimientos.map((m) =>
-          m.id === id ? updatedMovimiento : m
-        ),
-        loading: false,
-      }));
-      // Refresca la lista completa
-      await get().getMovimientos();
-      return updatedMovimiento;
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : "Error al actualizar movimiento";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-      throw new Error(errorMessage);
-    }
-  },
-
-  updateMovimientoStatus: async (
+  ) => Promise<IMovimiento>;
+  updateMovimientoStatus: (
     id: string,
     estatus: EstatusMovimiento,
     notas?: string
-  ) => {
-    try {
-      set({ loading: true, error: null });
+  ) => Promise<void>;
+  deleteMovimiento: (id: string) => Promise<void>;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
+  clearError: () => void;
+  setPage: (page: number) => void;
+  setLimit: (limit: number) => void;
+}
 
-      await apiClient.put(`/movimientos/${id}/estatus`, {
-        estatus,
-        notas,
-      });
+export const useMovimientosStore = create<MovimientosStore>()(
+  persist(
+    (set, get) => ({
+      ...initialState,
 
-      // Refresh the movements list
-      await get().getMovimientos();
+      // Getters
+      getMovimientos: async (params = {}) => {
+        try {
+          set({ loading: true, error: null });
 
-      set({ loading: false });
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error al actualizar estatus";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-      throw new Error(errorMessage);
+          // Usa el valor actual del store si no viene en params
+          const page = params.page ?? get().page;
+          const limit = params.limit ?? get().limit;
+          const term = params.term ?? get().filters.term;
+          const estatus = params.estatus ?? get().filters.estatus;
+
+          const queryParams = new URLSearchParams();
+          if (page) queryParams.append("page", page.toString());
+          if (limit) queryParams.append("limit", limit.toString());
+          if (term) queryParams.append("term", term);
+          if (estatus) queryParams.append("estatus", estatus);
+
+          const response = await apiClient.get(
+            `/movimientos?${queryParams.toString()}`,
+            {}
+          );
+
+          set({ ...response.data, loading: false });
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Error al cargar movimientos";
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+        }
+      },
+
+      getMovimiento: async (id: string) => {
+        try {
+          set({ loading: true, error: null });
+
+          const response = await apiClient.get(`/movimientos/${id}`, {});
+
+          set({
+            selectedMovimiento: response.data,
+            loading: false,
+          });
+        } catch (error: unknown) {
+          const errorMessage =
+            error instanceof Error
+              ? error.message
+              : "Error al cargar movimiento";
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+        }
+      },
+
+      // Setters
+      setSelectedMovimiento: (movimiento: IMovimiento | null) => {
+        set({ selectedMovimiento: movimiento });
+      },
+
+      setFilters: (filters: Partial<MovimientosState["filters"]>) => {
+        set((state) => ({
+          filters: { ...state.filters, ...filters },
+        }));
+      },
+
+      clearFilters: () => {
+        set({
+          filters: {
+            term: "",
+            estatus: "",
+          },
+        });
+      },
+
+      // CRUD Operations
+      createMovimiento: async (movimientoData: {
+        origen: IAlmacen;
+        destino: IAlmacen;
+        items: {
+          producto: IProducto;
+          cantidad: number;
+          notas: string;
+        }[];
+        notas?: string;
+      }) => {
+        try {
+          set({ loading: true, error: null });
+
+          const response = await apiClient.post("/movimientos", {
+            movimiento: movimientoData,
+          });
+
+          const newMovimiento = response.data.movimiento;
+
+          set((state) => ({
+            movimientos: [newMovimiento, ...state.movimientos],
+            loading: false,
+          }));
+
+          return newMovimiento;
+        } catch (error: unknown) {
+          let errorMessage = "Error al crear movimiento";
+          if (error instanceof Error) errorMessage = error.message;
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+          throw new Error(errorMessage);
+        }
+      },
+
+      updateMovimiento: async (
+        id: string,
+        movimientoData: {
+          origen: IAlmacen;
+          destino: IAlmacen;
+          items: {
+            producto: IProducto;
+            cantidad: number;
+            notas: string;
+          }[];
+          notas?: string;
+        }
+      ) => {
+        try {
+          set({ loading: true, error: null });
+          const response = await apiClient.put(`/movimientos/${id}`, {
+            movimiento: movimientoData,
+          });
+          const updatedMovimiento = response.data.movimiento;
+          set((state) => ({
+            movimientos: state.movimientos.map((m: IMovimiento) =>
+              m.id === id ? updatedMovimiento : m
+            ),
+            loading: false,
+          }));
+          // Refresca la lista completa
+          await get().getMovimientos();
+          return updatedMovimiento;
+        } catch (error: unknown) {
+          let errorMessage = "Error al actualizar movimiento";
+          if (error instanceof Error) errorMessage = error.message;
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+          throw new Error(errorMessage);
+        }
+      },
+
+      updateMovimientoStatus: async (
+        id: string,
+        estatus: EstatusMovimiento,
+        notas?: string
+      ) => {
+        try {
+          set({ loading: true, error: null });
+
+          await apiClient.put(`/movimientos/${id}/estatus`, {
+            estatus,
+            notas,
+          });
+
+          // Refresh the movements list
+          await get().getMovimientos();
+
+          set({ loading: false });
+        } catch (error: unknown) {
+          let errorMessage = "Error al actualizar estatus";
+          if (error instanceof Error) errorMessage = error.message;
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+          throw new Error(errorMessage);
+        }
+      },
+
+      deleteMovimiento: async (id: string) => {
+        try {
+          set({ loading: true, error: null });
+
+          await apiClient.delete(`/movimientos/${id}`, {});
+
+          set((state) => ({
+            movimientos: state.movimientos.filter(
+              (m: IMovimiento) => m.id !== id
+            ),
+            loading: false,
+          }));
+        } catch (error: unknown) {
+          let errorMessage = "Error al eliminar movimiento";
+          if (error instanceof Error) errorMessage = error.message;
+          set({
+            error: errorMessage,
+            loading: false,
+          });
+          throw new Error(errorMessage);
+        }
+      },
+
+      // State management
+      setLoading: (loading: boolean) => {
+        set({ loading });
+      },
+
+      setError: (error: string | null) => {
+        set({ error });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+      setPage: (page: number) => {
+        set({ page });
+        get().getMovimientos();
+      },
+      setLimit: (limit: number) => {
+        set({ limit });
+        get().getMovimientos();
+      },
+    }),
+    {
+      name: "movimientos-store",
+      storage: createJSONStorage(() => localStorage),
     }
-  },
-
-  deleteMovimiento: async (id: string) => {
-    try {
-      set({ loading: true, error: null });
-
-      await apiClient.delete(`/movimientos/${id}`, {});
-
-      set((state) => ({
-        movimientos: state.movimientos.filter((m) => m.id !== id),
-        loading: false,
-      }));
-    } catch (error: unknown) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Error al eliminar movimiento";
-      set({
-        error: errorMessage,
-        loading: false,
-      });
-      throw new Error(errorMessage);
-    }
-  },
-
-  // State management
-  setLoading: (loading) => {
-    set({ loading });
-  },
-
-  setError: (error) => {
-    set({ error });
-  },
-
-  clearError: () => {
-    set({ error: null });
-  },
-  setPage: (page) => {
-    set({ page });
-    // Trigger a new API call when page changes
-    const state = get();
-    get().getMovimientos({
-      page,
-      limit: state.limit,
-      term: state.filters.term,
-      estatus: state.filters.estatus,
-    });
-  },
-  setLimit: (limit) => {
-    set({ limit });
-    // Trigger a new API call when limit changes
-    const state = get();
-    get().getMovimientos({
-      page: 1, // Reset to first page when changing limit
-      limit,
-      term: state.filters.term,
-      estatus: state.filters.estatus,
-    });
-  },
-}));
+  )
+);

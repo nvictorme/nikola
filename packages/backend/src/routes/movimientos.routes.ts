@@ -68,11 +68,17 @@ MovimientosRouter.get(
         .take(parseInt(limit as string))
         .getMany();
 
+      // Asegurar que pageCount nunca sea menor que 1
+      const pageCount = Math.max(
+        1,
+        Math.ceil(total / (parseInt(limit as string) || 1))
+      );
+
       res.status(200).json({
         movimientos,
         total,
         page: parseInt(page as string),
-        pageCount: Math.ceil(total / parseInt(limit as string)),
+        pageCount,
       });
     } catch (e: any) {
       console.error(e);

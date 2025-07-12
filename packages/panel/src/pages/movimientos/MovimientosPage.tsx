@@ -11,7 +11,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 
 import { Search, RefreshCw, PlusCircleIcon } from "lucide-react";
@@ -23,13 +22,13 @@ import { MovimientoForm } from "./MovimientoForm";
 import { IMovimiento } from "shared/interfaces";
 import { getEstatusMovimientoColor } from "shared/helpers";
 import { MovimientoPreview } from "./MovimientoPreview";
+import { MovimientosStore } from "@/store/movimientos.store";
 
 export default function MovimientosPage() {
   const {
     movimientos,
     loading,
     error,
-    total,
     page,
     pageCount,
     filters,
@@ -41,7 +40,7 @@ export default function MovimientosPage() {
     setPage,
     setLimit,
     limit,
-  } = useMovimientosStore();
+  } = useMovimientosStore() as MovimientosStore;
 
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState(filters.term);
@@ -139,16 +138,6 @@ export default function MovimientosPage() {
     }
   };
 
-  const getStatusCount = (estatus: EstatusMovimiento) => {
-    return movimientos.filter((m) => m.estatus === estatus).length;
-  };
-
-  const totalItems = movimientos.reduce(
-    (sum, m) =>
-      sum + m.items.reduce((itemSum, item) => itemSum + item.cantidad, 0),
-    0
-  );
-
   // Handler para editar movimiento
   const handleEditMovimiento = (movimiento: IMovimiento) => {
     setSelectedMovimiento(movimiento);
@@ -162,12 +151,12 @@ export default function MovimientosPage() {
   };
 
   return (
-    <div className="container mx-auto py-6 space-y-6">
+    <div className="container mx-auto space-y-4">
       {/* Header */}
       {/* Eliminar el botón Movimiento de la cabecera superior */}
 
       {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      {/* <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
@@ -218,108 +207,106 @@ export default function MovimientosPage() {
             <div className="text-2xl font-bold">{totalItems}</div>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
 
-      {/* Filters */}
-      <Card>
-        <CardContent className="pt-5">
-          <div className="w-full flex flex-col md:flex-row md:items-end md:gap-4">
-            {/* Campo Buscar */}
-            <div className="flex flex-col flex-1">
+      {/* Filters Sticky */}
+      <header className="sticky top-16 z-50 flex flex-col gap-4 border-b bg-background py-4">
+        <div className="w-full flex flex-col md:flex-row md:items-end md:gap-4">
+          {/* Campo Buscar */}
+          <div className="flex flex-col flex-1">
+            <Label
+              htmlFor="search-movimientos"
+              className="text-left block mb-2"
+            >
+              Buscar
+            </Label>
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search-movimientos"
+                placeholder="Buscar por serial, almacén, usuario..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-8"
+              />
+            </div>
+          </div>
+          {/* Botones */}
+          <div className="flex gap-4 md:ml-auto mt-4 md:mt-0 items-end">
+            {/* Select de Estatus a la izquierda */}
+            <div className="w-full md:w-[180px] flex flex-col">
               <Label
-                htmlFor="search-movimientos"
+                htmlFor="estatus-movimientos"
                 className="text-left block mb-2"
               >
-                Buscar
+                Estatus
               </Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="search-movimientos"
-                  placeholder="Buscar por serial, almacén, usuario..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-8"
-                />
-              </div>
+              <Select
+                value={selectedEstatus}
+                onValueChange={handleStatusChange}
+              >
+                <SelectTrigger
+                  id="estatus-movimientos"
+                  className={
+                    selectedEstatus !== "Todos" && selectedEstatus
+                      ? getEstatusMovimientoColor(
+                          selectedEstatus as unknown as EstatusMovimiento
+                        )
+                      : ""
+                  }
+                >
+                  <SelectValue placeholder="Filtrar por estatus" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Todos">Todos</SelectItem>
+                  <SelectItem value={EstatusMovimiento.pendiente}>
+                    Pendiente
+                  </SelectItem>
+                  <SelectItem value={EstatusMovimiento.aprobado}>
+                    Aprobado
+                  </SelectItem>
+                  <SelectItem value={EstatusMovimiento.transito}>
+                    En Tránsito
+                  </SelectItem>
+                  <SelectItem value={EstatusMovimiento.recibido}>
+                    Recibido
+                  </SelectItem>
+                  <SelectItem value={EstatusMovimiento.anulado}>
+                    Anulado
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-            {/* Botones */}
-            <div className="flex gap-4 md:ml-auto mt-4 md:mt-0 items-end">
-              {/* Select de Estatus a la izquierda */}
-              <div className="w-full md:w-[180px] flex flex-col">
-                <Label
-                  htmlFor="estatus-movimientos"
-                  className="text-left block mb-2"
-                >
-                  Estatus
-                </Label>
-                <Select
-                  value={selectedEstatus}
-                  onValueChange={handleStatusChange}
-                >
-                  <SelectTrigger
-                    id="estatus-movimientos"
-                    className={
-                      selectedEstatus !== "Todos" && selectedEstatus
-                        ? getEstatusMovimientoColor(
-                            selectedEstatus as unknown as EstatusMovimiento
-                          )
-                        : ""
-                    }
-                  >
-                    <SelectValue placeholder="Filtrar por estatus" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Todos">Todos</SelectItem>
-                    <SelectItem value={EstatusMovimiento.pendiente}>
-                      Pendiente
-                    </SelectItem>
-                    <SelectItem value={EstatusMovimiento.aprobado}>
-                      Aprobado
-                    </SelectItem>
-                    <SelectItem value={EstatusMovimiento.transito}>
-                      En Tránsito
-                    </SelectItem>
-                    <SelectItem value={EstatusMovimiento.recibido}>
-                      Recibido
-                    </SelectItem>
-                    <SelectItem value={EstatusMovimiento.anulado}>
-                      Anulado
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {/* Botón Actualizar */}
-              <Button
-                variant="outline"
-                onClick={handleRefresh}
-                disabled={loading}
-              >
-                <RefreshCw
-                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
-                />
-                Actualizar
-              </Button>
-              {/* Botón Movimiento al lado de Actualizar */}
-              <Button
-                onClick={() => {
-                  setSelectedMovimiento(null); // Limpiar selección para modo creación
-                  setShowForm(true);
-                }}
-                className="gap-2"
-                disabled={showForm}
-              >
-                <PlusCircleIcon size={16} /> Movimiento
-              </Button>
-              {/* Ocultar el botón Limpiar */}
-              {/* <Button variant="outline" onClick={clearFilters}>
+            {/* Botón Actualizar */}
+            <Button
+              variant="outline"
+              onClick={handleRefresh}
+              disabled={loading}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
+              Actualizar
+            </Button>
+            {/* Botón Movimiento al lado de Actualizar */}
+            <Button
+              onClick={() => {
+                setSelectedMovimiento(null); // Limpiar selección para modo creación
+                setShowForm(true);
+              }}
+              className="gap-2"
+              disabled={showForm}
+            >
+              <PlusCircleIcon size={16} /> Movimiento
+            </Button>
+            {/* Ocultar el botón Limpiar */}
+            {/* <Button variant="outline" onClick={clearFilters}>
                 <Filter className="mr-2 h-4 w-4" />
                 Limpiar
               </Button> */}
-            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </header>
 
       {/* Data Table */}
       <DataTable
