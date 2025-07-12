@@ -155,6 +155,12 @@ export default function MovimientosPage() {
     setShowForm(true);
   };
 
+  // Handler para eliminar movimiento
+  const handleDeleteMovimiento = (movimiento: IMovimiento) => {
+    setSelectedMovimiento(movimiento);
+    setActionType("delete");
+  };
+
   return (
     <div className="container mx-auto py-6 space-y-6">
       {/* Header */}
@@ -323,6 +329,7 @@ export default function MovimientosPage() {
             setPreviewMovimiento(movimiento);
             setShowPreview(true);
           },
+          onDelete: handleDeleteMovimiento,
         })}
         data={movimientos as IMovimiento[]}
         loading={loading}

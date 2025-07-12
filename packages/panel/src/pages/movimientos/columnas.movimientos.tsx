@@ -10,9 +10,11 @@ import { MovimientoPreview } from "./MovimientoPreview";
 export const columnasMovimientos = ({
   onEdit,
   onPreview,
+  onDelete,
 }: {
   onEdit: (movimiento: IMovimiento) => void;
   onPreview: (movimiento: IMovimiento) => void;
+  onDelete: (movimiento: IMovimiento) => void;
 }): ColumnDef<IMovimiento>[] => [
   {
     accessorKey: "serial",
@@ -128,10 +130,7 @@ export const columnasMovimientos = ({
               variant="ghost"
               size="icon"
               title="Eliminar"
-              onClick={() => {
-                // Eliminar movimiento
-                console.log("Eliminar movimiento:", movimiento.id);
-              }}
+              onClick={() => onDelete(movimiento)}
               className="text-red-500 hover:text-red-700"
             >
               <DeleteIcon size={16} />
