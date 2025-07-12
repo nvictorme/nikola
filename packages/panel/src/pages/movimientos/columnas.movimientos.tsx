@@ -18,23 +18,29 @@ export const columnasMovimientos = ({
 }): ColumnDef<IMovimiento>[] => [
   {
     accessorKey: "serial",
-    header: () => <div className="text-center w-full">#Serial</div>,
+    header: () => <div className="text-center w-10">#Serial</div>,
     cell: ({ row }) => {
       const serial = row.getValue("serial") as number;
-      return <div className="font-medium text-center">{serial}</div>;
+      return (
+        <div className="font-medium text-center whitespace-nowrap w-10">
+          {serial}
+        </div>
+      );
     },
+    size: 60,
   },
   {
     accessorKey: "fechaCreado",
-    header: () => <div className="text-center w-full">Fecha</div>,
+    header: () => <div className="text-center w-12 ml-3">Fecha</div>,
     cell: ({ row }) => {
       const fecha = row.getValue("fechaCreado") as string;
       return (
-        <div className="text-center whitespace-nowrap">
+        <div className="text-center whitespace-nowrap w-8">
           {formatearFecha(fecha)}
         </div>
       );
     },
+    size: 110,
   },
   {
     accessorKey: "estatus",
