@@ -110,7 +110,8 @@ export const OrdenPreview = ({
               </div>
             )}
 
-            <div className="absolute right-0">
+            {/* Botón Guía de Despacho solo si NO es reposición */}
+            {orden.tipo !== TipoOrden.reposicion && (
               <Button
                 onClick={handleGenerateGuiaDespachoPDFWithOrden}
                 disabled={isGeneratingGuiaDespachoPDF}
@@ -128,7 +129,7 @@ export const OrdenPreview = ({
                   </>
                 )}
               </Button>
-            </div>
+            )}
           </div>
         </div>
 
