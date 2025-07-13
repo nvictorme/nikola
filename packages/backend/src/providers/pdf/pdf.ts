@@ -723,55 +723,126 @@ export class PDFProvider {
 
       yPosition -= 20;
 
-      // Client and Seller Information - Aligned
+      // Client or Provider and Seller Information - Aligned
       const clientSectionX = 40;
       const sellerSectionX = 350;
       const sectionStartY = yPosition;
 
-      // Client section
-      page.drawText("Cliente:", {
-        x: clientSectionX,
-        y: sectionStartY,
-        size: 12,
-        font: helveticaBold,
-        color: primaryColor,
-      });
+      if (orden.tipo === TipoOrden.reposicion) {
+        // Proveedor section
+        page.drawText("Proveedor:", {
+          x: clientSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
 
-      let clientY = sectionStartY - 17;
+        let provY = sectionStartY - 17;
+        if (orden.proveedor?.nombre) {
+          page.drawText(orden.proveedor.nombre, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: primaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.marca) {
+          page.drawText(orden.proveedor.marca, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.direccion) {
+          page.drawText(orden.proveedor.direccion, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.telefono) {
+          page.drawText(`Tel: ${orden.proveedor.telefono}`, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.email) {
+          page.drawText(orden.proveedor.email, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.notas) {
+          page.drawText(orden.proveedor.notas, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
+      } else {
+        // Client section
+        page.drawText("Cliente:", {
+          x: clientSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
 
-      const clientName = orden.cliente?.empresa
-        ? orden.cliente.empresa
-        : `${orden.cliente?.nombre} ${orden.cliente?.apellido}`;
+        let clientY = sectionStartY - 17;
+        const clientName = orden.cliente?.empresa
+          ? orden.cliente.empresa
+          : `${orden.cliente?.nombre} ${orden.cliente?.apellido}`;
 
-      page.drawText(clientName, {
-        x: clientSectionX,
-        y: clientY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-
-      clientY -= 15;
-
-      if (orden.cliente?.empresa) {
-        page.drawText(`${orden.cliente?.nombre} ${orden.cliente?.apellido}`, {
+        page.drawText(clientName, {
           x: clientSectionX,
           y: clientY,
           size: 10,
           font: helveticaFont,
-          color: secondaryColor,
+          color: primaryColor,
         });
+
         clientY -= 15;
-      }
 
-      if (orden.cliente?.telefono) {
-        page.drawText(`Tel: ${orden.cliente.telefono}`, {
-          x: clientSectionX,
-          y: clientY,
-          size: 10,
-          font: helveticaFont,
-          color: secondaryColor,
-        });
+        if (orden.cliente?.empresa) {
+          page.drawText(`${orden.cliente?.nombre} ${orden.cliente?.apellido}`, {
+            x: clientSectionX,
+            y: clientY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          clientY -= 15;
+        }
+
+        if (orden.cliente?.telefono) {
+          page.drawText(`Tel: ${orden.cliente.telefono}`, {
+            x: clientSectionX,
+            y: clientY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
       }
 
       // Seller section - aligned with client section
