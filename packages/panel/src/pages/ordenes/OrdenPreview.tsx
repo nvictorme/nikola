@@ -91,27 +91,28 @@ export const OrdenPreview = ({
               </Button>
             </div>
             {/* Botón Factura Proforma centrado */}
-            {orden.tipoCambio === TipoCambio.bcv && (
-              <div className="absolute left-1/2 transform -translate-x-1/2">
-                <Button
-                  onClick={handleGenerateProformaPDFWithOrden}
-                  disabled={isGeneratingProformaPDF}
-                  className="w-full sm:w-auto"
-                >
-                  {isGeneratingProformaPDF ? (
-                    <>
-                      <Receipt className="mr-2 h-4 w-4 animate-spin" />
-                      Generando Proforma...
-                    </>
-                  ) : (
-                    <>
-                      <Receipt className="mr-2 h-4 w-4" />
-                      Factura Proforma
-                    </>
-                  )}
-                </Button>
-              </div>
-            )}
+            {orden.tipoCambio === TipoCambio.bcv &&
+              orden.tipo !== TipoOrden.reposicion && (
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <Button
+                    onClick={handleGenerateProformaPDFWithOrden}
+                    disabled={isGeneratingProformaPDF}
+                    className="w-full sm:w-auto"
+                  >
+                    {isGeneratingProformaPDF ? (
+                      <>
+                        <Receipt className="mr-2 h-4 w-4 animate-spin" />
+                        Generando Proforma...
+                      </>
+                    ) : (
+                      <>
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Factura Proforma
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
             {/* Botón Guía de Despacho a la derecha */}
             {orden.tipo !== TipoOrden.reposicion && (
               <Button
