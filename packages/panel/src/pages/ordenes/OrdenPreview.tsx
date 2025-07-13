@@ -69,25 +69,28 @@ export const OrdenPreview = ({
 
         {/* PDF Generation Buttons */}
         <div className="sticky top-0 z-10 bg-background border-b p-4">
-          <div className="relative flex items-center">
-            <Button
-              onClick={handleGeneratePDFWithOrden}
-              disabled={isGeneratingPDF}
-              className="w-full sm:w-auto"
-            >
-              {isGeneratingPDF ? (
-                <>
-                  <FileText className="mr-2 h-4 w-4 animate-spin" />
-                  Generando PDF...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Orden PDF
-                </>
-              )}
-            </Button>
-
+          <div className="flex items-center justify-between w-full">
+            {/* Botones a la izquierda */}
+            <div className="flex gap-2">
+              <Button
+                onClick={handleGeneratePDFWithOrden}
+                disabled={isGeneratingPDF}
+                className="w-full sm:w-auto"
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <FileText className="mr-2 h-4 w-4 animate-spin" />
+                    Generando PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Orden PDF
+                  </>
+                )}
+              </Button>
+            </div>
+            {/* Botón Factura Proforma centrado */}
             {orden.tipoCambio === TipoCambio.bcv && (
               <div className="absolute left-1/2 transform -translate-x-1/2">
                 <Button
@@ -109,8 +112,7 @@ export const OrdenPreview = ({
                 </Button>
               </div>
             )}
-
-            {/* Botón Guía de Despacho solo si NO es reposición */}
+            {/* Botón Guía de Despacho a la derecha */}
             {orden.tipo !== TipoOrden.reposicion && (
               <Button
                 onClick={handleGenerateGuiaDespachoPDFWithOrden}
