@@ -677,8 +677,11 @@ export class PDFProvider {
         color: secondaryColor,
       });
 
-      // BCV rate if applicable
-      if (orden.tipoCambio === TipoCambio.bcv) {
+      // BCV rate if applicable (solo si no es reposición)
+      if (
+        orden.tipoCambio === TipoCambio.bcv &&
+        orden.tipo !== TipoOrden.reposicion
+      ) {
         page.drawText("Tasa BCV:", {
           x: width - 150, // Right side positioning, aligned with date
           y: yPosition + 10, // Below the date
@@ -845,50 +848,64 @@ export class PDFProvider {
         }
       }
 
-      // Seller section - aligned with client section
-      page.drawText("Vendedor:", {
-        x: sellerSectionX,
-        y: sectionStartY,
-        size: 12,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-
-      let sellerY = sectionStartY - 17;
-
-      const sellerName = orden.vendedor.empresa
-        ? orden.vendedor.empresa
-        : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
-
-      page.drawText(sellerName, {
-        x: sellerSectionX,
-        y: sellerY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-
-      sellerY -= 15;
-
-      if (orden.vendedor.empresa) {
-        page.drawText(`${orden.vendedor.nombre} ${orden.vendedor.apellido}`, {
+      // Seller/Responsable section - aligned with client/proveedor section
+      if (orden.tipo === TipoOrden.reposicion) {
+        page.drawText("Responsable:", {
+          x: sellerSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
+        let respY = sectionStartY - 17;
+        // Solo nombre y apellido del vendedor
+        const responsableName = `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
+        page.drawText(responsableName, {
+          x: sellerSectionX,
+          y: respY,
+          size: 10,
+          font: helveticaFont,
+          color: primaryColor,
+        });
+      } else {
+        page.drawText("Vendedor:", {
+          x: sellerSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
+        let sellerY = sectionStartY - 17;
+        const sellerName = orden.vendedor.empresa
+          ? orden.vendedor.empresa
+          : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
+        page.drawText(sellerName, {
           x: sellerSectionX,
           y: sellerY,
           size: 10,
           font: helveticaFont,
-          color: secondaryColor,
+          color: primaryColor,
         });
         sellerY -= 15;
-      }
-
-      if (orden.vendedor.telefono) {
-        page.drawText(`Tel: ${orden.vendedor.telefono}`, {
-          x: sellerSectionX,
-          y: sellerY,
-          size: 10,
-          font: helveticaFont,
-          color: secondaryColor,
-        });
+        if (orden.vendedor.empresa) {
+          page.drawText(`${orden.vendedor.nombre} ${orden.vendedor.apellido}`, {
+            x: sellerSectionX,
+            y: sellerY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          sellerY -= 15;
+        }
+        if (orden.vendedor.telefono) {
+          page.drawText(`Tel: ${orden.vendedor.telefono}`, {
+            x: sellerSectionX,
+            y: sellerY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
       }
 
       // Reset Y position for items table
@@ -1291,8 +1308,15 @@ export class PDFProvider {
         }
       }
 
-      // Add IVA message to the main page
-      this.drawIVAMessage(page, helveticaFont, primaryColor, orden.tipoCambio);
+      // Add IVA message to the main page SOLO si no es reposición
+      if (orden.tipo !== TipoOrden.reposicion) {
+        this.drawIVAMessage(
+          page,
+          helveticaFont,
+          primaryColor,
+          orden.tipoCambio
+        );
+      }
 
       // Save the PDF
       console.log("Saving order PDF...");
