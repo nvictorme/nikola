@@ -12,8 +12,12 @@ import {
   formatearFecha,
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
-import { FileText, Download, Receipt } from "lucide-react";
-import { useGeneratePDF, useGenerateProformaPDF } from "./ordenes.helpers";
+import { FileText, Download, Receipt, Truck } from "lucide-react";
+import {
+  useGeneratePDF,
+  useGenerateProformaPDF,
+  useGenerateGuiaDespachoPDF,
+} from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -29,6 +33,8 @@ export const OrdenPreview = ({
   const { generatePDF, isGeneratingPDF } = useGeneratePDF();
   const { generateProformaPDF, isGeneratingProformaPDF } =
     useGenerateProformaPDF();
+  const { generateGuiaDespachoPDF, isGeneratingGuiaDespachoPDF } =
+    useGenerateGuiaDespachoPDF();
 
   if (!orden) return null;
 
@@ -46,6 +52,10 @@ export const OrdenPreview = ({
 
   const handleGenerateProformaPDFWithOrden = async () => {
     await generateProformaPDF(orden);
+  };
+
+  const handleGenerateGuiaDespachoPDFWithOrden = async () => {
+    await generateGuiaDespachoPDF(orden);
   };
 
   return (
@@ -77,6 +87,7 @@ export const OrdenPreview = ({
                 </>
               )}
             </Button>
+
             {orden.tipoCambio === TipoCambio.bcv && (
               <div className="absolute left-1/2 transform -translate-x-1/2">
                 <Button
@@ -98,6 +109,26 @@ export const OrdenPreview = ({
                 </Button>
               </div>
             )}
+
+            <div className="absolute right-0">
+              <Button
+                onClick={handleGenerateGuiaDespachoPDFWithOrden}
+                disabled={isGeneratingGuiaDespachoPDF}
+                className="w-full sm:w-auto"
+              >
+                {isGeneratingGuiaDespachoPDF ? (
+                  <>
+                    <Truck className="mr-2 h-4 w-4 animate-spin" />
+                    Generando Guía...
+                  </>
+                ) : (
+                  <>
+                    <Truck className="mr-2 h-4 w-4" />
+                    Guía de Despacho
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 

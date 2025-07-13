@@ -129,6 +129,16 @@ export const fetchProformaPDF = async (orderId: string): Promise<Blob> => {
   return new Blob([response.data], { type: "application/pdf" });
 };
 
+// API function - Single responsibility: fetch Guia de Despacho PDF from API
+export const fetchGuiaDespachoPDF = async (orderId: string): Promise<Blob> => {
+  const apiClient = new ApiClient();
+  const response = await apiClient.getBinary(
+    `/ordenes/${orderId}/guia-despacho`,
+    {}
+  );
+  return new Blob([response.data], { type: "application/pdf" });
+};
+
 // Download function - Single responsibility: handle file download
 export const downloadPDF = (blob: Blob, filename: string): void => {
   const url = window.URL.createObjectURL(blob);
@@ -210,6 +220,29 @@ export const handleGenerateProformaPDF = async (orden: IOrden) => {
   }
 };
 
+// Main orchestrator function - Single responsibility: coordinate the Guia de Despacho PDF generation process
+export const handleGenerateGuiaDespachoPDF = async (orden: IOrden) => {
+  // Validate input
+  const validation = validateOrderForPDF(orden);
+  if (!validation.isValid) {
+    throw new Error(validation.error);
+  }
+
+  try {
+    // Fetch PDF from API
+    const pdfBlob = await fetchGuiaDespachoPDF(orden.id!.toString());
+
+    // Download the file
+    downloadPDF(pdfBlob, `guia-despacho-${orden.serial}.pdf`);
+
+    // Return success info for the hook to handle
+    return { success: true, orderSerial: orden.serial.toString() };
+  } catch (error) {
+    console.error("Error generating Guia de Despacho PDF:", error);
+    throw error;
+  }
+};
+
 // Custom hook that handles PDF generation with toast notifications and loading state
 export const useGeneratePDF = () => {
   const { toast } = useToast();
@@ -256,4 +289,29 @@ export const useGenerateProformaPDF = () => {
   };
 
   return { generateProformaPDF, isGeneratingProformaPDF };
+};
+
+// Custom hook that handles Guia de Despacho PDF generation with toast notifications and loading state
+export const useGenerateGuiaDespachoPDF = () => {
+  const { toast } = useToast();
+  const [isGeneratingGuiaDespachoPDF, setIsGeneratingGuiaDespachoPDF] =
+    useState(false);
+
+  const generateGuiaDespachoPDF = async (orden: IOrden) => {
+    try {
+      setIsGeneratingGuiaDespachoPDF(true);
+      const result = await handleGenerateGuiaDespachoPDF(orden);
+      notifyPDFGeneration(toast, true, result.orderSerial, "Guía de Despacho");
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "No se pudo generar la Guía de Despacho. Inténtalo de nuevo.";
+      notifyPDFGeneration(toast, false, undefined, errorMessage);
+    } finally {
+      setIsGeneratingGuiaDespachoPDF(false);
+    }
+  };
+
+  return { generateGuiaDespachoPDF, isGeneratingGuiaDespachoPDF };
 };
