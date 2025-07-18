@@ -10,6 +10,7 @@ import {
   formatearFecha,
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
+import { IMovimiento } from "shared/interfaces";
 
 // Constants for PDF messages
 const PDF_MESSAGES = {
@@ -235,6 +236,61 @@ export class PDFProvider {
     });
   }
 
+  private drawMovimientoTableHeaders(
+    page: any,
+    helveticaBold: any,
+    primaryColor: any,
+    yPosition: number,
+    itemLabel: string,
+    columnWidths: number[]
+  ) {
+    // Header dinámico: 'Item' o 'Items' según corresponda
+    const tableHeaders = [itemLabel, "Descripción", "Cantidad"];
+    let currentX = 40;
+    const descripcionOffset = 20; // Espacio extra a la derecha para Descripción
+
+    tableHeaders.forEach((header, index) => {
+      let headerX = currentX;
+
+      // 'Item(s)' header (centrado en su columna)
+      if (index === 0) {
+        const headerWidth = helveticaBold.widthOfTextAtSize(header, 10);
+        headerX = 40 + columnWidths[0] / 2 - headerWidth / 2;
+      }
+
+      // 'Descripción' header (justificado a la izquierda y desplazado a la derecha)
+      if (index === 1) {
+        headerX = 40 + columnWidths[0] + descripcionOffset;
+      }
+
+      // 'Cantidad' header (centrado en su columna, sin offset)
+      if (index === 2) {
+        const headerWidth = helveticaBold.widthOfTextAtSize(header, 10);
+        const cantidadColumnStart = 40 + columnWidths[0] + columnWidths[1];
+        const cantidadColumnCenter = cantidadColumnStart + columnWidths[2] / 2;
+        headerX = cantidadColumnCenter - headerWidth / 2;
+      }
+
+      page.drawText(header, {
+        x: headerX,
+        y: yPosition,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+
+      currentX += columnWidths[index];
+    });
+
+    // Draw separator line (más cerca del header)
+    page.drawLine({
+      start: { x: 40, y: yPosition - 10 },
+      end: { x: page.getSize().width - 40, y: yPosition - 8 },
+      thickness: 1,
+      color: rgb(0.8, 0.8, 0.8),
+    });
+  }
+
   // Helper function to draw IVA message at bottom of page
   private drawIVAMessage(
     page: any,
@@ -371,11 +427,7 @@ export class PDFProvider {
 
     // Mensaje de tasa de cambio y fecha
     const exchangeRateY = retentionY - 20;
-    const currentDate = new Date().toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    const currentDate = formatearFecha(new Date().toISOString());
 
     if (tipoCambio === TipoCambio.bcv) {
       page.drawText(
@@ -493,14 +545,7 @@ export class PDFProvider {
       });
 
       // Draw fecha de emision
-      const fechaEmision = new Date(certificado.fechaCreado).toLocaleDateString(
-        "es-ES",
-        {
-          day: "2-digit",
-          month: "long",
-          year: "numeric",
-        }
-      );
+      const fechaEmision = formatearFecha(certificado.fechaCreado);
       page.drawText(`${fechaEmision}`, {
         x: this.LETTER.center.x,
         y: this.LETTER.center.y + 84, // Vertically centered
@@ -616,14 +661,7 @@ export class PDFProvider {
       yPosition -= 30;
 
       // Order date - moved to right side aligned with order title
-      const orderDate = new Date(orden.fechaCreado).toLocaleDateString(
-        "es-ES",
-        {
-          day: "2-digit",
-          month: "2-digit",
-          year: "numeric",
-        }
-      );
+      const orderDate = formatearFecha(orden.fechaCreado);
       page.drawText("Fecha:", {
         x: width - 150, // Right side positioning
         y: yPosition + 30, // Same Y as order title
@@ -862,10 +900,10 @@ export class PDFProvider {
         // Quantity
         const quantityText = item.cantidad.toString();
         const quantityWidth = helveticaFont.widthOfTextAtSize(quantityText, 10);
-        const quantityColumnStart = 40 + columnWidths[0] + columnWidths[1]; // Start of Cantidad column
-        const quantityColumnCenter = quantityColumnStart + columnWidths[2] / 2;
+        const cantidadColumnStart = 40 + columnWidths[0] + columnWidths[1]; // Start of Cantidad column
+        const cantidadColumnCenter = cantidadColumnStart + columnWidths[2] / 2;
         page.drawText(quantityText, {
-          x: quantityColumnCenter - quantityWidth / 2, // Center the text
+          x: cantidadColumnCenter - quantityWidth / 2, // Center the text
           y: yPosition,
           size: 10,
           font: helveticaFont,
@@ -1491,6 +1529,398 @@ export class PDFProvider {
         throw error;
       }
       throw new Error("Failed to generate proforma PDF");
+    }
+  }
+
+  public async generateMovimientoPDF(movimiento: IMovimiento): Promise<Buffer> {
+    try {
+      console.log(
+        "Starting movimiento PDF generation for movimiento:",
+        movimiento.serial
+      );
+
+      // Create a new PDF document
+      const pdfDoc = await PDFDocument.create();
+      let page = pdfDoc.addPage([this.LETTER.width, this.LETTER.height]);
+      const { width, height } = page.getSize();
+
+      // Load fonts
+      const helveticaFont = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+
+      // Colors
+      const primaryColor = rgb(0.2, 0.2, 0.2);
+      const secondaryColor = rgb(0.4, 0.4, 0.4);
+      const accentColor = rgb(1, 0.4, 0); // Orange for accent
+
+      // --- HEADER ---
+      await this.drawHeader(
+        page,
+        pdfDoc,
+        helveticaFont,
+        helveticaBold,
+        primaryColor
+      );
+
+      // --- END HEADER ---
+
+      let yPosition = height - 120;
+
+      // Movimiento title
+      page.drawText("Movimiento:", {
+        x: 40,
+        y: yPosition,
+        size: 12,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      page.drawText(` #${movimiento.serial}`, {
+        x: 40,
+        y: yPosition - 20, // Below "Movimiento:"
+        size: 12,
+        font: helveticaFont,
+        color: secondaryColor,
+      });
+
+      yPosition -= 30;
+
+      // Movimiento date - right aligned
+      const movimientoDate = formatearFecha(movimiento.fechaCreado);
+
+      const fechaLabel = "Fecha:";
+      const fechaLabelWidth = helveticaBold.widthOfTextAtSize(fechaLabel, 10);
+      const fechaValueWidth = helveticaFont.widthOfTextAtSize(
+        ` ${movimientoDate}`,
+        10
+      );
+      const fechaTotalWidth = fechaLabelWidth + fechaValueWidth;
+
+      page.drawText(fechaLabel, {
+        x: width - 40 - fechaTotalWidth, // Right aligned with 40px margin
+        y: yPosition + 30, // Same Y as movimiento title
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      page.drawText(` ${movimientoDate}`, {
+        x: width - 40 - fechaValueWidth, // Right aligned
+        y: yPosition + 30, // Same Y as movimiento title
+        size: 10,
+        font: helveticaFont,
+        color: secondaryColor,
+      });
+
+      // Estatus - centrado horizontalmente y alineado verticalmente con Fecha
+      const estatusLabel = "Estatus:";
+      const estatusLabelWidth = helveticaBold.widthOfTextAtSize(
+        estatusLabel,
+        10
+      );
+      const estatusValueWidth = helveticaFont.widthOfTextAtSize(
+        ` ${movimiento.estatus}`,
+        10
+      );
+      const estatusTotalWidth = estatusLabelWidth + estatusValueWidth;
+      const estatusX = (width - estatusTotalWidth) / 2;
+      const estatusY = yPosition + 30;
+      page.drawText(estatusLabel, {
+        x: estatusX,
+        y: estatusY,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      page.drawText(` ${movimiento.estatus}`, {
+        x: estatusX + estatusLabelWidth,
+        y: estatusY,
+        size: 10,
+        font: helveticaFont,
+        color: secondaryColor,
+      });
+
+      // Agregar separación extra antes de almacenes y responsable
+      yPosition -= 20;
+
+      // Almacenes Information - Aligned
+      const origenSectionX = 40;
+      const sectionStartY = yPosition;
+
+      // Origen section (izquierda)
+      page.drawText("Almacén Origen:", {
+        x: origenSectionX,
+        y: sectionStartY,
+        size: 12,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+
+      let origenY = sectionStartY - 17;
+
+      page.drawText(movimiento.origen?.nombre || "", {
+        x: origenSectionX,
+        y: origenY,
+        size: 10,
+        font: helveticaFont,
+        color: primaryColor,
+      });
+
+      // Destino section - centered horizontally
+      const destinoLabel = "Almacén Destino:";
+      const destinoLabelWidth = helveticaBold.widthOfTextAtSize(
+        destinoLabel,
+        12
+      );
+      const destinoSectionX = width / 2 - destinoLabelWidth / 2;
+
+      page.drawText(destinoLabel, {
+        x: destinoSectionX,
+        y: sectionStartY,
+        size: 12,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+
+      let destinoY = sectionStartY - 17;
+
+      const destinoName = movimiento.destino?.nombre || "";
+      const destinoNameWidth = helveticaFont.widthOfTextAtSize(destinoName, 10);
+      page.drawText(destinoName, {
+        x: width / 2 - destinoNameWidth / 2,
+        y: destinoY,
+        size: 10,
+        font: helveticaFont,
+        color: primaryColor,
+      });
+
+      // Responsable section - right aligned, same height as almacenes
+      const responsableLabel = "Responsable:";
+      const responsableLabelWidth = helveticaBold.widthOfTextAtSize(
+        responsableLabel,
+        12
+      );
+      const responsableSectionX = width - 40 - responsableLabelWidth; // 40px margin from right
+
+      page.drawText(responsableLabel, {
+        x: responsableSectionX,
+        y: sectionStartY,
+        size: 12,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+
+      const responsableName = `${movimiento.usuario?.nombre || ""} ${
+        movimiento.usuario?.apellido || ""
+      }`;
+      const responsableNameWidth = helveticaFont.widthOfTextAtSize(
+        responsableName,
+        10
+      );
+      page.drawText(responsableName, {
+        x: width - 40 - responsableNameWidth, // Right aligned
+        y: sectionStartY - 17,
+        size: 10,
+        font: helveticaFont,
+        color: primaryColor,
+      });
+
+      // Reset Y position for items table
+      yPosition = sectionStartY - 50;
+
+      // Table headers - Solo Item, Descripción y Cantidad para movimientos
+      const itemLabel = movimiento.items.length > 1 ? "Items" : "Item";
+      const columnWidths = [35, 440, 60]; // Item, Descripción, Cantidad
+
+      // Draw table headers
+      this.drawMovimientoTableHeaders(
+        page,
+        helveticaBold,
+        primaryColor,
+        yPosition,
+        itemLabel,
+        columnWidths
+      );
+
+      yPosition -= 25;
+
+      // Items
+      let pageItemCount = 0;
+      let currentPageItems: typeof movimiento.items = [];
+      let pageNumber = 0;
+      const maxItemsPerPage = 15; // Adjust based on your needs
+
+      for (let index = 0; index < movimiento.items.length; index++) {
+        const item = movimiento.items[index];
+
+        // Nueva página si se excede el máximo
+        if (pageItemCount >= maxItemsPerPage) {
+          page = pdfDoc.addPage([this.LETTER.width, this.LETTER.height]);
+          await this.drawHeader(
+            page,
+            pdfDoc,
+            helveticaFont,
+            helveticaBold,
+            primaryColor
+          );
+          yPosition = height - 120;
+          pageItemCount = 0;
+          currentPageItems = [];
+          pageNumber++;
+
+          // Redibujar encabezados
+          this.drawMovimientoTableHeaders(
+            page,
+            helveticaBold,
+            primaryColor,
+            yPosition,
+            itemLabel,
+            columnWidths
+          );
+          yPosition -= 25;
+        }
+
+        // Agregar el item a la página actual
+        currentPageItems.push(item);
+        let currentX = 40;
+
+        // Item number
+        const itemNumber = (index + 1).toString();
+        const itemNumberWidth = helveticaFont.widthOfTextAtSize(itemNumber, 9);
+        page.drawText(itemNumber, {
+          x: currentX + columnWidths[0] / 2 - itemNumberWidth / 2,
+          y: yPosition,
+          size: 10,
+          font: helveticaFont,
+          color: primaryColor,
+        });
+        currentX += columnWidths[0];
+
+        // Product description
+        const descripcionX = currentX + 20;
+        page.drawText(item.producto?.nombre || "", {
+          x: descripcionX,
+          y: yPosition,
+          size: 10,
+          font: helveticaFont,
+          color: primaryColor,
+        });
+        currentX += columnWidths[1];
+
+        // Quantity
+        const cantidadText = item.cantidad.toString();
+        const cantidadWidth = helveticaFont.widthOfTextAtSize(cantidadText, 9);
+        page.drawText(cantidadText, {
+          x: currentX + columnWidths[2] / 2 - cantidadWidth / 2,
+          y: yPosition,
+          size: 9,
+          font: helveticaFont,
+          color: primaryColor,
+        });
+
+        yPosition -= 15;
+
+        // SKU below product name (alineado con la descripción)
+        page.drawText(`SKU: ${item.producto?.sku || ""}`, {
+          x: descripcionX,
+          y: yPosition,
+          size: 8,
+          font: helveticaFont,
+          color: secondaryColor,
+        });
+
+        yPosition -= 12;
+
+        yPosition -= 5;
+        pageItemCount++;
+      }
+
+      // Total de unidades movidas (al final de la página, centrado)
+      const totalUnidades = movimiento.items.reduce(
+        (acc, item) => acc + (item.cantidad || 0),
+        0
+      );
+      const totalLabel = "Total de Unidades Movidas:";
+      const totalValue = `  ${totalUnidades}`;
+      const totalLabelWidth = helveticaBold.widthOfTextAtSize(totalLabel, 10);
+      const totalValueWidth = helveticaFont.widthOfTextAtSize(totalValue, 10);
+      const totalTextWidth = totalLabelWidth + totalValueWidth;
+      const totalY = 40; // 40px desde el borde inferior
+      const totalX = (width - totalTextWidth) / 2;
+      page.drawText(totalLabel, {
+        x: totalX,
+        y: totalY,
+        size: 10,
+        font: helveticaBold,
+        color: primaryColor,
+      });
+      page.drawText(totalValue, {
+        x: totalX + totalLabelWidth,
+        y: totalY,
+        size: 10,
+        font: helveticaFont,
+        color: secondaryColor,
+      });
+
+      // Notes section
+      if (movimiento.notas) {
+        yPosition -= 40;
+        page.drawText("Notas:", {
+          x: 40,
+          y: yPosition,
+          size: 10,
+          font: helveticaBold,
+          color: primaryColor,
+        });
+        yPosition -= 15;
+
+        // Simple text wrapping for notes
+        const notes = movimiento.notas;
+        const maxWidth = width - 80; // 40px margin on each side
+        const words = notes.split(" ");
+        let currentLine = "";
+        let lineY = yPosition;
+
+        for (const word of words) {
+          const testLine = currentLine + (currentLine ? " " : "") + word;
+          const testWidth = helveticaFont.widthOfTextAtSize(testLine, 9);
+
+          if (testWidth > maxWidth && currentLine) {
+            page.drawText(currentLine, {
+              x: 40,
+              y: lineY,
+              size: 9,
+              font: helveticaFont,
+              color: primaryColor,
+            });
+            lineY -= 12;
+            currentLine = word;
+          } else {
+            currentLine = testLine;
+          }
+        }
+
+        if (currentLine) {
+          page.drawText(currentLine, {
+            x: 40,
+            y: lineY,
+            size: 9,
+            font: helveticaFont,
+            color: primaryColor,
+          });
+        }
+      }
+
+      // Guardar PDF
+      console.log("Saving movimiento PDF...");
+      const pdfBytes = await pdfDoc.save();
+      console.log("Movimiento PDF saved successfully");
+
+      return Buffer.from(pdfBytes);
+    } catch (error) {
+      console.error("Movimiento PDF generation error:", error);
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error("Failed to generate movimiento PDF");
     }
   }
 }

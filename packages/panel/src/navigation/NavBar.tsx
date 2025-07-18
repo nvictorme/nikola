@@ -67,6 +67,15 @@ const NavBar: React.FC = () => {
           <routes.productos.icon className="h-4 w-4" /> {routes.productos.title}
         </a>
         <a
+          href={routes.movimientos.path}
+          className={`flex gap-2 align-middle ${isActive(
+            routes.movimientos.path
+          )} transition-colors hover:text-foreground`}
+        >
+          <routes.movimientos.icon className="h-4 w-4" />{" "}
+          {routes.movimientos.title}
+        </a>
+        <a
           href={routes.personas.path}
           className={`flex gap-2 align-middle ${isActive(
             routes.personas.path
@@ -125,6 +134,15 @@ const NavBar: React.FC = () => {
             >
               <routes.productos.icon className="h-4 w-4" />{" "}
               {routes.productos.title}
+            </a>
+            <a
+              href={routes.movimientos.path}
+              className={`flex gap-2 align-middle ${isActive(
+                routes.movimientos.path
+              )} transition-colors hover:text-foreground`}
+            >
+              <routes.movimientos.icon className="h-4 w-4" />{" "}
+              {routes.movimientos.title}
             </a>
             <a
               href={routes.personas.path}

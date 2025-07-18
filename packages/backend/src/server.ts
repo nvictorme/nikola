@@ -29,6 +29,7 @@ import {
   ConfiguracionRouter,
   ProveedoresRouter,
   AuditoriaRouter,
+  MovimientosRouter,
 } from "./routes";
 import { socketsSetup } from "./providers/sockets";
 import { AppDataSource } from "./orm/data-source";
@@ -102,6 +103,7 @@ AppDataSource.initialize()
     app.use("/configuracion", ConfiguracionRouter);
     app.use("/proveedores", ProveedoresRouter);
     app.use("/auditoria", AuditoriaRouter);
+    app.use("/movimientos", MovimientosRouter);
     // 404 - catch-all
     app.use((req, res) => res.status(404).json({ message: "Not found" }));
 

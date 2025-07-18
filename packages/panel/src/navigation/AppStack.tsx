@@ -109,6 +109,14 @@ const router = createBrowserRouter([
           </ProtectedRoute>
         ),
       },
+      {
+        path: routes.movimientos.path,
+        element: (
+          <ProtectedRoute routeRuleCheck={RouteRuleCheck.isAdmin}>
+            <routes.movimientos.element />
+          </ProtectedRoute>
+        ),
+      },
     ],
   },
 ]);
