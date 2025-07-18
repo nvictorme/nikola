@@ -12,8 +12,12 @@ import {
   formatearFecha,
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
-import { FileText, Download, Receipt } from "lucide-react";
-import { useGeneratePDF, useGenerateProformaPDF } from "./ordenes.helpers";
+import { FileText, Download, Receipt, Truck } from "lucide-react";
+import {
+  useGeneratePDF,
+  useGenerateProformaPDF,
+  useGenerateGuiaDespachoPDF,
+} from "./ordenes.helpers";
 
 interface OrdenPreviewProps {
   orden: IOrden;
@@ -29,6 +33,8 @@ export const OrdenPreview = ({
   const { generatePDF, isGeneratingPDF } = useGeneratePDF();
   const { generateProformaPDF, isGeneratingProformaPDF } =
     useGenerateProformaPDF();
+  const { generateGuiaDespachoPDF, isGeneratingGuiaDespachoPDF } =
+    useGenerateGuiaDespachoPDF();
 
   if (!orden) return null;
 
@@ -48,6 +54,10 @@ export const OrdenPreview = ({
     await generateProformaPDF(orden);
   };
 
+  const handleGenerateGuiaDespachoPDFWithOrden = async () => {
+    await generateGuiaDespachoPDF(orden);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[850px] max-h-[90vh] overflow-y-auto p-0">
@@ -59,44 +69,69 @@ export const OrdenPreview = ({
 
         {/* PDF Generation Buttons */}
         <div className="sticky top-0 z-10 bg-background border-b p-4">
-          <div className="relative flex items-center">
-            <Button
-              onClick={handleGeneratePDFWithOrden}
-              disabled={isGeneratingPDF}
-              className="w-full sm:w-auto"
-            >
-              {isGeneratingPDF ? (
-                <>
-                  <FileText className="mr-2 h-4 w-4 animate-spin" />
-                  Generando PDF...
-                </>
-              ) : (
-                <>
-                  <Download className="mr-2 h-4 w-4" />
-                  Orden PDF
-                </>
+          <div className="flex items-center justify-between w-full">
+            {/* Botones a la izquierda */}
+            <div className="flex gap-2">
+              <Button
+                onClick={handleGeneratePDFWithOrden}
+                disabled={isGeneratingPDF}
+                className="w-full sm:w-auto"
+              >
+                {isGeneratingPDF ? (
+                  <>
+                    <FileText className="mr-2 h-4 w-4 animate-spin" />
+                    Generando PDF...
+                  </>
+                ) : (
+                  <>
+                    <Download className="mr-2 h-4 w-4" />
+                    Orden PDF
+                  </>
+                )}
+              </Button>
+            </div>
+            {/* Botón Factura Proforma centrado */}
+            {orden.tipoCambio === TipoCambio.bcv &&
+              orden.tipo !== TipoOrden.reposicion && (
+                <div className="absolute left-1/2 transform -translate-x-1/2">
+                  <Button
+                    onClick={handleGenerateProformaPDFWithOrden}
+                    disabled={isGeneratingProformaPDF}
+                    className="w-full sm:w-auto"
+                  >
+                    {isGeneratingProformaPDF ? (
+                      <>
+                        <Receipt className="mr-2 h-4 w-4 animate-spin" />
+                        Generando Proforma...
+                      </>
+                    ) : (
+                      <>
+                        <Receipt className="mr-2 h-4 w-4" />
+                        Factura Proforma
+                      </>
+                    )}
+                  </Button>
+                </div>
               )}
-            </Button>
-            {orden.tipoCambio === TipoCambio.bcv && (
-              <div className="absolute left-1/2 transform -translate-x-1/2">
-                <Button
-                  onClick={handleGenerateProformaPDFWithOrden}
-                  disabled={isGeneratingProformaPDF}
-                  className="w-full sm:w-auto"
-                >
-                  {isGeneratingProformaPDF ? (
-                    <>
-                      <Receipt className="mr-2 h-4 w-4 animate-spin" />
-                      Generando Proforma...
-                    </>
-                  ) : (
-                    <>
-                      <Receipt className="mr-2 h-4 w-4" />
-                      Factura Proforma
-                    </>
-                  )}
-                </Button>
-              </div>
+            {/* Botón Guía de Despacho a la derecha */}
+            {orden.tipo !== TipoOrden.reposicion && (
+              <Button
+                onClick={handleGenerateGuiaDespachoPDFWithOrden}
+                disabled={isGeneratingGuiaDespachoPDF}
+                className="w-full sm:w-auto"
+              >
+                {isGeneratingGuiaDespachoPDF ? (
+                  <>
+                    <Truck className="mr-2 h-4 w-4 animate-spin" />
+                    Generando Guía...
+                  </>
+                ) : (
+                  <>
+                    <Truck className="mr-2 h-4 w-4" />
+                    Guía de Despacho
+                  </>
+                )}
+              </Button>
             )}
           </div>
         </div>
