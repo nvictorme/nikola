@@ -11,6 +11,7 @@ import {
 } from "shared/helpers";
 import { TipoDescuento, TipoOrden, TipoCambio } from "shared/enums";
 import { IMovimiento } from "shared/interfaces";
+import { GuiaDespachoPDFProvider } from "./guia-despacho";
 
 // Constants for PDF messages
 const PDF_MESSAGES = {
@@ -33,6 +34,12 @@ export class PDFProvider {
       right: 612 - 40, // Adjusted for new left margin
     },
   };
+
+  private guiaDespachoProvider: GuiaDespachoPDFProvider;
+
+  constructor() {
+    this.guiaDespachoProvider = new GuiaDespachoPDFProvider();
+  }
 
   // Helper function to draw header on any page
   private async drawHeader(
@@ -677,8 +684,11 @@ export class PDFProvider {
         color: secondaryColor,
       });
 
-      // BCV rate if applicable
-      if (orden.tipoCambio === TipoCambio.bcv) {
+      // BCV rate if applicable (solo si no es reposición)
+      if (
+        orden.tipoCambio === TipoCambio.bcv &&
+        orden.tipo !== TipoOrden.reposicion
+      ) {
         page.drawText("Tasa BCV:", {
           x: width - 150, // Right side positioning, aligned with date
           y: yPosition + 10, // Below the date
@@ -723,101 +733,186 @@ export class PDFProvider {
 
       yPosition -= 20;
 
-      // Client and Seller Information - Aligned
+      // Client or Provider and Seller Information - Aligned
       const clientSectionX = 40;
       const sellerSectionX = 350;
       const sectionStartY = yPosition;
 
-      // Client section
-      page.drawText("Cliente:", {
-        x: clientSectionX,
-        y: sectionStartY,
-        size: 12,
-        font: helveticaBold,
-        color: primaryColor,
-      });
+      if (orden.tipo === TipoOrden.reposicion) {
+        // Proveedor section
+        page.drawText("Proveedor:", {
+          x: clientSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
 
-      let clientY = sectionStartY - 17;
+        let provY = sectionStartY - 17;
+        if (orden.proveedor?.nombre) {
+          page.drawText(orden.proveedor.nombre, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: primaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.marca) {
+          page.drawText(orden.proveedor.marca, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.direccion) {
+          page.drawText(orden.proveedor.direccion, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.telefono) {
+          page.drawText(`Tel: ${orden.proveedor.telefono}`, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.email) {
+          page.drawText(orden.proveedor.email, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          provY -= 15;
+        }
+        if (orden.proveedor?.notas) {
+          page.drawText(orden.proveedor.notas, {
+            x: clientSectionX,
+            y: provY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
+      } else {
+        // Client section
+        page.drawText("Cliente:", {
+          x: clientSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
 
-      const clientName = orden.cliente?.empresa
-        ? orden.cliente.empresa
-        : `${orden.cliente?.nombre} ${orden.cliente?.apellido}`;
+        let clientY = sectionStartY - 17;
+        const clientName = orden.cliente?.empresa
+          ? orden.cliente.empresa
+          : `${orden.cliente?.nombre} ${orden.cliente?.apellido}`;
 
-      page.drawText(clientName, {
-        x: clientSectionX,
-        y: clientY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-
-      clientY -= 15;
-
-      if (orden.cliente?.empresa) {
-        page.drawText(`${orden.cliente?.nombre} ${orden.cliente?.apellido}`, {
+        page.drawText(clientName, {
           x: clientSectionX,
           y: clientY,
           size: 10,
           font: helveticaFont,
-          color: secondaryColor,
+          color: primaryColor,
         });
+
         clientY -= 15;
+
+        if (orden.cliente?.empresa) {
+          page.drawText(`${orden.cliente?.nombre} ${orden.cliente?.apellido}`, {
+            x: clientSectionX,
+            y: clientY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          clientY -= 15;
+        }
+
+        if (orden.cliente?.telefono) {
+          page.drawText(`Tel: ${orden.cliente.telefono}`, {
+            x: clientSectionX,
+            y: clientY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
       }
 
-      if (orden.cliente?.telefono) {
-        page.drawText(`Tel: ${orden.cliente.telefono}`, {
-          x: clientSectionX,
-          y: clientY,
+      // Seller/Responsable section - aligned with client/proveedor section
+      if (orden.tipo === TipoOrden.reposicion) {
+        page.drawText("Responsable:", {
+          x: sellerSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
+        let respY = sectionStartY - 17;
+        // Solo nombre y apellido del vendedor
+        const responsableName = `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
+        page.drawText(responsableName, {
+          x: sellerSectionX,
+          y: respY,
           size: 10,
           font: helveticaFont,
-          color: secondaryColor,
+          color: primaryColor,
         });
-      }
-
-      // Seller section - aligned with client section
-      page.drawText("Vendedor:", {
-        x: sellerSectionX,
-        y: sectionStartY,
-        size: 12,
-        font: helveticaBold,
-        color: primaryColor,
-      });
-
-      let sellerY = sectionStartY - 17;
-
-      const sellerName = orden.vendedor.empresa
-        ? orden.vendedor.empresa
-        : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
-
-      page.drawText(sellerName, {
-        x: sellerSectionX,
-        y: sellerY,
-        size: 10,
-        font: helveticaFont,
-        color: primaryColor,
-      });
-
-      sellerY -= 15;
-
-      if (orden.vendedor.empresa) {
-        page.drawText(`${orden.vendedor.nombre} ${orden.vendedor.apellido}`, {
+      } else {
+        page.drawText("Vendedor:", {
+          x: sellerSectionX,
+          y: sectionStartY,
+          size: 12,
+          font: helveticaBold,
+          color: primaryColor,
+        });
+        let sellerY = sectionStartY - 17;
+        const sellerName = orden.vendedor.empresa
+          ? orden.vendedor.empresa
+          : `${orden.vendedor.nombre} ${orden.vendedor.apellido}`;
+        page.drawText(sellerName, {
           x: sellerSectionX,
           y: sellerY,
           size: 10,
           font: helveticaFont,
-          color: secondaryColor,
+          color: primaryColor,
         });
         sellerY -= 15;
-      }
-
-      if (orden.vendedor.telefono) {
-        page.drawText(`Tel: ${orden.vendedor.telefono}`, {
-          x: sellerSectionX,
-          y: sellerY,
-          size: 10,
-          font: helveticaFont,
-          color: secondaryColor,
-        });
+        if (orden.vendedor.empresa) {
+          page.drawText(`${orden.vendedor.nombre} ${orden.vendedor.apellido}`, {
+            x: sellerSectionX,
+            y: sellerY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+          sellerY -= 15;
+        }
+        if (orden.vendedor.telefono) {
+          page.drawText(`Tel: ${orden.vendedor.telefono}`, {
+            x: sellerSectionX,
+            y: sellerY,
+            size: 10,
+            font: helveticaFont,
+            color: secondaryColor,
+          });
+        }
       }
 
       // Reset Y position for items table
@@ -1220,8 +1315,15 @@ export class PDFProvider {
         }
       }
 
-      // Add IVA message to the main page
-      this.drawIVAMessage(page, helveticaFont, primaryColor, orden.tipoCambio);
+      // Add IVA message to the main page SOLO si no es reposición
+      if (orden.tipo !== TipoOrden.reposicion) {
+        this.drawIVAMessage(
+          page,
+          helveticaFont,
+          primaryColor,
+          orden.tipoCambio
+        );
+      }
 
       // Save the PDF
       console.log("Saving order PDF...");
@@ -1922,5 +2024,9 @@ export class PDFProvider {
       }
       throw new Error("Failed to generate movimiento PDF");
     }
+  }
+
+  public async generateGuiaDespachoPDF(orden: IOrden): Promise<Buffer> {
+    return this.guiaDespachoProvider.generateGuiaDespachoPDF(orden);
   }
 }

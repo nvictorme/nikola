@@ -1196,4 +1196,68 @@ OrdenesRouter.get(
   }
 );
 
+// GET - Generate Guia de Despacho PDF for order
+OrdenesRouter.get(
+  "/:ordenId/guia-despacho",
+  verificarPrivilegio({
+    entidad: Orden.name,
+    accion: Acciones.leer,
+    valor: true,
+  }),
+  async (req: Request, res: Response) => {
+    try {
+      const { ordenId } = req.params;
+      console.log(
+        "Received request for guia de despacho PDF with ordenId:",
+        ordenId
+      );
+
+      // Get the order with all relations
+      const orden = await AppDataSource.getRepository(Orden).findOne({
+        where: { id: ordenId },
+        relations: [
+          "sucursal",
+          "vendedor",
+          "cliente",
+          "proveedor",
+          "items",
+          "items.producto",
+          "items.almacen",
+        ],
+      });
+
+      if (!orden) {
+        return res.status(404).json({ error: "Orden no encontrada" });
+      }
+
+      const pdfProvider = new PDFProvider();
+
+      const pdfBuffer = await pdfProvider.generateGuiaDespachoPDF(orden);
+      console.log("Guia de despacho PDF generated successfully");
+
+      // Set response headers for download
+      res.setHeader("Content-Type", "application/pdf");
+      res.setHeader(
+        "Content-Disposition",
+        `attachment; filename=guia-despacho-${orden.serial}.pdf`
+      );
+      res.status(200).send(pdfBuffer);
+    } catch (error: unknown) {
+      console.error("Error generating guia de despacho PDF:", error);
+      if (error instanceof Error) {
+        const errorMessage = error.message;
+        console.error("Error message:", errorMessage);
+        console.error("Error stack:", error.stack);
+
+        res.status(500).json({
+          error: "Failed to generate guia de despacho PDF",
+          details: errorMessage,
+        });
+      } else {
+        res.status(500).json({ error: "An unknown error occurred" });
+      }
+    }
+  }
+);
+
 export { OrdenesRouter };
