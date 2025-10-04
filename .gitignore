@@ -6,3 +6,5 @@ node_modules/
 
 .env.production
 
+
+packages/shared/dist/
