@@ -174,6 +174,7 @@ export interface IProducto extends IBase {
   descripcion: string;
   modelo: string;
   slug: string;
+  posicion: number;
 
   sku: string;
   upc?: string;

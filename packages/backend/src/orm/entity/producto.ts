@@ -39,6 +39,9 @@ export class Producto extends Base implements ORMProducto {
   @Column({ nullable: true })
   descripcion: string;
 
+  @Column({ type: "int", default: 0 })
+  posicion: number;
+
   @Column({
     type: "numeric",
     default: 0,
