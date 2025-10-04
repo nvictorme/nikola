@@ -64,7 +64,7 @@ async function run(): Promise<void> {
       strict: true,
       replacement: "-",
       trim: true,
-    });
+    }).slice(0, 100);
     producto.sku = p.sku;
     producto.categoria = _categorias.find((c) => c.nombre === p.categoria)!;
     producto.subcategoria = _subcategorias.find(
