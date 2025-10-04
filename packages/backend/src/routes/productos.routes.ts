@@ -239,6 +239,7 @@ ProductosRouter.post(
         replacement: "-",
         trim: true,
       });
+      _producto.slug = _producto.slug.slice(0, 100);
 
       // First save the producto to get its ID
       const savedProducto = await AppDataSource.getRepository(Producto).save(
@@ -338,12 +339,6 @@ ProductosRouter.put(
       // Create update object with safe category/subcategory handling
       const updateObj = {
         ...updateData,
-        slug: slugify(`${data.nombre} ${data.modelo} ${data.sku}`, {
-          lower: true,
-          strict: true,
-          replacement: "-",
-          trim: true,
-        }),
         stockMinimo: data.stockMinimo || 0,
         // Only include category/subcategory if they exist and have an id
         ...(data.categoria?.id && { categoria: { id: data.categoria.id } }),

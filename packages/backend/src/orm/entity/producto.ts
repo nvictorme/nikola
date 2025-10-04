@@ -8,7 +8,6 @@ import {
   JoinColumn,
   ManyToOne,
   BeforeUpdate,
-  AfterUpdate,
 } from "typeorm";
 import { Base } from "./base";
 import { IProducto } from "shared/interfaces";
@@ -124,13 +123,15 @@ export class Producto extends Base implements ORMProducto {
   modelo: string;
 
   @BeforeUpdate()
-  slugify() {
+  slugIt() {
+    // Then create the slug with the trimmed values
     this.slug = slugify(`${this.nombre} ${this.modelo} ${this.sku}`, {
       lower: true,
       strict: true,
       replacement: "-",
       trim: true,
     });
+    this.slug = this.slug.slice(0, 100);
   }
   @Column({ length: 100, nullable: false, unique: true })
   slug: string;
